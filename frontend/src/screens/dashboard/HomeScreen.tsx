@@ -12,6 +12,8 @@ import {
 import { Text } from '../../components/Text';
 import { useUser } from '@clerk/clerk-expo';
 import { dataService } from '../../api/dataService';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Play, Video, BookOpen, PenTool as Tool, User, Award, MessageCircle, Send } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -27,7 +29,7 @@ const AnnouncementCarousel = ({ data }: { data: any[] }) => {
                 Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
             ]).start();
             setCurrent(c => (c + 1) % data.length);
-        }, 4000);
+        }, 5000);
         return () => clearInterval(interval);
     }, [data, fadeAnim]);
 
@@ -36,26 +38,35 @@ const AnnouncementCarousel = ({ data }: { data: any[] }) => {
     const item = data[current];
 
     return (
-        <Animated.View style={{ opacity: fadeAnim }} className="mx-4 mb-4 overflow-hidden rounded-xl">
+        <Animated.View style={{ opacity: fadeAnim }} className="mx-4 mb-6 overflow-hidden rounded-[2.5rem] shadow-xl bg-white border border-gray-100">
             {item.image ? (
-                <View className="relative h-40">
+                <View className="relative h-44">
                     <Animated.Image source={{ uri: item.image }} className="w-full h-full" resizeMode="cover" />
-                    <View className="absolute inset-0 bg-black/40 p-4 justify-end">
-                        <Text variant="caption" className="text-white/80 mb-1">ANNOUNCEMENT</Text>
-                        <Text variant="h3" className="text-white mb-1 font-bold" numberOfLines={1}>{item.title}</Text>
-                        <Text variant="caption" className="text-white/90" numberOfLines={2}>{item.body}</Text>
-                    </View>
+                    <LinearGradient
+                        colors={['transparent', 'rgba(0,0,0,0.8)']}
+                        className="absolute inset-0 p-6 justify-end"
+                    >
+                        <Text className="text-white/70 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Update</Text>
+                        <Text variant="h3" className="text-white font-black text-xl mb-1" numberOfLines={1}>{item.title}</Text>
+                        <Text variant="caption" className="text-white/80 font-medium" numberOfLines={2}>{item.body}</Text>
+                    </LinearGradient>
                 </View>
             ) : (
-                <View className="bg-blue-600 p-4">
-                    <Text variant="caption" className="text-blue-200 mb-1">ANNOUNCEMENT</Text>
-                    <Text variant="h3" className="text-white mb-1 font-bold" numberOfLines={1}>{item.title}</Text>
-                    <Text variant="caption" className="text-blue-100" numberOfLines={2}>{item.body}</Text>
+                <View className="p-6">
+                    <LinearGradient
+                        colors={['#7C3AED', '#4F46E5']}
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                        style={{ borderRadius: 20, padding: 20 }}
+                    >
+                        <Text className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Official News</Text>
+                        <Text variant="h3" className="text-white font-black text-lg mb-2" numberOfLines={1}>{item.title}</Text>
+                        <Text variant="caption" className="text-white/80 font-semibold" numberOfLines={2}>{item.body}</Text>
+                    </LinearGradient>
                 </View>
             )}
-            <View className="flex-row absolute bottom-3 left-4">
+            <View className="flex-row absolute bottom-4 right-6">
                 {data.map((_, i) => (
-                    <View key={i} className={`h-1.5 rounded-full mr-1 ${i === current ? 'bg-white w-4' : 'bg-white/40 w-1.5'}`} />
+                    <View key={i} className={`h-1.5 rounded-full mr-1.5 ${i === current ? 'bg-white w-4' : 'bg-white/30 w-1.5'}`} />
                 ))}
             </View>
         </Animated.View>
@@ -64,34 +75,35 @@ const AnnouncementCarousel = ({ data }: { data: any[] }) => {
 
 const CourseCard = ({ item }: { item: any }) => (
     <TouchableOpacity
-        style={{ backgroundColor: '#2563EB' }}
-        className="rounded-xl overflow-hidden mr-3 w-44 shadow-lg shadow-blue-600/20"
-        activeOpacity={0.85}
+        className="rounded-[2rem] overflow-hidden mr-4 w-48 bg-white shadow-xl shadow-black/10 border border-gray-50"
+        activeOpacity={0.9}
     >
         {item.image ? (
-            <View className="h-28">
+            <View className="h-28 relative">
                 <Animated.Image source={{ uri: item.image }} className="w-full h-full" resizeMode="cover" />
+                <View className="absolute top-2 right-2 bg-black/40 px-2 py-1 rounded-lg backdrop-blur-md">
+                    <Text className="text-white text-[8px] font-black uppercase tracking-widest">Premium</Text>
+                </div>
             </View>
         ) : (
-            <View className="h-28 bg-blue-700 items-center justify-center">
-                <Text style={{ fontSize: 40 }}>📚</Text>
-            </View>
+            <LinearGradient colors={['#6366F1', '#4338CA']} className="h-28 items-center justify-center">
+                <BookOpen size={32} color="white" opacity={0.3} />
+            </LinearGradient>
         )}
-        <View className="p-3">
-            <Text variant="body" className="text-white font-bold mb-1" numberOfLines={1}>{item.title}</Text>
-            <Text variant="caption" className="text-blue-100" numberOfLines={1}>
-                {item.lessons?.length || 0} Videos
-            </Text>
-            <View className="mt-3 bg-white/20 rounded-lg py-1.5 items-center">
-                <Text className="text-white text-[10px] font-bold tracking-wider uppercase">View Playlist</Text>
+        <View className="p-4">
+            <Text className="text-gray-800 font-black text-sm uppercase tracking-tight mb-1" numberOfLines={1}>{item.title}</Text>
+            <View className="flex-row items-center gap-1.5">
+                <Play size={10} color="#6366F1" fill="#6366F1" />
+                <Text className="text-gray-400 text-[10px] font-black uppercase tracking-widest">
+                    {item.lessons?.length || 0} Lessons
+                </Text>
             </View>
+            <TouchableOpacity className="mt-3 bg-indigo-50 rounded-xl py-2 items-center flex-row justify-center gap-2">
+                <Text className="text-indigo-600 text-[9px] font-black uppercase tracking-[0.2em]">Play Now</Text>
+            </TouchableOpacity>
         </View>
     </TouchableOpacity>
 );
-
-import { useAuth } from '@clerk/clerk-expo';
-import { ComingSoon } from '../../components/ComingSoon';
-import { Video } from 'lucide-react-native';
 
 export const HomeScreen = ({ navigation }: any) => {
     const { user } = useUser();
@@ -102,7 +114,7 @@ export const HomeScreen = ({ navigation }: any) => {
 
     useEffect(() => {
         const fetchDashboardData = async () => {
-            if (!isLoaded || !isSignedIn) return; // Wait until token is explicitly generated by Clerk
+            if (!isLoaded || !isSignedIn) return;
             setIsLoading(true);
             try {
                 const [dashboardRes, announcementsRes] = await Promise.all([
@@ -122,40 +134,58 @@ export const HomeScreen = ({ navigation }: any) => {
 
     if (isLoading) {
         return (
-            <View className="flex-1 items-center justify-center bg-white dark:bg-gray-900">
-                <ActivityIndicator size="large" color="#2563EB" />
+            <View className="flex-1 items-center justify-center bg-gray-50">
+                <ActivityIndicator size="large" color="#6366F1" />
+                <Text className="text-gray-400 text-[10px] font-black mt-4 tracking-[0.2em]">LOADING DATA...</Text>
             </View>
         );
     }
 
     const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Student';
+    const init = displayName.charAt(0).toUpperCase();
 
     return (
-        <ScrollView className="flex-1 bg-gray-50 dark:bg-gray-900" showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
 
-            {/* Header */}
-            <View className="bg-blue-600 pt-14 pb-8 px-4 rounded-b-3xl mb-4">
-                <Text variant="caption" className="text-blue-200 mb-1">Hello 👋</Text>
-                <Text variant="h2" className="text-white font-bold">{displayName}</Text>
-                <Text variant="caption" className="text-blue-200 mt-0.5">Keep pushing your preparation!</Text>
-            </View>
+            {/* Gradient Header */}
+            <LinearGradient
+                colors={['#6366F1', '#4F46E5', '#3730A3']}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                className="pt-16 pb-12 px-6 rounded-b-[3rem] mb-6 shadow-2xl shadow-indigo-200"
+            >
+                <View className="flex-row items-center justify-between mb-4">
+                    <View>
+                        <Text className="text-indigo-100 text-[10px] font-black uppercase tracking-[0.3em] mb-1">Welcome back!</Text>
+                        <Text variant="h2" className="text-white font-black text-2xl tracking-tighter">{displayName}</Text>
+                    </View>
+                    <View className="w-12 h-12 rounded-2xl bg-white/20 border border-white/30 items-center justify-center">
+                        <Text className="text-white font-black text-lg">{init}</Text>
+                    </View>
+                </View>
+
+                {/* Embedded Stats in Header */}
+                <View className="flex-row gap-3 mt-4">
+                    <View className="flex-1 bg-white/10 p-3 rounded-2xl border border-white/10 backdrop-blur-md">
+                        <Text className="text-white font-black text-lg leading-none">{dashboardData?.stats?.courses || 0}</Text>
+                        <Text className="text-indigo-100 text-[9px] font-bold uppercase tracking-widest mt-1">Courses</Text>
+                    </View>
+                    <View className="flex-1 bg-white/15 p-3 rounded-2xl border border-white/10 backdrop-blur-md">
+                        <Text className="text-white font-black text-lg leading-none">{dashboardData?.stats?.enrolled || 0}</Text>
+                        <Text className="text-indigo-100 text-[9px] font-bold uppercase tracking-widest mt-1">Enrolled</Text>
+                    </View>
+                </View>
+            </LinearGradient>
 
             <AnnouncementCarousel data={announcements} />
 
-            {/* Stats Row */}
-            <View className="flex-row px-4 justify-between mb-6">
-                <View className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm items-center w-[48%]">
-                    <Text variant="h2" className="font-bold text-blue-600">{dashboardData?.stats?.courses || 0}</Text>
-                    <Text variant="caption" className="text-gray-500">Total Courses</Text>
-                </View>
-                <View className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm items-center w-[48%]">
-                    <Text variant="h2" className="font-bold text-purple-600">{dashboardData?.stats?.enrolled || 0}</Text>
-                    <Text variant="caption" className="text-gray-500">Enrolled</Text>
-                </View>
+            {/* Video Playlists */}
+            <View className="flex-row items-center justify-between px-6 mb-4">
+                <Text className="font-black text-gray-800 text-sm tracking-widest uppercase">Latest Content</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Courses')}>
+                    <Text className="text-indigo-600 text-[10px] font-black uppercase">View All</Text>
+                </TouchableOpacity>
             </View>
 
-            {/* Video Playlists (Courses) */}
-            <Text variant="h3" className="font-bold px-4 mb-3 text-gray-800 dark:text-white">✨ Video Playlists</Text>
             {dashboardData?.newestCourses?.length > 0 ? (
                 <FlatList
                     data={dashboardData.newestCourses}
@@ -163,57 +193,72 @@ export const HomeScreen = ({ navigation }: any) => {
                     renderItem={({ item }) => <CourseCard item={item} />}
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}
-                    className="mb-4"
+                    contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 16 }}
+                    className="mb-6"
                 />
             ) : (
-                <View className="px-4 mb-6">
-                    <View className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm">
-                        <ComingSoon
-                            small
-                            title="Coming Soon"
-                            message="We're curating new video playlists just for you!"
-                            icon={<Video size={32} color="#2563EB" />}
-                        />
+                <View className="px-6 mb-8">
+                    <View className="bg-white rounded-[2rem] p-8 items-center border border-gray-50 shadow-sm">
+                        <Video size={40} color="#E5E7EB" strokeWidth={1.5} />
+                        <Text className="text-gray-400 font-black text-[10px] uppercase tracking-widest mt-4">New content coming soon</Text>
                     </View>
                 </View>
             )}
 
-            {/* Quick Access Tiles */}
-            <Text variant="h3" className="font-bold px-4 mb-3 text-gray-800 dark:text-white">🚀 Quick Access</Text>
-            <View className="flex-row flex-wrap px-4 gap-3 mb-4">
-                {[
-                    { icon: '📚', label: 'Courses', bg: 'bg-green-100', target: 'Courses' },
-                    { icon: '📝', label: 'Quizzes', bg: 'bg-orange-100', target: 'Tests' },
-                    { icon: '👤', label: 'Profile', bg: 'bg-pink-100', target: 'Profile' },
-                ].map(tile => (
-                    <TouchableOpacity
-                        key={tile.label}
-                        className={`${tile.bg} rounded-2xl items-center justify-center p-4`}
-                        style={{ width: (width - 48) / 2 }}
-                        onPress={() => navigation?.navigate(tile.target)}
-                    >
-                        <Text style={{ fontSize: 28 }}>{tile.icon}</Text>
-                        <Text variant="caption" className="font-semibold mt-1 text-gray-700">{tile.label}</Text>
-                    </TouchableOpacity>
-                ))}
+            {/* Premium Quick Access Tiles */}
+            <View className="px-6 mb-8">
+                <Text className="font-black text-gray-800 text-sm tracking-widest uppercase mb-4">Your Toolbox</Text>
+                <View className="flex-row gap-4">
+                    {[
+                        { icon: <BookOpen color="#4F46E5" size={24} />, label: 'COURSES', color: 'bg-indigo-50', target: 'Courses' },
+                        { icon: <Tool color="#F59E0B" size={24} />, label: 'QUIZZES', color: 'bg-amber-50', target: 'Tests' },
+                    ].map(tile => (
+                        <TouchableOpacity
+                            key={tile.label}
+                            className={`${tile.color} flex-1 rounded-[2rem] p-6 items-center border border-white shadow-sm`}
+                            onPress={() => navigation?.navigate(tile.target)}
+                        >
+                            <View className="mb-2">{tile.icon}</View>
+                            <Text className="text-gray-800 font-black text-[10px] tracking-[0.2em]">{tile.label}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+                <TouchableOpacity
+                    className="mt-4 bg-rose-50 rounded-[2rem] p-6 flex-row items-center justify-between border border-white"
+                    onPress={() => navigation?.navigate('Profile')}
+                >
+                    <View className="flex-row items-center gap-4">
+                        <View className="w-10 h-10 bg-rose-200 rounded-xl items-center justify-center">
+                            <User color="#E11D48" size={20} />
+                        </View>
+                        <View>
+                            <Text className="text-gray-800 font-black text-[10px] tracking-[0.2em]">STUDENT PROFILE</Text>
+                            <Text className="text-rose-400 text-[8px] font-black">Manage your settings</Text>
+                        </View>
+                    </View>
+                    <Text className="text-rose-300 font-black text-xl">›</Text>
+                </TouchableOpacity>
             </View>
 
             {/* Community Buttons */}
-            <Text variant="h3" className="font-bold px-4 mb-3 text-gray-800 dark:text-white">📲 Join Community</Text>
-            <View className="flex-row px-4 gap-3 mb-8">
-                <TouchableOpacity
-                    className="flex-1 bg-green-500 rounded-xl py-3.5 items-center flex-row justify-center gap-2"
-                    onPress={() => Linking.openURL('https://whatsapp.com')}
-                >
-                    <Text className="text-white font-bold text-base">💬 WhatsApp</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    className="flex-1 bg-sky-500 rounded-xl py-3.5 items-center flex-row justify-center gap-2"
-                    onPress={() => Linking.openURL('https://t.me/')}
-                >
-                    <Text className="text-white font-bold text-base">✈️ Telegram</Text>
-                </TouchableOpacity>
+            <View className="px-6 pb-20">
+                <Text className="font-black text-gray-800 text-sm tracking-widest uppercase mb-4">Official Channels</Text>
+                <View className="flex-row gap-3">
+                    <TouchableOpacity
+                        className="flex-1 bg-emerald-500 rounded-2xl py-4 items-center flex-row justify-center gap-2 shadow-lg shadow-emerald-200"
+                        onPress={() => Linking.openURL('https://whatsapp.com')}
+                    >
+                        <MessageCircle color="white" size={18} />
+                        <Text className="text-white font-black text-xs uppercase tracking-widest">WhatsApp</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        className="flex-1 bg-sky-500 rounded-2xl py-4 items-center flex-row justify-center gap-2 shadow-lg shadow-sky-200"
+                        onPress={() => Linking.openURL('https://t.me/')}
+                    >
+                        <Send color="white" size={18} />
+                        <Text className="text-white font-black text-xs uppercase tracking-widest">Telegram</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
 
         </ScrollView>

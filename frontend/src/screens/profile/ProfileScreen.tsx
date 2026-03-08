@@ -6,12 +6,17 @@ import {
     Alert,
     Modal,
     ActivityIndicator,
+    Dimensions,
 } from 'react-native';
 import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { dataService } from '../../api/dataService';
+import { LinearGradient } from 'expo-linear-gradient';
+import { User, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen, ClipboardList } from 'lucide-react-native';
+
+const { width } = Dimensions.get('window');
 
 export const ProfileScreen = ({ navigation }: any) => {
     const { user } = useUser();
@@ -51,11 +56,7 @@ export const ProfileScreen = ({ navigation }: any) => {
         setIsSaving(true);
         try {
             const updatedProfile = await dataService.updateProfile({
-                mobile,
-                age,
-                city,
-                state,
-                pincode,
+                mobile, age, city, state, pincode,
             });
             setProfile(updatedProfile);
             setMobile(updatedProfile.mobile || '');
@@ -75,110 +76,177 @@ export const ProfileScreen = ({ navigation }: any) => {
 
     if (loading) {
         return (
-            <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <ActivityIndicator size="large" color="#2563EB" />
+            <View className="flex-1 items-center justify-center bg-gray-50">
+                <ActivityIndicator size="large" color="#6366F1" />
             </View>
         );
     }
 
-    const displayName = user?.firstName
-        ? `${user.firstName} ${user.lastName || ''}`.trim()
-        : (profile?.name || 'Student');
+    const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (profile?.name || 'Student');
     const email = user?.primaryEmailAddress?.emailAddress || profile?.email || 'Not set';
-
-    const infoRows = [
-        { label: 'Full Name', value: displayName },
-        { label: 'Email', value: email },
-        { label: 'Mobile', value: profile?.mobile || 'Not provided' },
-        { label: 'Age', value: profile?.age || 'Not provided' },
-        { label: 'City', value: profile?.city || 'Not provided' },
-        { label: 'State', value: profile?.state || 'Not provided' },
-        { label: 'Pincode', value: profile?.pincode || 'Not provided' },
-    ];
+    const initials = displayName.split(' ').map((n: any) => n[0]).join('').slice(0, 2).toUpperCase();
 
     return (
-        <View className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <View className="flex-1 bg-gray-50">
             <ScrollView showsVerticalScrollIndicator={false}>
 
-                {/* Header */}
-                <View className="bg-blue-600 pt-14 pb-10 px-4 rounded-b-3xl items-center mb-6">
-                    <View className="w-20 h-20 rounded-full bg-white/20 items-center justify-center mb-3 border-2 border-white/40">
-                        <Text style={{ fontSize: 36 }}>👤</Text>
-                    </View>
-                    <Text variant="h3" className="text-white font-bold">{displayName}</Text>
-                    <Text variant="caption" className="text-blue-200 mt-0.5">{email}</Text>
-                </View>
-
-                {/* Info Card */}
-                <View className="mx-4 bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 shadow-sm">
-                    <Text variant="h3" className="font-bold text-gray-800 dark:text-white mb-3">Personal Info</Text>
-                    {infoRows.map((row, i) => (
-                        <View key={row.label} className={`flex-row justify-between py-3 ${i < infoRows.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}`}>
-                            <Text variant="caption" className="text-gray-500 font-medium">{row.label}</Text>
-                            <Text variant="body" className="text-gray-800 dark:text-white flex-1 text-right ml-4" numberOfLines={1}>{row.value}</Text>
+                {/* Header with Skewed Gradient */}
+                <LinearGradient
+                    colors={['#6366F1', '#4F46E5', '#3730A3']}
+                    className="pt-20 pb-16 px-6 rounded-b-[4rem] items-center mb-10 shadow-2xl"
+                >
+                    <View className="relative mb-6">
+                        <View className="w-24 h-24 rounded-[30%] bg-white p-1.5 shadow-2xl rotate-3">
+                            {user?.imageUrl ? (
+                                <View className="w-full h-full rounded-[25%] overflow-hidden -rotate-3 bg-indigo-50">
+                                    <ActivityIndicator size="small" color="#6366F1" style={{ position: 'absolute', top: '40%', left: '40%' }} />
+                                    <View style={{ width: '100%', height: '100%' }}>
+                                        {/* React Native Image equivalent for Tailwind mapping */}
+                                        <View className="w-full h-full bg-indigo-100 items-center justify-center">
+                                            <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            ) : (
+                                <View className="w-full h-full rounded-[25%] bg-indigo-50 items-center justify-center -rotate-3">
+                                    <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
+                                </View>
+                            )}
                         </View>
-                    ))}
-                </View>
+                        <View className="absolute -bottom-1 -right-1 bg-emerald-500 w-8 h-8 rounded-full border-4 border-white shadow-lg items-center justify-center">
+                            <ShieldCheck size={14} color="white" strokeWidth={3} />
+                        </View>
+                    </View>
 
-                {/* Quick Links */}
-                <View className="mx-4 bg-white dark:bg-gray-800 rounded-2xl mb-4 shadow-sm overflow-hidden">
-                    {[
-                        { icon: '✏️', label: 'Edit Profile', action: () => setShowEdit(true) },
-                        { icon: '📋', label: 'My Test Attempts', action: () => navigation?.navigate('MyTests') },
-                        { icon: '📚', label: 'My Enrolled Courses', action: () => navigation?.navigate('MyCourses') },
-                    ].map((opt, i, arr) => (
-                        <TouchableOpacity
-                            key={opt.label}
-                            className={`flex-row items-center px-4 py-4 ${i < arr.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}`}
-                            onPress={opt.action}
-                        >
-                            <Text style={{ fontSize: 20 }} className="mr-3">{opt.icon}</Text>
-                            <Text variant="body" className="flex-1 text-gray-800 dark:text-white">{opt.label}</Text>
-                            <Text className="text-gray-400">›</Text>
+                    <Text variant="h2" className="text-white font-black text-xl tracking-tight leading-none mb-1">{displayName}</Text>
+                    <View className="flex-row items-center bg-white/10 px-3 py-1 rounded-full border border-white/20">
+                        <Mail size={10} color="#C7D2FE" />
+                        <Text className="text-indigo-100 text-[9px] font-black uppercase tracking-wider ml-1.5">{email}</Text>
+                    </View>
+                </LinearGradient>
+
+                {/* Personal Info Card */}
+                <View className="mx-6 bg-white rounded-[2.5rem] p-8 shadow-xl shadow-black/5 border border-gray-50 mb-8">
+                    <View className="flex-row justify-between items-center mb-6">
+                        <View className="flex-row items-center gap-2">
+                            <User size={16} color="#4F46E5" />
+                            <Text className="font-black text-gray-800 text-[10px] uppercase tracking-[0.2em]">Personal Details</Text>
+                        </View>
+                        <TouchableOpacity onPress={() => setShowEdit(true)} className="bg-indigo-50 px-3 py-1.5 rounded-xl">
+                            <Text className="text-indigo-600 text-[8px] font-black uppercase tracking-widest">Edit</Text>
                         </TouchableOpacity>
-                    ))}
+                    </View>
+
+                    <View className="flex-row flex-wrap gap-x-8 gap-y-6">
+                        <View className="w-[40%]">
+                            <Text className="text-gray-300 text-[8px] font-black uppercase tracking-widest mb-1.5 text-center">Mobile</Text>
+                            <Text className="text-gray-800 font-black text-xs text-center">{profile?.mobile || '---'}</Text>
+                        </View>
+                        <View className="w-[40%]">
+                            <Text className="text-gray-300 text-[8px] font-black uppercase tracking-widest mb-1.5 text-center">Age</Text>
+                            <Text className="text-gray-800 font-black text-xs text-center">{profile?.age || '--'}</Text>
+                        </View>
+                        <View className="w-full pt-4 border-t border-gray-50">
+                            <Text className="text-gray-300 text-[8px] font-black uppercase tracking-widest mb-1.5">Location</Text>
+                            <View className="flex-row items-center gap-2">
+                                <MapPin size={12} color="#6366F1" />
+                                <Text className="text-gray-800 font-black text-[11px] uppercase tracking-tight flex-1" numberOfLines={1}>
+                                    {profile?.city ? `${profile.city}, ${profile.state}` : 'Not provided yet'}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
                 </View>
 
-                {/* Logout */}
-                <View className="mx-4 mb-10">
-                    <Button
-                        label="Log Out"
-                        variant="outline"
+                {/* Action Links */}
+                <View className="mx-6 space-y-3 mb-10">
+                    <Text className="text-gray-400 font-black text-[9px] uppercase tracking-[0.3em] ml-4 mb-2">Learning Progress</Text>
+
+                    <View className="bg-white rounded-[2.5rem] shadow-lg border border-gray-50 overflow-hidden">
+                        <TouchableOpacity
+                            className="flex-row items-center px-6 py-5 border-b border-gray-50"
+                            onPress={() => navigation?.navigate('MyTests')}
+                        >
+                            <View className="w-10 h-10 bg-amber-50 rounded-2xl items-center justify-center mr-4">
+                                <ClipboardList size={20} color="#D97706" />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">Test Attempts</Text>
+                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Performance history</Text>
+                            </View>
+                            <ChevronRight size={18} color="#E2E8F0" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            className="flex-row items-center px-6 py-5"
+                            onPress={() => navigation?.navigate('MyCourses')}
+                        >
+                            <View className="w-10 h-10 bg-indigo-50 rounded-2xl items-center justify-center mr-4">
+                                <BookOpen size={20} color="#4F46E5" />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">My Courses</Text>
+                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Premium Library</Text>
+                            </View>
+                            <ChevronRight size={18} color="#E2E8F0" />
+                        </TouchableOpacity>
+                    </View>
+
+                    <TouchableOpacity
+                        className="mt-8 bg-rose-50 rounded-2xl py-5 shadow-lg border border-rose-100 flex-row items-center justify-center gap-3"
                         onPress={() =>
                             Alert.alert('Logout', 'Are you sure you want to logout?', [
-                                { text: 'Cancel', style: 'cancel' },
+                                { text: 'Stay', style: 'cancel' },
                                 { text: 'Logout', style: 'destructive', onPress: () => signOut() },
                             ])
                         }
-                    />
+                    >
+                        <LogOut size={16} color="#E11D48" />
+                        <Text className="text-rose-600 font-black text-xs uppercase tracking-[0.2em]">Logout Session</Text>
+                    </TouchableOpacity>
                 </View>
 
+                <View className="h-20" />
             </ScrollView>
 
-            {/* Edit Profile Modal */}
+            {/* Premium Edit Profile Modal */}
             <Modal visible={showEdit} transparent animationType="slide">
-                <View className="flex-1 bg-black/50 justify-end">
-                    <View className="bg-white dark:bg-gray-800 rounded-t-3xl p-6">
-                        <View className="flex-row justify-between items-center mb-5">
-                            <Text variant="h2" className="font-bold text-gray-800 dark:text-white">Edit Profile</Text>
-                            <TouchableOpacity onPress={() => setShowEdit(false)} className="p-2">
-                                <Text className="text-gray-500 font-bold text-lg">✕</Text>
+                <View className="flex-1 bg-black/60 justify-end">
+                    <View className="bg-white rounded-t-[3rem] p-8 shadow-2xl">
+                        <View className="w-12 h-1.5 bg-gray-100 rounded-full mx-auto mb-8" />
+                        <View className="flex-row justify-between items-center mb-8">
+                            <Text variant="h2" className="font-black text-gray-800 text-2xl tracking-tighter">Update Profile</Text>
+                            <TouchableOpacity onPress={() => setShowEdit(false)} className="bg-gray-50 p-3 rounded-full">
+                                <Text className="text-gray-400 font-black text-xs">✕</Text>
                             </TouchableOpacity>
                         </View>
 
-                        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" className="mb-6">
                             <Input label="Mobile Number" placeholder="e.g. 9876543210" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" />
-                            <Input label="Age" placeholder="e.g. 22" value={age} onChangeText={setAge} keyboardType="numeric" />
-                            <Input label="City" placeholder="e.g. Mumbai" value={city} onChangeText={setCity} />
-                            <Input label="State" placeholder="e.g. Maharashtra" value={state} onChangeText={setState} />
-                            <Input label="Pincode" placeholder="e.g. 400001" value={pincode} onChangeText={setPincode} keyboardType="numeric" />
+                            <View className="flex-row gap-4">
+                                <View className="flex-1">
+                                    <Input label="Age" placeholder="22" value={age} onChangeText={setAge} keyboardType="numeric" />
+                                </View>
+                                <View className="flex-1">
+                                    <Input label="Pincode" placeholder="400001" value={pincode} onChangeText={setPincode} keyboardType="numeric" />
+                                </View>
+                            </View>
+                            <View className="flex-row gap-4">
+                                <View className="flex-1">
+                                    <Input label="City" placeholder="Mumbai" value={city} onChangeText={setCity} />
+                                </View>
+                                <View className="flex-1">
+                                    <Input label="State" placeholder="Maharashtra" value={state} onChangeText={setState} />
+                                </View>
+                            </View>
 
-                            <Button
-                                label={isSaving ? 'Saving...' : 'Save Changes'}
+                            <TouchableOpacity
                                 onPress={handleSave}
                                 disabled={isSaving}
-                                className="mt-2 mb-6"
-                            />
+                                className="mt-6 bg-indigo-600 rounded-2xl py-5 shadow-2xl shadow-indigo-200 items-center"
+                            >
+                                <Text className="text-white font-black text-xs uppercase tracking-widest">{isSaving ? 'Saving...' : 'Update Records'}</Text>
+                            </TouchableOpacity>
                         </ScrollView>
                     </View>
                 </View>

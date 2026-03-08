@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, FlatList, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import { Text } from '../../components/Text';
 import { dataService } from '../../api/dataService';
-import { ClipboardList } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ClipboardList, ChevronLeft, Award, Star, Target } from 'lucide-react-native';
 
 export const MyTestsScreen = ({ navigation }: any) => {
     const [attempts, setAttempts] = useState<any[]>([]);
@@ -24,37 +25,48 @@ export const MyTestsScreen = ({ navigation }: any) => {
 
     if (loading) {
         return (
-            <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <ActivityIndicator size="large" color="#2563EB" />
+            <View className="flex-1 items-center justify-center bg-gray-50">
+                <ActivityIndicator size="large" color="#6366F1" />
             </View>
         );
     }
 
     return (
-        <View className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <View className="flex-1 bg-gray-50">
             {/* Header */}
-            <View className="bg-blue-600 pt-14 pb-6 px-4 rounded-b-3xl mb-4">
-                <TouchableOpacity onPress={() => navigation?.goBack()} className="mb-3">
-                    <Text className="text-blue-200 font-bold">← Back</Text>
+            <LinearGradient
+                colors={['#6366F1', '#4F46E5']}
+                className="pt-16 pb-12 px-6 rounded-b-[3rem] shadow-xl"
+            >
+                <TouchableOpacity onPress={() => navigation?.goBack()} className="mb-4 flex-row items-center gap-1">
+                    <ChevronLeft size={20} color="#C7D2FE" />
+                    <Text className="text-indigo-100 font-black text-[10px] uppercase tracking-widest">BACK</Text>
                 </TouchableOpacity>
-                <Text variant="h2" className="text-white font-bold">📋 My Attempted Tests</Text>
-                <Text variant="caption" className="text-blue-200 mt-1">Your quiz history and scores</Text>
-            </View>
+                <View className="flex-row items-center gap-3">
+                    <View className="bg-white/10 p-2 rounded-xl border border-white/20">
+                        <ClipboardList size={22} color="white" />
+                    </View>
+                    <View>
+                        <Text variant="h2" className="text-white font-black text-xl tracking-tight uppercase">Test History</Text>
+                        <Text className="text-indigo-100 text-[9px] font-black tracking-widest uppercase">Performance Archives</Text>
+                    </View>
+                </View>
+            </LinearGradient>
 
             {attempts.length === 0 ? (
-                <View className="flex-1 items-center justify-center px-8">
-                    <View className="w-20 h-20 rounded-full bg-blue-50 items-center justify-center mb-4">
-                        <ClipboardList size={36} color="#93C5FD" />
+                <View className="flex-1 items-center justify-center px-10">
+                    <View className="w-20 h-20 rounded-[2rem] bg-indigo-50 items-center justify-center mb-6">
+                        <Target size={36} color="#818CF8" />
                     </View>
-                    <Text variant="h3" className="font-bold text-gray-700 text-center">No Attempts Yet</Text>
-                    <Text variant="caption" className="text-gray-500 text-center mt-2">
-                        You haven't attempted any quizzes yet. Go take a test!
+                    <Text className="font-black text-gray-800 text-base uppercase tracking-tight text-center">No Attempts Recorded</Text>
+                    <Text className="text-gray-400 text-xs text-center mt-2 leading-relaxed font-semibold">
+                        You haven't challenged yourself yet. Pick a quiz and start learning!
                     </Text>
                     <TouchableOpacity
                         onPress={() => navigation?.navigate('Tests')}
-                        className="mt-6 bg-blue-600 px-6 py-3 rounded-xl"
+                        className="mt-8 bg-indigo-600 px-8 py-4 rounded-2xl shadow-xl shadow-indigo-200"
                     >
-                        <Text className="text-white font-bold">Browse Quizzes</Text>
+                        <Text className="text-white font-black text-xs uppercase tracking-widest">Browse Quizzes</Text>
                     </TouchableOpacity>
                 </View>
             ) : (
@@ -62,38 +74,49 @@ export const MyTestsScreen = ({ navigation }: any) => {
                     data={attempts}
                     keyExtractor={item => item._id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+                    contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, paddingTop: 24 }}
                     renderItem={({ item }) => {
                         const pct = item.totalMarks > 0 ? Math.round((item.score / item.totalMarks) * 100) : 0;
                         const passed = pct >= 60;
                         return (
-                            <View className="bg-white dark:bg-gray-800 p-4 rounded-2xl mb-3 shadow-sm">
-                                <View className="flex-row justify-between items-start mb-3">
+                            <View className="bg-white p-5 rounded-[2rem] mb-4 shadow-xl shadow-black/5 border border-gray-50">
+                                <View className="flex-row justify-between items-start mb-4">
                                     <View className="flex-1">
-                                        <Text variant="body" className="font-bold text-gray-800 dark:text-white">
-                                            {item.test?.title || 'Unknown Test'}
-                                        </Text>
-                                        <Text variant="caption" className="text-gray-500 mt-0.5">
-                                            {new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        <View className="flex-row items-center gap-2 mb-1">
+                                            <Star size={10} color={passed ? '#10B981' : '#94A3B8'} fill={passed ? '#10B981' : 'transparent'} />
+                                            <Text className="font-black text-gray-800 text-xs uppercase tracking-tight" numberOfLines={1}>
+                                                {item.test?.title || item.quiz?.title || 'Unknown Test'}
+                                            </Text>
+                                        </View>
+                                        <Text className="text-gray-300 text-[8px] font-black uppercase tracking-widest mt-0.5">
+                                            Attempted on {new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                         </Text>
                                     </View>
-                                    <View className={`px-3 py-1 rounded-full ${passed ? 'bg-green-100' : 'bg-red-100'}`}>
-                                        <Text className={`text-xs font-bold ${passed ? 'text-green-700' : 'text-red-600'}`}>
-                                            {passed ? 'Passed' : 'Failed'}
+                                    <View className={`px-2.5 py-1 rounded-lg border flex-row items-center gap-1.5 ${passed ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+                                        {passed ? <ShieldCheck size={10} color="#10B981" strokeWidth={3} /> : <View className="w-1.5 h-1.5 rounded-full bg-rose-400" />}
+                                        <Text className={`text-[8px] font-black uppercase tracking-widest ${passed ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                            {passed ? 'PASSED' : 'RETRY'}
                                         </Text>
                                     </View>
                                 </View>
-                                <View className="flex-row items-center gap-3">
-                                    <Text variant="h3" className={`font-black ${passed ? 'text-green-600' : 'text-red-500'}`}>
-                                        {item.score}<Text className="text-gray-400 text-base">/{item.totalMarks || '?'}</Text>
-                                    </Text>
-                                    <View className="flex-1 bg-gray-100 rounded-full h-2">
+
+                                <View className="flex-row items-center gap-4 pt-4 border-t border-gray-50">
+                                    <View className="items-center min-w-[40px]">
+                                        <Text className={`text-xl font-black ${passed ? 'text-emerald-600' : 'text-rose-500'}`}>{item.score}<Text className="text-gray-300 text-[9px]">/{item.totalMarks || '?'}</Text></Text>
+                                        <Text className="text-gray-400 text-[7px] font-black uppercase tracking-[0.2em] mt-0.5">SCORE</Text>
+                                    </View>
+
+                                    <View className="flex-1 bg-gray-50 rounded-full h-2 overflow-hidden shadow-inner">
                                         <View
-                                            className={`h-2 rounded-full ${passed ? 'bg-green-500' : 'bg-red-400'}`}
+                                            className={`h-full rounded-full ${passed ? 'bg-emerald-500' : 'bg-rose-400'}`}
                                             style={{ width: `${pct}%` }}
                                         />
                                     </View>
-                                    <Text className={`text-sm font-bold ${passed ? 'text-green-600' : 'text-red-500'}`}>{pct}%</Text>
+
+                                    <View className="items-end">
+                                        <Text className={`text-sm font-black ${passed ? 'text-emerald-600' : 'text-rose-500'}`}>{pct}%</Text>
+                                        <Text className="text-gray-400 text-[7px] font-black uppercase tracking-[0.2em] mt-0.5">GRADE</Text>
+                                    </View>
                                 </View>
                             </View>
                         );

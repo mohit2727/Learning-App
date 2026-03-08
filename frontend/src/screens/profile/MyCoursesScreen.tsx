@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
+import { View, FlatList, ActivityIndicator, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Text } from '../../components/Text';
 import { dataService } from '../../api/dataService';
-import { BookOpen } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BookOpen, ChevronLeft, Play, ShieldCheck, Sparkles } from 'lucide-react-native';
+
+const { width } = Dimensions.get('window');
 
 export const MyCoursesScreen = ({ navigation }: any) => {
     const [courses, setCourses] = useState<any[]>([]);
@@ -24,37 +27,48 @@ export const MyCoursesScreen = ({ navigation }: any) => {
 
     if (loading) {
         return (
-            <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <ActivityIndicator size="large" color="#2563EB" />
+            <View className="flex-1 items-center justify-center bg-gray-50">
+                <ActivityIndicator size="large" color="#6366F1" />
             </View>
         );
     }
 
     return (
-        <View className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <View className="flex-1 bg-gray-50">
             {/* Header */}
-            <View className="bg-blue-600 pt-14 pb-6 px-4 rounded-b-3xl mb-4">
-                <TouchableOpacity onPress={() => navigation?.goBack()} className="mb-3">
-                    <Text className="text-blue-200 font-bold">← Back</Text>
+            <LinearGradient
+                colors={['#6366F1', '#4F46E5']}
+                className="pt-16 pb-12 px-6 rounded-b-[3rem] shadow-xl"
+            >
+                <TouchableOpacity onPress={() => navigation?.goBack()} className="mb-4 flex-row items-center gap-1">
+                    <ChevronLeft size={20} color="#C7D2FE" />
+                    <Text className="text-indigo-100 font-black text-[10px] uppercase tracking-widest">BACK</Text>
                 </TouchableOpacity>
-                <Text variant="h2" className="text-white font-bold">📚 My Enrolled Courses</Text>
-                <Text variant="caption" className="text-blue-200 mt-1">Courses you have access to</Text>
-            </View>
+                <View className="flex-row items-center gap-3">
+                    <View className="bg-white/10 p-2 rounded-xl border border-white/20">
+                        <BookOpen size={22} color="white" />
+                    </View>
+                    <View>
+                        <Text variant="h2" className="text-white font-black text-xl tracking-tight uppercase">My Learning</Text>
+                        <Text className="text-indigo-100 text-[9px] font-black tracking-widest uppercase">Your Enrolled Playlists</Text>
+                    </View>
+                </View>
+            </LinearGradient>
 
             {courses.length === 0 ? (
-                <View className="flex-1 items-center justify-center px-8">
-                    <View className="w-20 h-20 rounded-full bg-blue-50 items-center justify-center mb-4">
-                        <BookOpen size={36} color="#93C5FD" />
+                <View className="flex-1 items-center justify-center px-10">
+                    <View className="w-20 h-20 rounded-[2rem] bg-indigo-50 items-center justify-center mb-6">
+                        <Sparkles size={36} color="#818CF8" />
                     </View>
-                    <Text variant="h3" className="font-bold text-gray-700 text-center">No Courses Enrolled</Text>
-                    <Text variant="caption" className="text-gray-500 text-center mt-2">
-                        You haven't enrolled in any courses yet. Browse our playlists!
+                    <Text className="font-black text-gray-800 text-base uppercase tracking-tight text-center">Library is Empty</Text>
+                    <Text className="text-gray-400 text-xs text-center mt-2 leading-relaxed font-semibold">
+                        You haven't enrolled in any courses yet. Start your journey today!
                     </Text>
                     <TouchableOpacity
                         onPress={() => navigation?.navigate('Courses')}
-                        className="mt-6 bg-blue-600 px-6 py-3 rounded-xl"
+                        className="mt-8 bg-indigo-600 px-8 py-4 rounded-2xl shadow-xl shadow-indigo-200"
                     >
-                        <Text className="text-white font-bold">Browse Courses</Text>
+                        <Text className="text-white font-black text-xs uppercase tracking-widest">Browse Courses</Text>
                     </TouchableOpacity>
                 </View>
             ) : (
@@ -62,35 +76,42 @@ export const MyCoursesScreen = ({ navigation }: any) => {
                     data={courses}
                     keyExtractor={item => item._id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+                    contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, paddingTop: 24 }}
                     renderItem={({ item }) => (
                         <TouchableOpacity
                             onPress={() => navigation?.navigate('CourseDetail', { courseId: item._id })}
-                            activeOpacity={0.8}
-                            className="bg-white dark:bg-gray-800 rounded-2xl mb-4 shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700"
+                            activeOpacity={0.9}
+                            className="bg-white rounded-[2.5rem] mb-6 shadow-xl shadow-black/5 overflow-hidden border border-gray-50"
                         >
-                            {item.image ? (
-                                <Image source={{ uri: item.image }} style={{ width: '100%', height: 100 }} resizeMode="cover" />
-                            ) : (
-                                <View style={{ height: 100 }} className="bg-blue-600 items-center justify-center">
-                                    <Text style={{ fontSize: 40 }}>📚</Text>
-                                </View>
-                            )}
-                            <View className="p-4 flex-row items-center">
-                                <View className="flex-1">
-                                    <Text variant="h3" className="font-bold text-gray-800 dark:text-white mb-1" numberOfLines={2}>
-                                        {item.title}
-                                    </Text>
-                                    <View className="flex-row items-center gap-2">
-                                        <View className="bg-blue-50 dark:bg-blue-900/40 px-2 py-1 rounded self-start">
-                                            <Text className="text-blue-600 font-semibold text-xs">{item.lessons?.length || 0} Videos</Text>
+                            <View className="h-32 relative">
+                                {item.image ? (
+                                    <Image source={{ uri: item.image }} className="w-full h-full" resizeMode="cover" />
+                                ) : (
+                                    <LinearGradient colors={['#6366F1', '#4F46E5']} className="w-full h-full items-center justify-center">
+                                        <BookOpen size={40} color="white" opacity={0.2} />
+                                    </LinearGradient>
+                                )}
+                                <View className="absolute inset-0 bg-black/30 px-5 pt-4">
+                                    <View className="flex-row justify-between items-start">
+                                        <View className="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20 flex-row items-center gap-1.5">
+                                            <Play size={10} color="white" fill="white" />
+                                            <Text className="text-white text-[9px] font-black uppercase tracking-widest">{item.lessons?.length || 0} VIDEOS</Text>
                                         </View>
-                                        <View className="bg-green-50 px-2 py-1 rounded self-start">
-                                            <Text className="text-green-600 font-semibold text-xs">Enrolled</Text>
+                                        <View className="bg-emerald-500 p-1.5 rounded-full shadow-lg shadow-emerald-500/30">
+                                            <ShieldCheck size={12} color="white" strokeWidth={3} />
                                         </View>
                                     </View>
                                 </View>
-                                <Text style={{ fontSize: 24 }} className="text-gray-400 pl-2">›</Text>
+                            </View>
+
+                            <View className="p-6 flex-row items-center justify-between">
+                                <View className="flex-1">
+                                    <Text className="font-black text-gray-800 text-sm uppercase tracking-tight mb-1" numberOfLines={1}>{item.title}</Text>
+                                    <Text className="text-gray-400 text-[10px] font-black uppercase tracking-[0.1em] italic">Full Access Unlocked</Text>
+                                </View>
+                                <View className="w-10 h-10 rounded-2xl bg-gray-50 items-center justify-center">
+                                    <Text className="text-gray-300 font-black text-2xl">›</Text>
+                                </View>
                             </View>
                         </TouchableOpacity>
                     )}

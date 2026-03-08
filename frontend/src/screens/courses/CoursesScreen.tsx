@@ -1,30 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
 import { Text } from '../../components/Text';
 import { dataService } from '../../api/dataService';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Play, Video, ChevronRight, BookOpen, Star, ShieldCheck } from 'lucide-react-native';
+
+const { width } = Dimensions.get('window');
 
 const CourseCard = ({ course, onPress }: any) => (
     <TouchableOpacity
         onPress={onPress}
-        className="bg-white dark:bg-gray-800 rounded-2xl mb-4 overflow-hidden shadow-sm"
-        activeOpacity={0.85}
+        className="bg-white rounded-[2.5rem] mb-6 overflow-hidden shadow-xl shadow-black/5 border border-gray-50"
+        activeOpacity={0.9}
     >
-        <View style={{ backgroundColor: '#2563EB', height: 100 }} className="items-end p-2">
-            <View className="bg-white/20 rounded-full px-3 py-1">
-                <Text className="text-white text-xs font-bold">Playlist</Text>
+        <LinearGradient
+            colors={['#6366F1', '#4F46E5']}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            className="h-32 flex-row items-end p-5"
+        >
+            <View className="absolute top-4 left-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 flex-row items-center gap-1.5">
+                <Play size={10} color="white" fill="white" />
+                <Text className="text-white text-[9px] font-black uppercase tracking-widest">{course.lessons?.length || 0} VIDEOS</Text>
             </View>
-        </View>
-        <View className="p-4">
-            <Text variant="body" className="font-bold text-gray-800 dark:text-white mb-1">{course.title}</Text>
-            <View className="flex-row items-center mb-2 mt-1">
-                <Text variant="caption" className="text-gray-500">📹 {course.lessons?.length || 0} videos</Text>
+            <View className="bg-emerald-500 p-1.5 rounded-full absolute top-4 right-4 shadow-lg shadow-emerald-500/30">
+                <ShieldCheck size={12} color="white" strokeWidth={3} />
             </View>
-            <View className="flex-row items-center justify-between">
+        </LinearGradient>
+
+        <View className="p-6">
+            <Text className="text-gray-800 font-black text-base uppercase tracking-tight mb-1" numberOfLines={1}>{course.title}</Text>
+            <Text className="text-gray-400 text-[10px] font-black uppercase tracking-[0.1em] mb-4 italic">Exclusive Learning Path</Text>
+
+            <View className="flex-row items-center justify-between mt-2 pt-4 border-t border-gray-50">
                 <View className="flex-row items-center gap-2">
-                    <Text className="text-blue-600 font-bold text-lg">{course.price ? `₹${course.price}` : 'Free'}</Text>
+                    <Text className="text-indigo-600 font-black text-xl tracking-tighter">{course.price ? `₹${course.price}` : 'FREE'}</Text>
+                    {course.price > 0 && <Text className="text-gray-300 text-[10px] font-bold line-through">₹{Math.round(course.price * 1.5)}</Text>}
                 </View>
-                <View className="bg-blue-600 rounded-xl px-4 py-1.5">
-                    <Text className="text-white font-semibold text-sm">Watch</Text>
+                <View className="bg-indigo-600 rounded-2xl px-6 py-2.5 shadow-lg shadow-indigo-200">
+                    <Text className="text-white font-black text-[10px] uppercase tracking-widest">Enroll Now</Text>
                 </View>
             </View>
         </View>
@@ -33,7 +46,6 @@ const CourseCard = ({ course, onPress }: any) => (
 
 import { useAuth } from '@clerk/clerk-expo';
 import { ComingSoon } from '../../components/ComingSoon';
-import { Video } from 'lucide-react-native';
 
 export const CoursesScreen = ({ navigation }: any) => {
     const { isLoaded, isSignedIn } = useAuth();
@@ -58,20 +70,25 @@ export const CoursesScreen = ({ navigation }: any) => {
 
     if (isLoading) {
         return (
-            <View className="flex-1 items-center justify-center bg-white dark:bg-gray-900">
-                <ActivityIndicator size="large" color="#2563EB" />
+            <View className="flex-1 items-center justify-center bg-gray-50">
+                <ActivityIndicator size="large" color="#6366F1" />
+                <Text className="text-gray-400 text-[10px] font-black mt-4 tracking-[0.2em]">FETCHING COURSES...</Text>
             </View>
         );
     }
 
     return (
-        <ScrollView className="flex-1 bg-gray-50 dark:bg-gray-900" showsVerticalScrollIndicator={false}>
-            <View className="bg-blue-600 pt-14 pb-8 px-4 rounded-b-3xl mb-6">
-                <Text variant="h2" className="text-white font-bold">▶️ Video Playlists</Text>
-                <Text variant="caption" className="text-blue-200 mt-1">Watch and learn from expert curated playlists</Text>
-            </View>
+        <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
+            <LinearGradient
+                colors={['#6366F1', '#4F46E5']}
+                className="pt-16 pb-12 px-6 rounded-b-[3rem] shadow-2xl shadow-indigo-100 mb-8"
+            >
+                <Text className="text-indigo-100 text-[10px] font-black uppercase tracking-[0.3em] mb-1">Knowledge Library</Text>
+                <Text variant="h2" className="text-white font-black text-2xl tracking-tighter">Premium Playlists</Text>
+                <Text variant="caption" className="text-indigo-200 mt-0.5">Learn from the best educators</Text>
+            </LinearGradient>
 
-            <View className="px-4">
+            <View className="px-6 pb-20">
                 {courses.length > 0 ? (
                     courses.map(course => (
                         <CourseCard
@@ -81,11 +98,11 @@ export const CoursesScreen = ({ navigation }: any) => {
                         />
                     ))
                 ) : (
-                    <ComingSoon
-                        title="No Playlists Yet"
-                        message="We are currently crafting new video playlists for you. Check back soon!"
-                        icon={<Video size={48} color="#2563EB" />}
-                    />
+                    <View className="bg-white rounded-[2.5rem] p-10 items-center border border-gray-50 shadow-sm mt-4">
+                        <Video size={56} color="#E5E7EB" strokeWidth={1} />
+                        <Text className="text-gray-400 font-black text-sm uppercase tracking-widest mt-6">Courses Coming Soon</Text>
+                        <Text className="text-gray-300 text-xs text-center font-medium mt-2 px-6">We're curating advanced learning material for your preparation.</Text>
+                    </View>
                 )}
             </View>
         </ScrollView>
