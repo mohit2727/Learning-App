@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { dataService, setAuthToken } from '@/lib/api';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Trophy, Medal, Award, Crown } from 'lucide-react';
 
 export default function LeaderboardPage() {
     const { isLoaded, isSignedIn, getToken } = useAuth();
@@ -23,44 +23,139 @@ export default function LeaderboardPage() {
 
     useEffect(() => { load(); }, [isLoaded, isSignedIn]);
 
-    const rankEl = (i: number) => {
-        if (i === 0) return <Trophy className="text-yellow-500" size={22} />;
-        if (i === 1) return <Medal className="text-gray-400" size={22} />;
-        if (i === 2) return <Award className="text-amber-600" size={22} />;
-        return <span className="font-bold text-gray-400 text-base w-6 text-center">{i + 1}</span>;
-    };
+    const top3 = board.slice(0, 3);
+    const others = board.slice(3);
 
-    const borderClass = (i: number) => i === 0 ? 'border-yellow-400 bg-yellow-50' : i === 1 ? 'border-gray-300' : i === 2 ? 'border-amber-400' : 'border-transparent';
-    const scoreClass = (i: number) => i === 0 ? 'text-yellow-600' : i === 1 ? 'text-gray-600' : i === 2 ? 'text-amber-600' : 'text-blue-600';
-    const avatarBg = (i: number) => i === 0 ? 'bg-yellow-100' : i === 1 ? 'bg-gray-100' : i === 2 ? 'bg-amber-100' : 'bg-blue-50';
+    if (loading) return (
+        <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">
+            <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-gray-400 text-sm font-medium italic">Ranking students...</p>
+            </div>
+        </div>
+    );
 
     return (
         <div className="flex flex-col min-h-full bg-gray-50">
-            <div className="bg-white px-5 pt-12 pb-5 shadow-sm">
-                <h1 className="text-2xl font-bold text-gray-800">🏆 Leaderboard</h1>
-                <p className="text-gray-500 text-sm mt-1">Top 10 Students by Score</p>
+            {/* Gradient Header with Podium */}
+            <div className="grad-header pb-12 pt-16">
+                <div className="text-center mb-8 relative z-10">
+                    <h1 className="text-white text-2xl font-black tracking-tight flex items-center justify-center gap-2">
+                        <Trophy size={24} className="text-yellow-400" /> Leaderboard
+                    </h1>
+                    <p className="text-violet-200 text-xs font-semibold mt-1">THE ELITE TOP 10 RANKINGS</p>
+                </div>
+
+                {/* Podium */}
+                {top3.length > 0 && (
+                    <div className="flex items-end justify-center px-4 relative z-10">
+                        {/* 2nd Place */}
+                        {top3[1] && (
+                            <div className="flex flex-col items-center w-[30%] -mr-1">
+                                <div className="relative mb-2">
+                                    <div className="w-14 h-14 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center shadow-lg">
+                                        <span className="text-white font-bold text-lg">{top3[1].name.charAt(0)}</span>
+                                    </div>
+                                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-slate-300 rounded-full border-2 border-white flex items-center justify-center">
+                                        <span className="text-gray-700 text-[10px] font-black">2</span>
+                                    </div>
+                                </div>
+                                <p className="text-white text-[10px] font-black truncate w-full text-center mb-1">{top3[1].name.split(' ')[0]}</p>
+                                <div className="h-14 w-full bg-white/10 backdrop-blur-md rounded-t-xl border-x border-t border-white/20 flex flex-col items-center justify-center">
+                                    <span className="text-white font-black text-xs">{top3[1].totalScore}</span>
+                                    <span className="text-violet-200 text-[7px] font-bold uppercase tracking-wider">PTS</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 1st Place */}
+                        <div className="flex flex-col items-center w-[35%] relative z-20">
+                            <div className="relative mb-3 scale-110">
+                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 animate-bounce">
+                                    <Crown className="text-yellow-400 fill-yellow-400" size={24} />
+                                </div>
+                                <div className="w-16 h-16 rounded-3xl bg-white border-2 border-yellow-400 flex items-center justify-center shadow-2xl shadow-yellow-500/40">
+                                    <span className="text-violet-600 font-black text-xl">{top3[0].name.charAt(0)}</span>
+                                </div>
+                                <div className="absolute -top-1 -right-1 w-7 h-7 bg-yellow-400 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
+                                    <span className="text-white text-xs font-black">1</span>
+                                </div>
+                            </div>
+                            <p className="text-white text-xs font-black truncate w-full text-center mb-1">{top3[0].name.split(' ')[0]}</p>
+                            <div className="h-24 w-full bg-white/20 backdrop-blur-md rounded-t-2xl border-x border-t border-white/30 flex flex-col items-center justify-center shadow-2xl">
+                                <span className="text-white font-black text-sm">{top3[0].totalScore}</span>
+                                <span className="text-violet-200 text-[8px] font-bold uppercase tracking-widest">POINTS</span>
+                            </div>
+                        </div>
+
+                        {/* 3rd Place */}
+                        {top3[2] && (
+                            <div className="flex flex-col items-center w-[30%] -ml-1">
+                                <div className="relative mb-2">
+                                    <div className="w-14 h-14 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center shadow-lg">
+                                        <span className="text-white font-bold text-lg">{top3[2].name.charAt(0)}</span>
+                                    </div>
+                                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-amber-600 rounded-full border-2 border-white flex items-center justify-center">
+                                        <span className="text-white text-[10px] font-black">3</span>
+                                    </div>
+                                </div>
+                                <p className="text-white text-[10px] font-black truncate w-full text-center mb-1">{top3[2].name.split(' ')[0]}</p>
+                                <div className="h-10 w-full bg-white/5 backdrop-blur-sm rounded-t-xl border-x border-t border-white/10 flex flex-col items-center justify-center">
+                                    <span className="text-white font-black text-[10px]">{top3[2].totalScore}</span>
+                                    <span className="text-violet-300 text-[6px] font-bold uppercase tracking-wider">PTS</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
-            <div className="px-4 py-4 space-y-3">
-                {loading ? (
-                    <div className="flex justify-center pt-20"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>
-                ) : board.length === 0 ? (
-                    <p className="text-center text-gray-500 pt-20 italic">No scores recorded yet.</p>
-                ) : board.map((student, i) => (
-                    <div key={student._id || i} className={`flex items-center bg-white p-4 rounded-2xl shadow-sm border ${borderClass(i)}`}>
-                        <div className="w-10 flex items-center justify-center">{rankEl(i)}</div>
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center mx-3 ${avatarBg(i)}`}>
-                            <span className={`font-bold text-lg ${scoreClass(i)}`}>{student.name.charAt(0).toUpperCase()}</span>
+            {/* Others List */}
+            <div className="mx-4 -mt-5 bg-white rounded-t-[2rem] rounded-b-2xl p-5 shadow-2xl relative z-30 space-y-3 pb-8">
+                {others.length === 0 && top3.length > 0 && (
+                    <p className="text-center text-gray-400 text-[10px] font-bold py-4 italic">STAY TUNED FOR DAILY UPDATES</p>
+                )}
+
+                {others.length > 0 ? others.map((student, i) => {
+                    const rank = i + 4;
+                    return (
+                        <div key={student._id || i}
+                            className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100 card-hover">
+
+                            <div className="w-6 text-center">
+                                <span className="text-sm font-black text-gray-400">#{rank}</span>
+                            </div>
+
+                            <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                <span className="text-violet-600 font-bold text-sm tracking-tight">{student.name.charAt(0).toUpperCase()}</span>
+                            </div>
+
+                            <div className="flex-1">
+                                <p className="font-extrabold text-gray-800 text-xs tracking-tight">{student.name}</p>
+                                <div className="mt-0.5 w-full bg-gray-200 rounded-full h-1">
+                                    <div className="bg-violet-300 h-1 rounded-full" style={{ width: `${Math.min(100, (student.totalScore / (top3[0]?.totalScore || 1) * 100))}%` }} />
+                                </div>
+                            </div>
+
+                            <div className="text-right">
+                                <p className="font-black text-xs text-violet-700">{student.totalScore}</p>
+                                <p className="text-[7px] text-gray-400 font-black uppercase tracking-widest">PTS</p>
+                            </div>
                         </div>
-                        <div className="flex-1">
-                            <p className={`font-bold text-base ${i < 3 ? 'text-gray-900' : 'text-gray-700'}`}>{student.name}</p>
+                    )
+                }) : top3.length === 0 && (
+                    <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <Award size={32} className="text-gray-200" />
                         </div>
-                        <div className="text-right">
-                            <p className={`font-black text-xl ${scoreClass(i)}`}>{student.totalScore}</p>
-                            <p className="text-xs text-gray-500 font-semibold tracking-wider">PTS</p>
-                        </div>
+                        <p className="font-black text-gray-400 text-sm uppercase">Competition starting soon!</p>
                     </div>
-                ))}
+                )}
+            </div>
+
+            {/* Footer note */}
+            <div className="p-8 text-center">
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">Rankings updated in real-time</p>
             </div>
         </div>
     );

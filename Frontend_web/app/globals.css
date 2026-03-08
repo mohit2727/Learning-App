@@ -10,7 +10,8 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #f3f4f6;
+  background: #f0f2f5;
+  -webkit-font-smoothing: antialiased;
 }
 
 .app-shell {
@@ -18,22 +19,110 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: #f3f4f6;
+  background: linear-gradient(135deg, #667eea15, #764ba215, #f0f2f5 40%);
 }
 
 .app-container {
   width: 100%;
   max-width: 480px;
   min-height: 100vh;
-  background-color: #ffffff;
+  background: #f8f9fb;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 0 60px rgba(102, 126, 234, 0.12);
   position: relative;
+  overflow: hidden;
 }
 
-@media (min-width: 768px) {
-  .app-container {
-    min-height: 100vh;
-  }
+/* ─── Gradient Headers ────────────────────────────────────── */
+.grad-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 3rem 1.25rem 2rem;
+  border-radius: 0 0 2rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.grad-header::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 160px;
+  height: 160px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.grad-header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: -20px;
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 50%;
+}
+
+/* ─── Cards ──────────────────────────────────────────────── */
+.card {
+  background: white;
+  border-radius: 1.25rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.card-hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* ─── Stat tiles ─────────────────────────────────────────── */
+.stat-card {
+  background: white;
+  border-radius: 1.25rem;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* ─── Badge ─────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Bottom Nav ─────────────────────────────────────────── */
+.bottom-nav {
+  position: sticky;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  z-index: 50;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 9999px;
 }

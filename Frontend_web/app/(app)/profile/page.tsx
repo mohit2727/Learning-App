@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { UserCircle } from 'lucide-react';
+import { UserCircle, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap } from 'lucide-react';
 
 export default function ProfilePage() {
     const { signOut, getToken } = useAuth();
@@ -44,84 +44,165 @@ export default function ProfilePage() {
 
     const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : profile?.name || 'Student';
     const email = user?.primaryEmailAddress?.emailAddress || profile?.email || '';
+    const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
 
-    const infoRows = [
-        { label: 'Full Name', value: displayName },
-        { label: 'Email', value: email },
-        { label: 'Mobile', value: profile?.mobile || 'Not provided' },
-        { label: 'Age', value: profile?.age || 'Not provided' },
-        { label: 'City', value: profile?.city || 'Not provided' },
-        { label: 'State', value: profile?.state || 'Not provided' },
-        { label: 'Pincode', value: profile?.pincode || 'Not provided' },
-    ];
-
-    if (loading) return <div className="flex-1 flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
+    if (loading) return (
+        <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">
+            <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
 
     return (
         <div className="flex flex-col min-h-full bg-gray-50">
-            {/* Header */}
-            <div className="bg-blue-600 pt-12 pb-10 px-5 rounded-b-3xl flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-3 border-2 border-white/40">
-                    <UserCircle size={48} className="text-white" />
+
+            {/* Header Profile Section */}
+            <div className="grad-header pb-12">
+                <div className="flex flex-col items-center relative z-10">
+                    <div className="relative mb-4">
+                        <div className="w-24 h-24 rounded-[30%] bg-white p-1.5 shadow-2xl shadow-black/20 rotate-3">
+                            {user?.imageUrl ? (
+                                <div className="w-full h-full rounded-[25%] overflow-hidden -rotate-3">
+                                    <img src={user.imageUrl} alt="Profile" className="w-full h-full object-cover" />
+                                </div>
+                            ) : (
+                                <div className="w-full h-full rounded-[25%] bg-violet-100 flex items-center justify-center -rotate-3">
+                                    <span className="text-violet-600 font-black text-2xl">{initials}</span>
+                                </div>
+                            )}
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-7 h-7 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                            <ShieldCheck size={14} className="text-white" strokeWidth={3} />
+                        </div>
+                    </div>
+
+                    <h1 className="text-white text-xl font-black tracking-tight">{displayName}</h1>
+                    <div className="flex items-center gap-1.5 bg-white/15 px-3 py-1 rounded-full border border-white/20 mt-1">
+                        <Mail size={12} className="text-violet-200" />
+                        <span className="text-violet-100 text-[10px] font-bold tracking-wide">{email}</span>
+                    </div>
                 </div>
-                <p className="text-white font-bold text-lg">{displayName}</p>
-                <p className="text-blue-200 text-sm">{email}</p>
             </div>
 
-            <div className="px-4 pt-5 pb-8 space-y-4">
-                {/* Info Card */}
-                <div className="bg-white rounded-2xl p-4 shadow-sm">
-                    <p className="font-bold text-gray-800 mb-3">Personal Info</p>
-                    {infoRows.map((row, i) => (
-                        <div key={row.label} className={`flex justify-between py-3 ${i < infoRows.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                            <span className="text-gray-500 text-sm font-medium">{row.label}</span>
-                            <span className="text-gray-800 text-sm font-medium text-right ml-4 max-w-[60%] truncate">{row.value}</span>
-                        </div>
-                    ))}
-                </div>
+            <div className="px-5 -mt-6 pb-8 space-y-6 relative z-20">
 
-                {/* Quick actions */}
-                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                    {[
-                        { icon: '✏️', label: 'Edit Profile', action: () => setShowEdit(true) },
-                        { icon: '📋', label: 'My Test Attempts', action: () => router.push('/profile/my-tests') },
-                        { icon: '📚', label: 'My Enrolled Courses', action: () => router.push('/profile/my-courses') },
-                    ].map((opt, i, arr) => (
-                        <button key={opt.label} onClick={opt.action} className={`w-full flex items-center gap-3 px-4 py-4 hover:bg-gray-50 transition-colors ${i < arr.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                            <span className="text-xl">{opt.icon}</span>
-                            <span className="flex-1 text-left text-gray-800 font-medium">{opt.label}</span>
-                            <span className="text-gray-400">›</span>
+                {/* Personal Details Card */}
+                <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-white">
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className="font-black text-gray-800 text-sm tracking-tight flex items-center gap-2">
+                            <UserCircle size={18} className="text-violet-600" /> PERSONAL INFO
+                        </h3>
+                        <button
+                            onClick={() => setShowEdit(true)}
+                            className="text-violet-600 bg-violet-50 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider card-hover"
+                        >
+                            Edit Details
                         </button>
-                    ))}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Mobile</span>
+                            <div className="flex items-center gap-2">
+                                <Phone size={12} className="text-violet-400" />
+                                <span className="text-xs font-black text-gray-800">{profile?.mobile || 'No Data'}</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Age</span>
+                            <div className="flex items-center gap-2">
+                                <Zap size={12} className="text-violet-400" />
+                                <span className="text-xs font-black text-gray-800">{profile?.age || '--'}</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-1 col-span-2">
+                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Location</span>
+                            <div className="flex items-center gap-2">
+                                <MapPin size={12} className="text-violet-400" />
+                                <span className="text-xs font-black text-gray-800 line-clamp-1">
+                                    {profile?.city ? `${profile.city}, ${profile.state}` : 'Not provided'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <button onClick={() => { if (confirm('Are you sure you want to logout?')) signOut(); }} className="w-full border-2 border-gray-300 text-gray-700 rounded-xl py-3 font-semibold hover:bg-gray-50 transition-colors">
-                    Log Out
-                </button>
+                {/* Action List Section */}
+                <div className="space-y-3">
+                    <h4 className="font-black text-gray-400 text-[10px] uppercase tracking-[0.2em] ml-2">Learning Progress</h4>
+                    <div className="bg-white rounded-[2rem] shadow-lg border border-gray-50 overflow-hidden p-2">
+                        <button onClick={() => router.push('/profile/my-tests')}
+                            className="w-full h-14 bg-white hover:bg-violet-50/50 rounded-2xl flex items-center px-4 gap-4 transition-all group">
+                            <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
+                                <Star size={18} />
+                            </div>
+                            <div className="flex-1 text-left">
+                                <p className="font-extrabold text-gray-800 text-xs tracking-tight">Test Attempts</p>
+                                <p className="text-[9px] text-gray-400 font-bold">Review your past performance</p>
+                            </div>
+                            <ChevronRight size={16} className="text-gray-300 group-hover:text-violet-600 transition-colors" />
+                        </button>
+
+                        <div className="h-px bg-gray-50 mx-4" />
+
+                        <button onClick={() => router.push('/profile/my-courses')}
+                            className="w-full h-14 bg-white hover:bg-violet-50/50 rounded-2xl flex items-center px-4 gap-4 transition-all group">
+                            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
+                                <BookOpen size={18} />
+                            </div>
+                            <div className="flex-1 text-left">
+                                <p className="font-extrabold text-gray-800 text-xs tracking-tight">Enrolled Courses</p>
+                                <p className="text-[9px] text-gray-400 font-bold">Continue your learning journey</p>
+                            </div>
+                            <ChevronRight size={16} className="text-gray-300 group-hover:text-violet-600 transition-colors" />
+                        </button>
+                    </div>
+
+                    <button onClick={() => { if (confirm('Are you sure you want to logout?')) signOut(); }}
+                        className="w-full h-14 bg-rose-50 rounded-2xl flex items-center px-4 border border-rose-100 mt-6 group card-hover">
+                        <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600">
+                            <LogOut size={18} />
+                        </div>
+                        <p className="flex-1 text-left font-black text-rose-600 text-xs tracking-wider uppercase ml-4">Logout Session</p>
+                    </button>
+                </div>
             </div>
 
-            {/* Edit Modal */}
+            {/* Modern Edit Modal */}
             {showEdit && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-                    <div className="bg-white w-full rounded-t-3xl p-6 max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-5">
-                            <p className="text-xl font-bold text-gray-800">Edit Profile</p>
-                            <button onClick={() => setShowEdit(false)} className="text-gray-500 font-bold text-lg">✕</button>
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-end backdrop-blur-sm">
+                    <div className="bg-white w-full rounded-t-[2.5rem] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
+                        <div className="w-12 h-1.5 bg-gray-100 rounded-full mx-auto mb-8" />
+                        <div className="flex justify-between items-center mb-8">
+                            <h2 className="text-2xl font-black text-gray-800 tracking-tight">Update Profile</h2>
+                            <button onClick={() => setShowEdit(false)} className="text-gray-400 hover:bg-gray-100 p-2 rounded-full transition-colors">✕</button>
                         </div>
-                        {[
-                            { label: 'Mobile Number', key: 'mobile', type: 'tel' },
-                            { label: 'Age', key: 'age', type: 'number' },
-                            { label: 'City', key: 'city', type: 'text' },
-                            { label: 'State', key: 'state', type: 'text' },
-                            { label: 'Pincode', key: 'pincode', type: 'text' },
-                        ].map(({ label, key, type }) => (
-                            <div key={key} className="mb-4">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
-                                <input type={type} value={(form as any)[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-blue-500" />
-                            </div>
-                        ))}
-                        <button onClick={handleSave} disabled={saving} className="w-full bg-blue-600 text-white rounded-xl py-3 font-bold mt-2 mb-4 disabled:opacity-60">
-                            {saving ? 'Saving...' : 'Save Changes'}
+
+                        <div className="grid grid-cols-2 gap-4">
+                            {[
+                                { label: 'Mobile Number', key: 'mobile', type: 'tel', full: true },
+                                { label: 'Age', key: 'age', type: 'number' },
+                                { label: 'Pincode', key: 'pincode', type: 'text' },
+                                { label: 'City', key: 'city', type: 'text' },
+                                { label: 'State', key: 'state', type: 'text' },
+                            ].map(({ label, key, type, full }) => (
+                                <div key={key} className={`${full ? 'col-span-2' : 'col-span-1'}`}>
+                                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">{label}</label>
+                                    <input
+                                        type={type}
+                                        value={(form as any)[key]}
+                                        onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                                        className="w-full bg-gray-50 border-2 border-transparent rounded-2xl px-4 py-4 text-xs font-bold text-gray-800 focus:outline-none focus:border-violet-300 focus:bg-white transition-all shadow-inner"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl py-4 font-black transition-all mt-8 mb-4 shadow-xl shadow-violet-200 disabled:opacity-50"
+                        >
+                            {saving ? 'UPDATING...' : 'SAVE CHANGES'}
                         </button>
                     </div>
                 </div>

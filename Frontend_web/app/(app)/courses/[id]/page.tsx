@@ -1,55 +1,114 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { dataService } from '@/lib/api';
-import { ChevronLeft, Play } from 'lucide-react';
+import { useState, useEffect, use } from 'react';
+import { useAuth, useUser } from '@clerk/nextjs';
+import { dataService, setAuthToken } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { Play, ChevronLeft, Clock, BookOpen, Info, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 
-export default function CourseDetailPage() {
-    const { id } = useParams<{ id: string }>();
-    const router = useRouter();
+export default function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
+    const { isLoaded, isSignedIn, getToken } = useAuth();
     const [course, setCourse] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
-        dataService.getCourseDetail(id).then(setCourse).catch(console.error).finally(() => setLoading(false));
-    }, [id]);
+        if (!isLoaded || !isSignedIn) return;
+        const load = async () => {
+            try {
+                const token = await getToken();
+                setAuthToken(token);
+                const data = await dataService.getCourseDetail(id);
+                setCourse(data);
+            } catch (e) { console.error(e); }
+            finally { setLoading(false); }
+        };
+        load();
+    }, [id, isLoaded, isSignedIn]);
 
-    if (loading) return <div className="flex-1 flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
-    if (!course) return <div className="flex-1 flex items-center justify-center h-screen text-gray-500">Course not found.</div>;
+    if (loading) return (
+        <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">
+            <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
 
     return (
         <div className="flex flex-col min-h-full bg-gray-50">
-            {/* Header */}
-            <div className="bg-blue-600 pt-12 pb-6 px-5 rounded-b-3xl">
-                <button onClick={() => router.back()} className="flex items-center gap-1 text-blue-200 mb-3"><ChevronLeft size={18} /> Back</button>
-                <h1 className="text-white text-xl font-bold">{course.title}</h1>
-                <p className="text-blue-200 text-sm mt-1">{course.lessons?.length || 0} lessons</p>
-            </div>
-
-            <div className="px-4 py-5 space-y-3">
-                {course.description && (
-                    <div className="bg-white rounded-2xl p-4 shadow-sm">
-                        <p className="font-bold text-gray-800 mb-2">About this Course</p>
-                        <p className="text-gray-600 text-sm leading-relaxed">{course.description}</p>
+            {/* Gradient Header */}
+            <div className="grad-header pb-12">
+                <button onClick={() => router.back()} className="flex items-center gap-1 text-violet-200 mb-6 hover:text-white transition-all relative z-10">
+                    <ChevronLeft size={20} /> <span className="text-sm font-bold">BACK</span>
+                </button>
+                <div className="flex flex-col items-center relative z-10 text-center px-4">
+                    {course?.image ? (
+                        <div className="w-24 h-24 rounded-3xl overflow-hidden mb-4 border-2 border-white/30 shadow-2xl">
+                            <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+                        </div>
+                    ) : (
+                        <div className="w-20 h-20 rounded-3xl bg-white/20 flex items-center justify-center mb-4 border border-white/20">
+                            <BookOpen size={40} className="text-white/40" />
+                        </div>
+                    )}
+                    <h1 className="text-white text-xl font-black tracking-tight leading-tight uppercase">{course?.title}</h1>
+                    <div className="flex items-center gap-3 mt-3">
+                        <div className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 flex items-center gap-1.5">
+                            <Play size={10} className="text-violet-200" fill="currentColor" />
+                            <span className="text-white text-[10px] font-black uppercase tracking-widest">{course?.lessons?.length || 0} Lessons</span>
+                        </div>
+                        <div className="bg-emerald-500/20 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
+                            <ShieldCheck size={10} className="text-emerald-400" />
+                            <span className="text-white text-[10px] font-black uppercase tracking-widest">ENROLLED</span>
+                        </div>
                     </div>
-                )}
-
-                <p className="font-bold text-gray-800">📹 Lessons</p>
-                {course.lessons?.length > 0 ? course.lessons.map((lesson: any, i: number) => (
-                    <button key={lesson._id || i} onClick={() => router.push(`/courses/${id}/video?lessonIndex=${i}&courseTitle=${encodeURIComponent(course.title)}&videoId=${lesson.videoId}`)} className="w-full text-left bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                            <Play size={16} className="text-blue-600" fill="#2563EB" />
-                        </div>
-                        <div className="flex-1">
-                            <p className="font-semibold text-gray-800 text-sm">{lesson.title}</p>
-                            {lesson.duration && <p className="text-gray-400 text-xs mt-0.5">⏱️ {lesson.duration}</p>}
-                        </div>
-                        <span className="text-gray-400">›</span>
-                    </button>
-                )) : (
-                    <p className="text-gray-500 text-center py-8">No lessons in this course yet.</p>
-                )}
+                </div>
             </div>
+
+            <div className="px-5 -mt-6 pb-20 relative z-20 space-y-6">
+                {/* Course Info Card */}
+                <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-white">
+                    <h3 className="font-extrabold text-gray-800 text-sm tracking-tight mb-3 flex items-center gap-2">
+                        <Info size={16} className="text-violet-600" /> ABOUT THIS COURSE
+                    </h3>
+                    <p className="text-gray-500 text-xs leading-relaxed font-medium">
+                        {course?.description || 'Deep dive into specialized topics with professional guidance. This course covers everything from basics to advanced concepts.'}
+                    </p>
+                </div>
+
+                {/* Lesson List */}
+                <div className="space-y-3">
+                    <h4 className="font-black text-gray-400 text-[10px] uppercase tracking-[0.2em] ml-2">Course syllabus</h4>
+                    {course?.lessons?.map((lesson: any, i: number) => (
+                        <Link key={lesson._id || i} href={`/courses/${id}/video?v=${lesson.videoUrl}`}
+                            className="card p-3 flex items-center gap-4 card-hover border border-gray-50">
+                            <div className="w-10 h-10 rounded-xl bg-violet-50 flex flex-col items-center justify-center shrink-0">
+                                <span className="text-violet-600 font-black text-sm">{i + 1}</span>
+                            </div>
+
+                            <div className="flex-1">
+                                <p className="font-extrabold text-gray-800 text-xs tracking-tight line-clamp-1 truncate uppercase">{lesson.title}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <Clock size={10} className="text-gray-300" />
+                                    <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Video Lesson</span>
+                                </div>
+                            </div>
+
+                            <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200 shrink-0">
+                                <Play size={12} fill="white" className="text-white" />
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+
+            {/* Play All Button (Sticky) */}
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-[440px] px-8">
+                <button onClick={() => { if (course?.lessons?.[0]) router.push(`/courses/${id}/video?v=${course.lessons[0].videoUrl}`) }}
+                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl py-4 font-black shadow-2xl flex items-center justify-center gap-3 card-hover tracking-[0.1em]">
+                    <Play size={18} fill="white" /> START WATCHING NOW
+                </button>
+            </div>
+
         </div>
     );
 }

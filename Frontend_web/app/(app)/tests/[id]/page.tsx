@@ -1,106 +1,157 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { dataService } from '@/lib/api';
-import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { useState, useEffect, use } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import { dataService, setAuthToken } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { Clock, ChevronLeft, ChevronRight, Send, HelpCircle, Target } from 'lucide-react';
 
-export default function ActiveTestPage() {
-    const { id } = useParams<{ id: string }>();
-    const router = useRouter();
+export default function ActiveTestPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
+    const { isLoaded, isSignedIn, getToken } = useAuth();
     const [test, setTest] = useState<any>(null);
-    const [answers, setAnswers] = useState<(number | null)[]>([]);
-    const [current, setCurrent] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const [answers, setAnswers] = useState<(number | null)[]>([]);
     const [timeLeft, setTimeLeft] = useState(0);
-    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
-        dataService.getTestById(id).then(t => {
-            setTest(t);
-            setAnswers(new Array(t.questions.length).fill(null));
-            setTimeLeft((t.duration || 20) * 60);
-            setLoading(false);
-        }).catch(console.error);
-    }, [id]);
+        if (!isLoaded || !isSignedIn) return;
+        const load = async () => {
+            try {
+                const token = await getToken();
+                setAuthToken(token);
+                const data = await dataService.getTestById(id);
+                setTest(data);
+                setAnswers(new Array(data.questions.length).fill(null));
+                setTimeLeft((data.duration || 20) * 60);
+            } catch (e) { console.error(e); }
+            finally { setLoading(false); }
+        };
+        load();
+    }, [id, isLoaded, isSignedIn]);
 
     useEffect(() => {
-        if (!test) return;
-        timerRef.current = setInterval(() => {
-            setTimeLeft(t => {
-                if (t <= 1) { clearInterval(timerRef.current!); handleSubmit(); return 0; }
-                return t - 1;
-            });
-        }, 1000);
-        return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [test]);
+        if (timeLeft <= 0) return;
+        const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+        return () => clearInterval(timer);
+    }, [timeLeft]);
 
-    const handleSubmit = async () => {
-        if (submitting || !test) return;
-        setSubmitting(true);
-        if (timerRef.current) clearInterval(timerRef.current);
-        try {
-            const result = await dataService.submitTest(id, answers);
-            router.replace(`/tests/${id}/result?score=${result.score}&total=${result.total}`);
-        } catch (e) {
-            console.error(e);
-            setSubmitting(false);
-        }
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
     };
 
-    const mins = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-    const secs = String(timeLeft % 60).padStart(2, '0');
-    const q = test?.questions?.[current];
+    const handleSelect = (optionIdx: number) => {
+        const newAnswers = [...answers];
+        newAnswers[currentIdx] = optionIdx;
+        setAnswers(newAnswers);
+    };
 
-    if (loading) return <div className="flex-1 flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
+    const handleSubmit = async () => {
+        if (!confirm('Are you busy? Wait, no—Are you SURE you want to submit?')) return;
+        try {
+            const token = await getToken();
+            setAuthToken(token);
+            await dataService.submitTest(id, answers);
+            router.push(`/tests/${id}/result`);
+        } catch (e) { alert('Failed to submit. Check connection.'); }
+    };
+
+    if (loading) return (
+        <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">
+            <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
+
+    const q = test.questions[currentIdx];
+    const progress = ((currentIdx + 1) / test.questions.length) * 100;
 
     return (
-        <div className="flex flex-col min-h-full bg-gray-50">
-            {/* Timer Header */}
-            <div className="bg-blue-600 pt-12 pb-4 px-5 rounded-b-3xl flex items-center justify-between">
-                <div>
-                    <p className="text-blue-200 text-xs">Question {current + 1}/{test.questions.length}</p>
-                    <p className="text-white font-bold">{test.title}</p>
+        <div className="flex flex-col min-h-screen bg-gray-50 pb-24">
+
+            {/* Quiz Header */}
+            <div className="grad-header pb-8 pt-14">
+                <div className="flex items-center justify-between px-2 mb-4">
+                    <button onClick={() => router.back()} className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all">
+                        <ChevronLeft size={20} className="text-white" />
+                    </button>
+                    <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/30 shadow-lg">
+                        <Clock size={16} className="text-yellow-300 animate-pulse" />
+                        <span className="text-white font-black text-sm tracking-widest">{formatTime(timeLeft)}</span>
+                    </div>
+                    <button onClick={handleSubmit} className="bg-emerald-500 text-white px-5 py-2.5 rounded-2xl font-black text-[11px] shadow-lg shadow-emerald-500/30 flex items-center gap-2 tracking-widest uppercase">
+                        DONE <Send size={12} strokeWidth={3} />
+                    </button>
                 </div>
-                <div className="flex items-center gap-1.5 bg-white/20 rounded-xl px-3 py-1.5">
-                    <Clock size={16} className="text-white" />
-                    <span className={`font-bold text-base ${timeLeft < 60 ? 'text-red-300' : 'text-white'}`}>{mins}:{secs}</span>
+
+                <div className="px-2">
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="text-white text-[10px] font-black tracking-[0.2em] uppercase">Question {currentIdx + 1} of {test.questions.length}</p>
+                        <p className="text-violet-200 text-[10px] font-black">{Math.round(progress)}% Complete</p>
+                    </div>
+                    <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+                        <div className="bg-white h-full transition-all duration-500" style={{ width: `${progress}%` }} />
+                    </div>
                 </div>
             </div>
 
-            {/* Progress */}
-            <div className="mx-4 mt-4 bg-gray-200 rounded-full h-1.5">
-                <div className="bg-blue-600 h-1.5 rounded-full transition-all" style={{ width: `${((current + 1) / test.questions.length) * 100}%` }} />
-            </div>
+            <div className="px-5 -mt-4 relative z-20">
+                {/* Question Card */}
+                <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-white min-h-[500px] flex flex-col">
+                    <div className="flex items-start gap-4 mb-8">
+                        <div className="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center shrink-0">
+                            <HelpCircle size={24} className="text-violet-500" />
+                        </div>
+                        <h2 className="text-lg font-black text-gray-800 leading-tight tracking-tight mt-1">{q.question}</h2>
+                    </div>
 
-            {/* Question */}
-            <div className="mx-4 mt-4 bg-white rounded-2xl p-5 shadow-sm flex-1">
-                <p className="font-bold text-gray-800 text-base leading-relaxed mb-5">{q.question}</p>
-                <div className="space-y-3">
-                    {q.options.map((opt: string, i: number) => (
-                        <button key={i} onClick={() => {
-                            const a = [...answers]; a[current] = i; setAnswers(a);
-                        }} className={`w-full text-left p-4 rounded-xl border-2 transition-colors font-medium ${answers[current] === i ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-100 bg-gray-50 text-gray-700 hover:border-gray-300'}`}>
-                            <span className="font-bold mr-2">{String.fromCharCode(65 + i)}.</span>{opt}
+                    <div className="space-y-3 flex-1">
+                        {q.options.map((option: string, i: number) => {
+                            const selected = answers[currentIdx] === i;
+                            return (
+                                <button
+                                    key={i}
+                                    onClick={() => handleSelect(i)}
+                                    className={`w-full p-5 rounded-3xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${selected ? 'border-violet-600 bg-violet-50 shadow-lg shadow-violet-100' : 'border-gray-50 bg-gray-50 hover:bg-white hover:border-violet-200 text-gray-700'
+                                        }`}
+                                >
+                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${selected ? 'border-violet-600 bg-violet-600' : 'border-gray-200'
+                                        }`}>
+                                        {selected && <div className="w-2 h-2 rounded-full bg-white shadow-lg" />}
+                                    </div>
+                                    <span className={`text-sm font-bold tracking-tight ${selected ? 'text-violet-900' : 'text-gray-600'}`}>{option}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Navigation Buttons inside card bottom */}
+                    <div className="flex gap-4 mt-10">
+                        <button
+                            disabled={currentIdx === 0}
+                            onClick={() => setCurrentIdx(prev => prev - 1)}
+                            className="flex-1 bg-gray-100 text-gray-400 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest disabled:opacity-30 disabled:grayscale transition-all flex items-center justify-center gap-2"
+                        >
+                            <ChevronLeft size={16} strokeWidth={3} /> PREV
                         </button>
-                    ))}
+                        <button
+                            disabled={currentIdx === test.questions.length - 1}
+                            onClick={() => setCurrentIdx(prev => prev + 1)}
+                            className="flex-1 bg-violet-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-violet-200 transition-all flex items-center justify-center gap-2"
+                        >
+                            NEXT <ChevronRight size={16} strokeWidth={3} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="p-10 flex flex-col items-center gap-2">
+                    <Target size={24} className="text-gray-200" />
+                    <p className="text-[10px] text-gray-300 font-bold uppercase tracking-[0.3em]">Precision Learning</p>
                 </div>
             </div>
 
-            {/* Navigation */}
-            <div className="p-4 flex gap-3">
-                <button onClick={() => setCurrent(c => Math.max(0, c - 1))} disabled={current === 0} className="flex-1 flex items-center justify-center gap-1 bg-white border border-gray-200 rounded-xl py-3 text-gray-700 font-semibold disabled:opacity-40">
-                    <ChevronLeft size={18} /> Prev
-                </button>
-                {current < test.questions.length - 1
-                    ? <button onClick={() => setCurrent(c => c + 1)} className="flex-1 flex items-center justify-center gap-1 bg-blue-600 text-white rounded-xl py-3 font-semibold">
-                        Next <ChevronRight size={18} />
-                    </button>
-                    : <button onClick={handleSubmit} disabled={submitting} className="flex-1 bg-green-600 text-white rounded-xl py-3 font-bold">
-                        {submitting ? 'Submitting...' : 'Submit Quiz'}
-                    </button>
-                }
-            </div>
         </div>
     );
 }

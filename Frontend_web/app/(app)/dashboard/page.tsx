@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/nextjs';
 import { dataService, setAuthToken } from '@/lib/api';
 import Link from 'next/link';
+import { TrendingUp, Users, Sparkles, MessageCircle, Send } from 'lucide-react';
 
 export default function DashboardPage() {
     const { user } = useUser();
@@ -34,61 +35,111 @@ export default function DashboardPage() {
     }, [announcements.length]);
 
     const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Student';
+    const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
 
-    if (loading) {
-        return (
-            <div className="flex-1 flex items-center justify-center h-screen">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    if (loading) return (
+        <div className="flex-1 flex items-center justify-center h-screen">
+            <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-gray-400 text-sm font-medium">Loading...</p>
             </div>
-        );
-    }
+        </div>
+    );
 
     const ann = announcements[current];
 
     return (
         <div className="flex flex-col bg-gray-50 min-h-full">
-            {/* Header */}
-            <div className="bg-blue-600 pt-12 pb-8 px-5 rounded-b-3xl">
-                <p className="text-blue-200 text-sm">Hello 👋</p>
-                <h1 className="text-white text-2xl font-bold">{displayName}</h1>
-                <p className="text-blue-200 text-sm mt-0.5">Keep pushing your preparation!</p>
+
+            {/* Gradient Header */}
+            <div className="grad-header mb-2">
+                <div className="flex items-center justify-between mb-4 relative z-10">
+                    <div>
+                        <p className="text-violet-200 text-xs font-medium tracking-wide uppercase">Hello 👋</p>
+                        <h1 className="text-white text-xl font-bold mt-0.5">{displayName}</h1>
+                        <p className="text-violet-200 text-xs mt-0.5">Ready to learn something new?</p>
+                    </div>
+                    <div className="w-11 h-11 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">{initials}</span>
+                    </div>
+                </div>
+
+                {/* Stats row inside header */}
+                <div className="grid grid-cols-2 gap-2 relative z-10">
+                    <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+                        <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center">
+                                <TrendingUp size={14} className="text-white" />
+                            </div>
+                            <div>
+                                <p className="text-white font-black text-lg leading-none">{dashboard?.stats?.courses || 0}</p>
+                                <p className="text-violet-200 text-[10px] font-medium">Total Courses</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+                        <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center">
+                                <Users size={14} className="text-white" />
+                            </div>
+                            <div>
+                                <p className="text-white font-black text-lg leading-none">{dashboard?.stats?.enrolled || 0}</p>
+                                <p className="text-violet-200 text-[10px] font-medium">Enrolled</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Announcement Banner */}
             {ann && (
-                <div className="mx-4 -mt-4 rounded-2xl overflow-hidden shadow-md bg-white">
-                    {ann.image
-                        ? <div className="relative h-36"><img src={ann.image} alt={ann.title} className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/40 p-4 flex flex-col justify-end"><p className="text-white/80 text-xs uppercase tracking-wider">Announcement</p><p className="text-white font-bold text-base truncate">{ann.title}</p><p className="text-white/90 text-xs line-clamp-2">{ann.body}</p></div></div>
-                        : <div className="bg-blue-600 p-4"><p className="text-blue-200 text-xs uppercase tracking-wider mb-0.5">Announcement</p><p className="text-white font-bold text-base truncate">{ann.title}</p><p className="text-blue-100 text-xs line-clamp-2">{ann.body}</p></div>
-                    }
+                <div className="mx-4 mb-4 rounded-2xl overflow-hidden shadow-md">
+                    {ann.image ? (
+                        <div className="relative h-32">
+                            <img src={ann.image} alt={ann.title} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-3 flex flex-col justify-end">
+                                <span className="text-[10px] text-white/70 font-semibold uppercase tracking-wider">📢 Announcement</span>
+                                <p className="text-white font-bold text-sm truncate">{ann.title}</p>
+                                <p className="text-white/80 text-xs line-clamp-1">{ann.body}</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-gradient-to-r from-violet-600 to-purple-500 p-4">
+                            <span className="text-[10px] text-violet-200 font-semibold uppercase tracking-wider">📢 Announcement</span>
+                            <p className="text-white font-bold text-sm mt-0.5">{ann.title}</p>
+                            <p className="text-violet-100 text-xs mt-0.5 line-clamp-2">{ann.body}</p>
+                        </div>
+                    )}
+                    {announcements.length > 1 && (
+                        <div className="flex gap-1 justify-center py-1.5 bg-white">
+                            {announcements.map((_, i) => (
+                                <div key={i} className={`h-1 rounded-full transition-all ${i === current ? 'w-4 bg-violet-500' : 'w-1 bg-gray-200'}`} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 
-            <div className="px-4 pt-5 space-y-5 pb-6">
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white rounded-2xl p-4 text-center shadow-sm">
-                        <p className="text-2xl font-bold text-blue-600">{dashboard?.stats?.courses || 0}</p>
-                        <p className="text-gray-500 text-xs mt-0.5">Total Courses</p>
-                    </div>
-                    <div className="bg-white rounded-2xl p-4 text-center shadow-sm">
-                        <p className="text-2xl font-bold text-purple-600">{dashboard?.stats?.enrolled || 0}</p>
-                        <p className="text-gray-500 text-xs mt-0.5">Enrolled</p>
-                    </div>
-                </div>
-
+            <div className="px-4 space-y-4 pb-6">
                 {/* Newest Courses */}
                 {dashboard?.newestCourses?.length > 0 && (
                     <div>
-                        <h2 className="font-bold text-gray-800 mb-3">✨ Video Playlists</h2>
-                        <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Sparkles size={16} className="text-violet-500" />
+                            <h2 className="font-bold text-gray-800 text-sm">Video Playlists</h2>
+                            <Link href="/courses" className="ml-auto text-violet-600 text-xs font-semibold">See all →</Link>
+                        </div>
+                        <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
                             {dashboard.newestCourses.map((c: any) => (
-                                <Link key={c._id} href={`/courses/${c._id}`} className="flex-shrink-0 w-40 bg-blue-600 rounded-2xl overflow-hidden shadow-md">
-                                    {c.image ? <img src={c.image} alt={c.title} className="w-full h-24 object-cover" /> : <div className="h-24 bg-blue-700 flex items-center justify-center text-4xl">📚</div>}
-                                    <div className="p-3">
-                                        <p className="text-white font-bold text-sm truncate">{c.title}</p>
-                                        <p className="text-blue-200 text-xs">{c.lessons?.length || 0} Videos</p>
-                                        <div className="mt-2 bg-white/20 rounded-lg py-1 text-center text-white text-[10px] font-bold uppercase tracking-wider">View Playlist</div>
+                                <Link key={c._id} href={`/courses/${c._id}`}
+                                    className="flex-shrink-0 w-36 rounded-2xl overflow-hidden shadow-md card-hover bg-white border border-gray-100">
+                                    {c.image
+                                        ? <img src={c.image} alt={c.title} className="w-full h-20 object-cover" />
+                                        : <div className="h-20 bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-3xl">📚</div>}
+                                    <div className="p-2.5">
+                                        <p className="text-gray-800 font-bold text-xs truncate">{c.title}</p>
+                                        <p className="text-gray-400 text-[10px] mt-0.5">{c.lessons?.length || 0} videos</p>
+                                        <div className="mt-1.5 bg-violet-50 rounded-lg py-1 text-center text-violet-600 text-[9px] font-bold uppercase tracking-wider">Watch →</div>
                                     </div>
                                 </Link>
                             ))}
@@ -98,17 +149,18 @@ export default function DashboardPage() {
 
                 {/* Quick Access */}
                 <div>
-                    <h2 className="font-bold text-gray-800 mb-3">🚀 Quick Access</h2>
-                    <div className="grid grid-cols-2 gap-3">
+                    <h2 className="font-bold text-gray-800 text-sm mb-3">🚀 Quick Access</h2>
+                    <div className="grid grid-cols-4 gap-2">
                         {[
-                            { icon: '📚', label: 'Courses', href: '/courses', bg: 'bg-green-100' },
-                            { icon: '📝', label: 'Quizzes', href: '/tests', bg: 'bg-orange-100' },
-                            { icon: '🏆', label: 'Leaderboard', href: '/leaderboard', bg: 'bg-yellow-100' },
-                            { icon: '👤', label: 'Profile', href: '/profile', bg: 'bg-pink-100' },
+                            { icon: '📚', label: 'Courses', href: '/courses', bg: 'from-emerald-400 to-teal-500' },
+                            { icon: '📝', label: 'Quizzes', href: '/tests', bg: 'from-orange-400 to-rose-500' },
+                            { icon: '🏆', label: 'Ranks', href: '/leaderboard', bg: 'from-amber-400 to-yellow-500' },
+                            { icon: '👤', label: 'Profile', href: '/profile', bg: 'from-blue-400 to-indigo-500' },
                         ].map(tile => (
-                            <Link key={tile.label} href={tile.href} className={`${tile.bg} rounded-2xl flex flex-col items-center justify-center p-5 gap-1`}>
-                                <span className="text-3xl">{tile.icon}</span>
-                                <span className="text-gray-700 text-xs font-semibold">{tile.label}</span>
+                            <Link key={tile.label} href={tile.href}
+                                className={`bg-gradient-to-br ${tile.bg} rounded-2xl flex flex-col items-center justify-center py-3 px-1 gap-1 card-hover shadow-sm`}>
+                                <span className="text-2xl">{tile.icon}</span>
+                                <span className="text-white text-[9px] font-bold">{tile.label}</span>
                             </Link>
                         ))}
                     </div>
@@ -116,10 +168,18 @@ export default function DashboardPage() {
 
                 {/* Community */}
                 <div>
-                    <h2 className="font-bold text-gray-800 mb-3">📲 Join Community</h2>
+                    <h2 className="font-bold text-gray-800 text-sm mb-3">📲 Join Community</h2>
                     <div className="flex gap-3">
-                        <a href="https://whatsapp.com" target="_blank" rel="noreferrer" className="flex-1 bg-green-500 rounded-xl py-3 text-white font-bold text-center text-sm">💬 WhatsApp</a>
-                        <a href="https://t.me/" target="_blank" rel="noreferrer" className="flex-1 bg-sky-500 rounded-xl py-3 text-white font-bold text-center text-sm">✈️ Telegram</a>
+                        <a href="https://whatsapp.com" target="_blank" rel="noreferrer"
+                            className="flex-1 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl py-3 flex items-center justify-center gap-2 card-hover shadow-sm">
+                            <MessageCircle size={16} className="text-white" />
+                            <span className="text-white font-bold text-xs">WhatsApp</span>
+                        </a>
+                        <a href="https://t.me/" target="_blank" rel="noreferrer"
+                            className="flex-1 bg-gradient-to-br from-sky-400 to-blue-600 rounded-2xl py-3 flex items-center justify-center gap-2 card-hover shadow-sm">
+                            <Send size={16} className="text-white" />
+                            <span className="text-white font-bold text-xs">Telegram</span>
+                        </a>
                     </div>
                 </div>
             </div>

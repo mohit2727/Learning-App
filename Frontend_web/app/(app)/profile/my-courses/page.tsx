@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, BookOpen } from 'lucide-react';
+import { ChevronLeft, BookOpen, Play, ShieldCheck, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MyCoursesPage() {
@@ -23,50 +23,72 @@ export default function MyCoursesPage() {
             finally { setLoading(false); }
         };
         load();
-    }, []);
+    }, [getToken]);
+
+    if (loading) return (
+        <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">
+            <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
 
     return (
-        <div className="flex flex-col min-h-full bg-gray-50">
-            {/* Header */}
-            <div className="bg-blue-600 pt-12 pb-6 px-5 rounded-b-3xl">
-                <button onClick={() => router.back()} className="flex items-center gap-1 text-blue-200 mb-3 hover:text-white">
-                    <ChevronLeft size={18} /> Back
+        <div className="flex flex-col min-h-full bg-gray-50 pb-10">
+            {/* Gradient Header */}
+            <div className="grad-header pb-12 pt-16">
+                <button onClick={() => router.back()} className="absolute top-6 left-5 flex items-center gap-1 text-violet-200 hover:text-white transition-all">
+                    <ChevronLeft size={20} /> <span className="text-sm font-bold uppercase">Back</span>
                 </button>
-                <h1 className="text-white text-xl font-bold">📚 My Enrolled Courses</h1>
-                <p className="text-blue-200 text-sm mt-1">Courses you have access to</p>
+                <div className="text-center relative z-10 px-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                        <BookOpen className="text-white" size={24} />
+                    </div>
+                    <h1 className="text-white text-xl font-black tracking-tight uppercase">ENROLLED COURSES</h1>
+                    <p className="text-violet-200 text-[10px] font-black tracking-[0.2em] mt-1">YOUR PREMIUM LEARNING LIBRARY</p>
+                </div>
             </div>
 
-            <div className="px-4 py-5 space-y-3">
-                {loading ? (
-                    <div className="flex justify-center pt-20">
-                        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    </div>
-                ) : courses.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center pt-24 px-8 text-center">
-                        <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                            <BookOpen size={36} className="text-blue-400" />
+            <div className="px-5 -mt-6 relative z-20 space-y-4">
+                {courses.length === 0 ? (
+                    <div className="bg-white rounded-[2rem] p-10 shadow-xl border border-white flex flex-col items-center text-center">
+                        <div className="w-16 h-16 rounded-3xl bg-violet-50 flex items-center justify-center mb-5">
+                            <Sparkles size={32} className="text-violet-400" />
                         </div>
-                        <p className="font-bold text-gray-700 text-lg">No Courses Enrolled</p>
-                        <p className="text-gray-500 text-sm mt-1">You haven't enrolled in any courses yet. Browse our playlists!</p>
-                        <button onClick={() => router.push('/courses')} className="mt-6 bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm">
-                            Browse Courses
+                        <p className="font-black text-gray-800 text-base uppercase tracking-tight">Library is Empty</p>
+                        <p className="text-gray-500 text-xs mt-2 leading-relaxed font-semibold">You haven't enrolled in any courses yet. Start your journey today!</p>
+                        <button onClick={() => router.push('/courses')} className="mt-8 bg-violet-600 text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-violet-200 tracking-wider">
+                            BROWSER COURSES
                         </button>
                     </div>
                 ) : courses.map((course: any, i: number) => (
-                    <Link key={course._id || i} href={`/courses/${course._id}`} className="block bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                        <div className="h-20 bg-blue-600 flex items-center justify-center relative">
+                    <Link key={course._id || i} href={`/courses/${course._id}`}
+                        className="block bg-white rounded-[2rem] overflow-hidden shadow-xl border border-white card-hover relative group">
+                        <div className="h-28 relative">
                             {course.image
-                                ? <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
-                                : <span className="text-4xl">📚</span>
+                                ? <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                : <div className="w-full h-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center"><BookOpen size={40} className="text-white/20" /></div>
                             }
-                            <span className="absolute top-2 right-2 bg-white/20 text-white text-xs font-bold rounded-full px-2 py-0.5">Enrolled</span>
-                        </div>
-                        <div className="p-4 flex items-center gap-3">
-                            <div className="flex-1">
-                                <p className="font-bold text-gray-800">{course.title}</p>
-                                <p className="text-gray-500 text-xs mt-0.5">📹 {course.lessons?.length || 0} videos</p>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                            <div className="absolute top-3 right-4">
+                                <div className="bg-emerald-500 p-1.5 rounded-full shadow-lg shadow-emerald-200/50">
+                                    <ShieldCheck size={14} className="text-white" strokeWidth={3} />
+                                </div>
                             </div>
-                            <span className="text-blue-600 text-xl">›</span>
+                            <div className="absolute bottom-3 left-4">
+                                <div className="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20 flex items-center gap-1.5">
+                                    <Play size={10} className="text-white" fill="white" />
+                                    <span className="text-white text-[9px] font-black uppercase tracking-widest">{course.lessons?.length || 0} VIDEOS</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-5 flex items-center justify-between">
+                            <div className="flex-1">
+                                <p className="font-black text-gray-800 text-sm tracking-tight uppercase group-hover:text-violet-600 transition-colors">{course.title}</p>
+                                <p className="text-gray-400 text-[9px] font-bold uppercase tracking-[0.1em] mt-1 italic">Exclusive Content</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 group-hover:bg-violet-50 group-hover:text-violet-600 transition-all">
+                                <span className="font-black text-xl leading-none -mt-0.5">›</span>
+                            </div>
                         </div>
                     </Link>
                 ))}

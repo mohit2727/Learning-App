@@ -7,21 +7,34 @@ const tabs = [
     { href: '/dashboard', icon: Home, label: 'Home' },
     { href: '/courses', icon: BookOpen, label: 'Courses' },
     { href: '/tests', icon: FileText, label: 'Tests' },
-    { href: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
+    { href: '/leaderboard', icon: Trophy, label: 'Leaders' },
     { href: '/profile', icon: User, label: 'Profile' },
 ];
 
 export default function BottomNav() {
     const pathname = usePathname();
+
     return (
-        <nav className="sticky bottom-0 bg-white border-t border-gray-100 z-50">
-            <div className="flex">
+        <nav className="bottom-nav">
+            <div className="flex items-center px-1">
                 {tabs.map(({ href, icon: Icon, label }) => {
                     const active = pathname.startsWith(href);
                     return (
-                        <Link key={href} href={href} className={`flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors ${active ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
-                            <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
-                            <span className={`text-[10px] font-semibold ${active ? 'text-blue-600' : ''}`}>{label}</span>
+                        <Link
+                            key={href}
+                            href={href}
+                            className={`flex-1 flex flex-col items-center pt-2 pb-2.5 gap-0.5 relative transition-colors ${active ? 'text-violet-600' : 'text-gray-400 hover:text-gray-600'
+                                }`}
+                        >
+                            {active && (
+                                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full bg-violet-600" />
+                            )}
+                            <div className={`p-1.5 rounded-xl transition-colors ${active ? 'bg-violet-50' : ''}`}>
+                                <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+                            </div>
+                            <span className={`text-[10px] font-semibold leading-none ${active ? 'text-violet-600' : 'text-gray-400'}`}>
+                                {label}
+                            </span>
                         </Link>
                     );
                 })}
