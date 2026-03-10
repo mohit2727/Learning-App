@@ -91,46 +91,48 @@ export const ProfileScreen = ({ navigation }: any) => {
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 {/* Header with Skewed Gradient */}
-                <LinearGradient
-                    colors={['#6366F1', '#4F46E5', '#3730A3']}
-                    className="pt-20 pb-16 px-6 rounded-b-[4rem] items-center mb-10 shadow-2xl"
-                >
-                    <View className="relative mb-6">
-                        <View className="w-24 h-24 rounded-[30%] bg-white p-1.5 shadow-2xl rotate-3">
-                            {user?.imageUrl ? (
-                                <View className="w-full h-full rounded-[25%] overflow-hidden -rotate-3 bg-indigo-50">
-                                    <ActivityIndicator size="small" color="#6366F1" style={{ position: 'absolute', top: '40%', left: '40%' }} />
-                                    <View style={{ width: '100%', height: '100%' }}>
-                                        {/* React Native Image equivalent for Tailwind mapping */}
-                                        <View className="w-full h-full bg-indigo-100 items-center justify-center">
-                                            <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
+                <View className="rounded-b-[4rem] overflow-hidden shadow-2xl mb-10">
+                    <LinearGradient
+                        colors={['#6366F1', '#4F46E5', '#3730A3']}
+                        className="pt-20 pb-16 px-6 items-center"
+                    >
+                        <View className="relative mb-6">
+                            <View className="w-24 h-24 rounded-[30%] bg-white p-1.5 shadow-2xl rotate-3">
+                                {user?.imageUrl ? (
+                                    <View className="w-full h-full rounded-[25%] overflow-hidden -rotate-3 bg-indigo-50">
+                                        <ActivityIndicator size="small" color="#6366F1" style={{ position: 'absolute', top: '40%', left: '40%' }} />
+                                        <View style={{ width: '100%', height: '100%' }}>
+                                            {/* React Native Image equivalent for Tailwind mapping */}
+                                            <View className="w-full h-full bg-indigo-100 items-center justify-center">
+                                                <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
+                                            </View>
                                         </View>
                                     </View>
-                                </View>
-                            ) : (
-                                <View className="w-full h-full rounded-[25%] bg-indigo-50 items-center justify-center -rotate-3">
-                                    <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
-                                </View>
-                            )}
+                                ) : (
+                                    <View className="w-full h-full rounded-[25%] bg-indigo-50 items-center justify-center -rotate-3">
+                                        <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
+                                    </View>
+                                )}
+                            </View>
+                            <View className="absolute -bottom-1 -right-1 bg-emerald-500 w-8 h-8 rounded-full border-4 border-white shadow-lg items-center justify-center">
+                                <ShieldCheck size={14} color="white" strokeWidth={3} />
+                            </View>
                         </View>
-                        <View className="absolute -bottom-1 -right-1 bg-emerald-500 w-8 h-8 rounded-full border-4 border-white shadow-lg items-center justify-center">
-                            <ShieldCheck size={14} color="white" strokeWidth={3} />
-                        </View>
-                    </View>
 
-                    <Text variant="h2" className="text-white font-black text-xl tracking-tight leading-none mb-1">{displayName}</Text>
-                    <View className="flex-row items-center bg-white/10 px-3 py-1 rounded-full border border-white/20">
-                        <Mail size={10} color="#C7D2FE" />
-                        <Text className="text-indigo-100 text-[9px] font-black uppercase tracking-wider ml-1.5">{email}</Text>
-                    </View>
-                </LinearGradient>
+                        <Text variant="h2" className="text-white font-black text-xl tracking-tight leading-none mb-1">{displayName}</Text>
+                        <View className="flex-row items-center bg-white/10 px-3 py-1 rounded-full border border-white/20">
+                            <Mail size={10} color="#C7D2FE" />
+                            <Text className="text-indigo-100 text-[9px] font-black uppercase tracking-wider ml-1.5">{email}</Text>
+                        </View>
+                    </LinearGradient>
+                </View>
 
                 {/* Personal Info Card */}
                 <View className="mx-6 bg-white rounded-[2.5rem] p-8 shadow-xl shadow-black/5 border border-gray-50 mb-8">
                     <View className="flex-row justify-between items-center mb-6">
                         <View className="flex-row items-center gap-2">
                             <User size={16} color="#4F46E5" />
-                            <Text className="font-black text-gray-800 text-[10px] uppercase tracking-[0.2em]">Personal Details</Text>
+                            <Text className="font-black text-gray-800 text-[10px] uppercase tracking-[2]">Personal Details</Text>
                         </View>
                         <TouchableOpacity onPress={() => setShowEdit(true)} className="bg-indigo-50 px-3 py-1.5 rounded-xl">
                             <Text className="text-indigo-600 text-[8px] font-black uppercase tracking-widest">Edit</Text>
@@ -160,7 +162,7 @@ export const ProfileScreen = ({ navigation }: any) => {
 
                 {/* Action Links */}
                 <View className="mx-6 space-y-3 mb-10">
-                    <Text className="text-gray-400 font-black text-[9px] uppercase tracking-[0.3em] ml-4 mb-2">Learning Progress</Text>
+                    <Text className="text-gray-400 font-black text-[9px] uppercase tracking-[3] ml-4 mb-2">Learning Progress</Text>
 
                     <View className="bg-white rounded-[2.5rem] shadow-lg border border-gray-50 overflow-hidden">
                         <TouchableOpacity
@@ -202,7 +204,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                         }
                     >
                         <LogOut size={16} color="#E11D48" />
-                        <Text className="text-rose-600 font-black text-xs uppercase tracking-[0.2em]">Logout Session</Text>
+                        <Text className="text-rose-600 font-black text-xs uppercase tracking-[2]">Logout Session</Text>
                     </TouchableOpacity>
                 </View>
 

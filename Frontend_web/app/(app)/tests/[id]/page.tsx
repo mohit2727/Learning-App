@@ -49,14 +49,39 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
         setAnswers(newAnswers);
     };
 
+    useEffect(() => {
+        // Warn before leaving the page accidentally
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            e.returnValue = '';
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, []);
+
     const handleSubmit = async () => {
-        if (!confirm('Are you busy? Wait, no—Are you SURE you want to submit?')) return;
+        if (!confirm('Are you sure you want to submit your test?')) return;
         try {
             const token = await getToken();
             setAuthToken(token);
-            await dataService.submitTest(id, answers);
-            router.push(`/tests/${id}/result`);
-        } catch (e) { alert('Failed to submit. Check connection.'); }
+
+            // Format answers to match backend expectation: [{ questionId, selectedOption }]
+            const formattedAnswers = answers.map((ans, idx) => ({
+                questionId: test.questions[idx]._id,
+                selectedOption: ans
+            }));
+
+            const response = await dataService.submitTest(id, formattedAnswers);
+
+            // Save the exact answers to session storage for instant review on the next page
+            sessionStorage.setItem(`test_answers_${id}`, JSON.stringify(formattedAnswers));
+
+            // Pass the exact score and marks through query params to guarantee they load instantly on the results screen
+            router.replace(`/tests/${id}/result?score=${response.score}&total=${response.totalMarks}`);
+        } catch (e) {
+            console.error('Submit test error:', e);
+            alert('Failed to submit. Check connection.');
+        }
     };
 
     if (loading) return (
@@ -127,7 +152,6 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
                         })}
                     </div>
 
-                    {/* Navigation Buttons inside card bottom */}
                     <div className="flex gap-4 mt-10">
                         <button
                             disabled={currentIdx === 0}
@@ -136,13 +160,22 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
                         >
                             <ChevronLeft size={16} strokeWidth={3} /> PREV
                         </button>
-                        <button
-                            disabled={currentIdx === test.questions.length - 1}
-                            onClick={() => setCurrentIdx(prev => prev + 1)}
-                            className="flex-1 bg-violet-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-violet-200 transition-all flex items-center justify-center gap-2"
-                        >
-                            NEXT <ChevronRight size={16} strokeWidth={3} />
-                        </button>
+
+                        {currentIdx === test.questions.length - 1 ? (
+                            <button
+                                onClick={handleSubmit}
+                                className="flex-1 bg-emerald-500 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-200 transition-all flex items-center justify-center gap-2"
+                            >
+                                SUBMIT <Send size={16} strokeWidth={3} />
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => setCurrentIdx(prev => prev + 1)}
+                                className="flex-1 bg-violet-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-violet-200 transition-all flex items-center justify-center gap-2"
+                            >
+                                NEXT <ChevronRight size={16} strokeWidth={3} />
+                            </button>
+                        )}
                     </div>
                 </div>
 

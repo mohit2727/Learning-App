@@ -27,7 +27,6 @@ const protect = asyncHandler(async (req, res, next) => {
             clerkId = result.sub;
         } catch (verifyErr) {
             console.error('Token verification failed:', verifyErr.message);
-            // Try verifying with an authorized party override (looser check)
             const result = await clerkClient.verifyToken(token, {
                 authorizedParties: undefined,
             });
@@ -37,25 +36,31 @@ const protect = asyncHandler(async (req, res, next) => {
         console.log('--- AUTH DEBUG ---');
         console.log('Incoming Token Clerk ID:', clerkId);
 
-        // Find or create user in our DB using clerkId
+        // Find user in DB
         let user = await User.findOne({ clerkId });
+
         if (!user) {
             console.log('User not found in DB by Clerk ID. Auto-creating...');
-            // Auto-create user on first authenticated request
-            const clerkUser = await clerkClient.users.getUser(clerkId);
-            const email = clerkUser.emailAddresses?.[0]?.emailAddress || '';
-            const role = clerkUser.publicMetadata?.role || 'student';
+            try {
+                const clerkUser = await clerkClient.users.getUser(clerkId);
+                const email = clerkUser.emailAddresses?.[0]?.emailAddress || '';
+                const role = clerkUser.publicMetadata?.role || 'student';
 
-            console.log('Fetched Clerk User Email:', email);
-            console.log('Assigning Role:', role);
+                console.log('Fetched Clerk User Email:', email, '| Role:', role);
 
-            user = await User.create({
-                clerkId,
-                name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || email.split('@')[0],
-                email,
-                role,
-            });
-            console.log('User created:', user);
+                user = await User.create({
+                    clerkId,
+                    name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || email.split('@')[0],
+                    email,
+                    role,
+                });
+                console.log('User created:', user._id);
+            } catch (createErr) {
+                // If Clerk API is unreachable, fail gracefully
+                console.error('Failed to auto-create user from Clerk:', createErr.message);
+                res.status(503).set('Cache-Control', 'no-store');
+                throw new Error('Auth service temporarily unavailable. Please try again.');
+            }
         } else {
             console.log('User found in DB with role:', user.role);
         }
@@ -64,8 +69,9 @@ const protect = asyncHandler(async (req, res, next) => {
         next();
     } catch (error) {
         console.error('Clerk auth error:', error.message);
-        res.status(401);
-        throw new Error('Not authorized, token failed: ' + error.message);
+        res.set('Cache-Control', 'no-store');
+        if (!res.statusCode || res.statusCode === 200) res.status(401);
+        throw new Error('Not authorized: ' + error.message);
     }
 });
 

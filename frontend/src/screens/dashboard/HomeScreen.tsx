@@ -10,7 +10,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { Text } from '../../components/Text';
-import { useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import { dataService } from '../../api/dataService';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Play, Video, BookOpen, PenTool as Tool, User, Award, MessageCircle, Send } from 'lucide-react-native';
@@ -46,7 +46,7 @@ const AnnouncementCarousel = ({ data }: { data: any[] }) => {
                         colors={['transparent', 'rgba(0,0,0,0.8)']}
                         className="absolute inset-0 p-6 justify-end"
                     >
-                        <Text className="text-white/70 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Update</Text>
+                        <Text className="text-white/70 text-[10px] font-black uppercase tracking-[2] mb-1">Update</Text>
                         <Text variant="h3" className="text-white font-black text-xl mb-1" numberOfLines={1}>{item.title}</Text>
                         <Text variant="caption" className="text-white/80 font-medium" numberOfLines={2}>{item.body}</Text>
                     </LinearGradient>
@@ -58,7 +58,7 @@ const AnnouncementCarousel = ({ data }: { data: any[] }) => {
                         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                         style={{ borderRadius: 20, padding: 20 }}
                     >
-                        <Text className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Official News</Text>
+                        <Text className="text-white/60 text-[10px] font-black uppercase tracking-[2] mb-1">Official News</Text>
                         <Text variant="h3" className="text-white font-black text-lg mb-2" numberOfLines={1}>{item.title}</Text>
                         <Text variant="caption" className="text-white/80 font-semibold" numberOfLines={2}>{item.body}</Text>
                     </LinearGradient>
@@ -83,7 +83,7 @@ const CourseCard = ({ item }: { item: any }) => (
                 <Animated.Image source={{ uri: item.image }} className="w-full h-full" resizeMode="cover" />
                 <View className="absolute top-2 right-2 bg-black/40 px-2 py-1 rounded-lg backdrop-blur-md">
                     <Text className="text-white text-[8px] font-black uppercase tracking-widest">Premium</Text>
-                </div>
+                </View>
             </View>
         ) : (
             <LinearGradient colors={['#6366F1', '#4338CA']} className="h-28 items-center justify-center">
@@ -99,7 +99,7 @@ const CourseCard = ({ item }: { item: any }) => (
                 </Text>
             </View>
             <TouchableOpacity className="mt-3 bg-indigo-50 rounded-xl py-2 items-center flex-row justify-center gap-2">
-                <Text className="text-indigo-600 text-[9px] font-black uppercase tracking-[0.2em]">Play Now</Text>
+                <Text className="text-indigo-600 text-[9px] font-black uppercase tracking-[2]">Play Now</Text>
             </TouchableOpacity>
         </View>
     </TouchableOpacity>
@@ -136,7 +136,7 @@ export const HomeScreen = ({ navigation }: any) => {
         return (
             <View className="flex-1 items-center justify-center bg-gray-50">
                 <ActivityIndicator size="large" color="#6366F1" />
-                <Text className="text-gray-400 text-[10px] font-black mt-4 tracking-[0.2em]">LOADING DATA...</Text>
+                <Text className="text-gray-400 text-[10px] font-black mt-4 tracking-[2]">LOADING DATA...</Text>
             </View>
         );
     }
@@ -148,33 +148,35 @@ export const HomeScreen = ({ navigation }: any) => {
         <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
 
             {/* Gradient Header */}
-            <LinearGradient
-                colors={['#6366F1', '#4F46E5', '#3730A3']}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                className="pt-16 pb-12 px-6 rounded-b-[3rem] mb-6 shadow-2xl shadow-indigo-200"
-            >
-                <View className="flex-row items-center justify-between mb-4">
-                    <View>
-                        <Text className="text-indigo-100 text-[10px] font-black uppercase tracking-[0.3em] mb-1">Welcome back!</Text>
-                        <Text variant="h2" className="text-white font-black text-2xl tracking-tighter">{displayName}</Text>
+            <View className="rounded-b-[3rem] overflow-hidden mb-6 shadow-2xl shadow-indigo-200">
+                <LinearGradient
+                    colors={['#6366F1', '#4F46E5', '#3730A3']}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                    className="pt-16 pb-12 px-6"
+                >
+                    <View className="flex-row items-center justify-between mb-4">
+                        <View>
+                            <Text className="text-indigo-100 text-[10px] font-black uppercase tracking-[3] mb-1">Welcome back!</Text>
+                            <Text variant="h2" className="text-white font-black text-2xl tracking-tighter">{displayName}</Text>
+                        </View>
+                        <View className="w-12 h-12 rounded-2xl bg-white/20 border border-white/30 items-center justify-center">
+                            <Text className="text-white font-black text-lg">{init}</Text>
+                        </View>
                     </View>
-                    <View className="w-12 h-12 rounded-2xl bg-white/20 border border-white/30 items-center justify-center">
-                        <Text className="text-white font-black text-lg">{init}</Text>
-                    </View>
-                </View>
 
-                {/* Embedded Stats in Header */}
-                <View className="flex-row gap-3 mt-4">
-                    <View className="flex-1 bg-white/10 p-3 rounded-2xl border border-white/10 backdrop-blur-md">
-                        <Text className="text-white font-black text-lg leading-none">{dashboardData?.stats?.courses || 0}</Text>
-                        <Text className="text-indigo-100 text-[9px] font-bold uppercase tracking-widest mt-1">Courses</Text>
+                    {/* Embedded Stats in Header */}
+                    <View className="flex-row gap-3 mt-4">
+                        <View className="flex-1 bg-white/10 p-3 rounded-2xl border border-white/10 backdrop-blur-md">
+                            <Text className="text-white font-black text-lg leading-none">{dashboardData?.stats?.courses || 0}</Text>
+                            <Text className="text-indigo-100 text-[9px] font-bold uppercase tracking-widest mt-1">Courses</Text>
+                        </View>
+                        <View className="flex-1 bg-white/15 p-3 rounded-2xl border border-white/10 backdrop-blur-md">
+                            <Text className="text-white font-black text-lg leading-none">{dashboardData?.stats?.enrolled || 0}</Text>
+                            <Text className="text-indigo-100 text-[9px] font-bold uppercase tracking-widest mt-1">Enrolled</Text>
+                        </View>
                     </View>
-                    <View className="flex-1 bg-white/15 p-3 rounded-2xl border border-white/10 backdrop-blur-md">
-                        <Text className="text-white font-black text-lg leading-none">{dashboardData?.stats?.enrolled || 0}</Text>
-                        <Text className="text-indigo-100 text-[9px] font-bold uppercase tracking-widest mt-1">Enrolled</Text>
-                    </View>
-                </View>
-            </LinearGradient>
+                </LinearGradient>
+            </View>
 
             <AnnouncementCarousel data={announcements} />
 
@@ -219,7 +221,7 @@ export const HomeScreen = ({ navigation }: any) => {
                             onPress={() => navigation?.navigate(tile.target)}
                         >
                             <View className="mb-2">{tile.icon}</View>
-                            <Text className="text-gray-800 font-black text-[10px] tracking-[0.2em]">{tile.label}</Text>
+                            <Text className="text-gray-800 font-black text-[10px] tracking-[2]">{tile.label}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -232,7 +234,7 @@ export const HomeScreen = ({ navigation }: any) => {
                             <User color="#E11D48" size={20} />
                         </View>
                         <View>
-                            <Text className="text-gray-800 font-black text-[10px] tracking-[0.2em]">STUDENT PROFILE</Text>
+                            <Text className="text-gray-800 font-black text-[10px] tracking-[2]">STUDENT PROFILE</Text>
                             <Text className="text-rose-400 text-[8px] font-black">Manage your settings</Text>
                         </View>
                     </View>

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/nextjs';
 import { dataService, setAuthToken } from '@/lib/api';
 import Link from 'next/link';
-import { TrendingUp, Users, Sparkles, MessageCircle, Send } from 'lucide-react';
+import { TrendingUp, Target, Sparkles, MessageCircle, Send } from 'lucide-react';
 
 export default function DashboardPage() {
     const { user } = useUser();
@@ -72,19 +72,19 @@ export default function DashboardPage() {
                                 <TrendingUp size={14} className="text-white" />
                             </div>
                             <div>
-                                <p className="text-white font-black text-lg leading-none">{dashboard?.stats?.courses || 0}</p>
-                                <p className="text-violet-200 text-[10px] font-medium">Total Courses</p>
+                                <p className="text-white font-black text-lg leading-none">{dashboard?.stats?.enrolled || 0}</p>
+                                <p className="text-violet-200 text-[10px] font-medium">Enrolled Courses</p>
                             </div>
                         </div>
                     </div>
                     <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
                         <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center">
-                                <Users size={14} className="text-white" />
+                                <Target size={14} className="text-white" />
                             </div>
                             <div>
-                                <p className="text-white font-black text-lg leading-none">{dashboard?.stats?.enrolled || 0}</p>
-                                <p className="text-violet-200 text-[10px] font-medium">Enrolled</p>
+                                <p className="text-white font-black text-lg leading-none">{dashboard?.stats?.quizzesTaken || 0}</p>
+                                <p className="text-violet-200 text-[10px] font-medium">Quizzes Taken</p>
                             </div>
                         </div>
                     </div>

@@ -2,8 +2,12 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const morgan = require('morgan');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const connectDB = require('./config/db');
+const { notFound, errorHandler } = require('./middleware/errorMiddleware');
+const { cacheMiddleware } = require('./middleware/cacheMiddleware');
 
 // Load environment variables
 dotenv.config();
@@ -13,14 +17,44 @@ connectDB();
 
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(cors());
+// ─── Security & Parsing ─────────────────────────────────────────────────────
+app.use(helmet());
+app.use(express.json({ limit: '10mb' }));
+
+// ─── CORS ────────────────────────────────────────────────────────────────────
+// Add your Firebase domains to ALLOWED_ORIGINS in .env (comma-separated)
+// e.g. ALLOWED_ORIGINS=https://your-app.web.app,https://your-admin.web.app
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : []),
+];
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. mobile apps, curl)
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
+    credentials: true,
+}));
+
+// ─── Rate Limiting ───────────────────────────────────────────────────────────
+const limiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: 150,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Too many requests, please try again later.' },
+});
+app.use('/api', limiter);
+
+// ─── Logging ─────────────────────────────────────────────────────────────────
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
 
-// Routes
+// ─── Routes ──────────────────────────────────────────────────────────────────
 const userRoutes = require('./routes/userRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -29,30 +63,26 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 
+// Public cached routes (2 min TTL)
+app.use('/api/courses', cacheMiddleware(120), courseRoutes);
+app.use('/api/announcements', cacheMiddleware(120), announcementRoutes);
+// Leaderboard cached 30s
 app.use('/api/users', userRoutes);
-app.use('/api/courses', courseRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/tests', testRoutes);
+app.use('/api/tests', cacheMiddleware(120), testRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/announcements', announcementRoutes);
 app.use('/api/payments', paymentRoutes);
 
 const __dirname_path = path.resolve();
 app.use('/uploads', express.static(path.join(__dirname_path, '/uploads')));
 
 app.get('/', (req, res) => {
-    res.send('Ravina App API is running...');
+    res.json({ message: 'Ravina App API is running', status: 'ok' });
 });
 
-// Error Handling Middleware
-app.use((err, req, res, next) => {
-    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-    res.status(statusCode);
-    res.json({
-        message: err.message,
-        stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-    });
-});
+// ─── Error Handling ──────────────────────────────────────────────────────────
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 

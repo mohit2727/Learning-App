@@ -16,7 +16,7 @@ export const CourseDetailScreen = ({ route, navigation }: any) => {
         const fetchCourseDetail = async () => {
             setIsLoading(true);
             try {
-                const data = await dataService.getCourseDetail(courseId);
+                const data = await dataService.getCourseById(courseId);
                 setCourse(data);
             } catch (error) {
                 console.error('Error fetching course detail:', error);
@@ -40,48 +40,50 @@ export const CourseDetailScreen = ({ route, navigation }: any) => {
         <View className="flex-1 bg-gray-50">
             <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
                 {/* Header */}
-                <LinearGradient
-                    colors={['#6366F1', '#4F46E5', '#3730A3']}
-                    className="pt-16 pb-12 px-6 rounded-b-[4rem] shadow-2xl items-center"
-                >
-                    <TouchableOpacity onPress={() => navigation.goBack()} className="absolute top-16 left-6 flex-row items-center gap-1">
-                        <ChevronLeft size={18} color="#C7D2FE" />
-                        <Text className="text-indigo-100 font-black text-[10px] uppercase tracking-widest">BACK</Text>
-                    </TouchableOpacity>
+                <View className="rounded-b-[4rem] overflow-hidden shadow-2xl">
+                    <LinearGradient
+                        colors={['#6366F1', '#4F46E5', '#3730A3']}
+                        className="pt-16 pb-12 px-6 items-center"
+                    >
+                        <TouchableOpacity onPress={() => navigation.goBack()} className="absolute top-16 left-6 flex-row items-center gap-1">
+                            <ChevronLeft size={18} color="#C7D2FE" />
+                            <Text className="text-indigo-100 font-black text-[10px] uppercase tracking-widest">BACK</Text>
+                        </TouchableOpacity>
 
-                    <View className="w-24 h-24 rounded-[2rem] overflow-hidden mb-6 border-2 border-white/30 shadow-2xl mt-4">
-                        {course?.image ? (
-                            <View className="w-full h-full bg-indigo-50 items-center justify-center">
-                                {/* Image rendering omitted for brevity, assuming standard component usage */}
-                                <BookOpen size={40} color="#6366F1" opacity={0.2} />
-                            </View>
-                        ) : (
-                            <View className="w-full h-full bg-white/20 items-center justify-center">
-                                <BookOpen size={40} color="white" opacity={0.4} />
-                            </View>
-                        )}
-                    </View>
-
-                    <Text className="text-white font-black text-xl text-center uppercase tracking-tight leading-7 px-4">{course?.title}</Text>
-
-                    <View className="flex-row items-center gap-3 mt-4">
-                        <View className="bg-white/10 px-3 py-1.5 rounded-full border border-white/20 flex-row items-center gap-2">
-                            <Play size={10} color="white" fill="white" />
-                            <Text className="text-white text-[9px] font-black uppercase tracking-widest">{course?.lessons?.length || 0} VIDEOS</Text>
+                        <View className="w-24 h-24 rounded-[2rem] overflow-hidden mb-6 border-2 border-white/30 shadow-2xl mt-4">
+                            {course?.image ? (
+                                <View className="w-full h-full bg-indigo-50 items-center justify-center">
+                                    {/* Image rendering omitted for brevity, assuming standard component usage */}
+                                    <BookOpen size={40} color="#6366F1" opacity={0.2} />
+                                </View>
+                            ) : (
+                                <View className="w-full h-full bg-white/20 items-center justify-center">
+                                    <BookOpen size={40} color="white" opacity={0.4} />
+                                </View>
+                            )}
                         </View>
-                        <View className="bg-emerald-500/20 px-3 py-1.5 rounded-full border border-emerald-500/30 flex-row items-center gap-2">
-                            <ShieldCheck size={12} color="#34D399" />
-                            <Text className="text-emerald-400 text-[9px] font-black uppercase tracking-widest">ENROLLED</Text>
+
+                        <Text className="text-white font-black text-xl text-center uppercase tracking-tight leading-7 px-4">{course?.title}</Text>
+
+                        <View className="flex-row items-center gap-3 mt-4">
+                            <View className="bg-white/10 px-3 py-1.5 rounded-full border border-white/20 flex-row items-center gap-2">
+                                <Play size={10} color="white" fill="white" />
+                                <Text className="text-white text-[9px] font-black uppercase tracking-widest">{course?.lessons?.length || 0} VIDEOS</Text>
+                            </View>
+                            <View className="bg-emerald-500/20 px-3 py-1.5 rounded-full border border-emerald-500/30 flex-row items-center gap-2">
+                                <ShieldCheck size={12} color="#34D399" />
+                                <Text className="text-emerald-400 text-[9px] font-black uppercase tracking-widest">ENROLLED</Text>
+                            </View>
                         </View>
-                    </View>
-                </LinearGradient>
+                    </LinearGradient>
+                </View>
 
                 <View className="px-6 -mt-8 pt-12 pb-32">
                     {/* About Card */}
                     <View className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-black/5 border border-gray-50 mb-8">
                         <View className="flex-row items-center gap-2 mb-3">
                             <Info size={16} color="#6366F1" />
-                            <Text className="font-black text-gray-800 text-[10px] uppercase tracking-[0.2em]">Course Syllabus</Text>
+                            <Text className="font-black text-gray-800 text-[10px] uppercase tracking-[2]">Course Syllabus</Text>
                         </View>
                         <Text className="text-gray-400 text-xs font-medium leading-relaxed">
                             {course?.description || 'Comprehensive learning module designed for top preparation performance.'}
@@ -89,7 +91,7 @@ export const CourseDetailScreen = ({ route, navigation }: any) => {
                     </View>
 
                     {/* Lessons */}
-                    <Text className="font-black text-gray-400 text-[9px] uppercase tracking-[0.3em] ml-4 mb-4">Lessons list</Text>
+                    <Text className="font-black text-gray-400 text-[9px] uppercase tracking-[3] ml-4 mb-4">Lessons list</Text>
                     {course?.lessons?.map((lesson: any, i: number) => (
                         <TouchableOpacity
                             key={lesson._id || i}
@@ -121,7 +123,7 @@ export const CourseDetailScreen = ({ route, navigation }: any) => {
                     onPress={() => { if (course?.lessons?.[0]) navigation.navigate('VideoPlayer', { videoUrl: course.lessons[0].videoUrl }) }}
                 >
                     <Play size={18} color="white" fill="white" />
-                    <Text className="text-white font-black text-xs uppercase tracking-[0.2em]">Start Learning Now</Text>
+                    <Text className="text-white font-black text-xs uppercase tracking-[2]">Start Learning Now</Text>
                 </TouchableOpacity>
             </View>
         </View>

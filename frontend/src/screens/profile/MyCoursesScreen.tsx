@@ -36,24 +36,26 @@ export const MyCoursesScreen = ({ navigation }: any) => {
     return (
         <View className="flex-1 bg-gray-50">
             {/* Header */}
-            <LinearGradient
-                colors={['#6366F1', '#4F46E5']}
-                className="pt-16 pb-12 px-6 rounded-b-[3rem] shadow-xl"
-            >
-                <TouchableOpacity onPress={() => navigation?.goBack()} className="mb-4 flex-row items-center gap-1">
-                    <ChevronLeft size={20} color="#C7D2FE" />
-                    <Text className="text-indigo-100 font-black text-[10px] uppercase tracking-widest">BACK</Text>
-                </TouchableOpacity>
-                <View className="flex-row items-center gap-3">
-                    <View className="bg-white/10 p-2 rounded-xl border border-white/20">
-                        <BookOpen size={22} color="white" />
+            <View className="rounded-b-[3rem] overflow-hidden shadow-xl">
+                <LinearGradient
+                    colors={['#6366F1', '#4F46E5']}
+                    className="pt-16 pb-12 px-6"
+                >
+                    <TouchableOpacity onPress={() => navigation?.goBack()} className="mb-4 flex-row items-center gap-1">
+                        <ChevronLeft size={20} color="#C7D2FE" />
+                        <Text className="text-indigo-100 font-black text-[10px] uppercase tracking-widest">BACK</Text>
+                    </TouchableOpacity>
+                    <View className="flex-row items-center gap-3">
+                        <View className="bg-white/10 p-2 rounded-xl border border-white/20">
+                            <BookOpen size={22} color="white" />
+                        </View>
+                        <View>
+                            <Text variant="h2" className="text-white font-black text-xl tracking-tight uppercase">My Learning</Text>
+                            <Text className="text-indigo-100 text-[9px] font-black tracking-widest uppercase">Your Enrolled Playlists</Text>
+                        </View>
                     </View>
-                    <View>
-                        <Text variant="h2" className="text-white font-black text-xl tracking-tight uppercase">My Learning</Text>
-                        <Text className="text-indigo-100 text-[9px] font-black tracking-widest uppercase">Your Enrolled Playlists</Text>
-                    </View>
-                </View>
-            </LinearGradient>
+                </LinearGradient>
+            </View>
 
             {courses.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-10">
@@ -107,7 +109,7 @@ export const MyCoursesScreen = ({ navigation }: any) => {
                             <View className="p-6 flex-row items-center justify-between">
                                 <View className="flex-1">
                                     <Text className="font-black text-gray-800 text-sm uppercase tracking-tight mb-1" numberOfLines={1}>{item.title}</Text>
-                                    <Text className="text-gray-400 text-[10px] font-black uppercase tracking-[0.1em] italic">Full Access Unlocked</Text>
+                                    <Text className="text-gray-400 text-[10px] font-black uppercase tracking-[1] italic">Full Access Unlocked</Text>
                                 </View>
                                 <View className="w-10 h-10 rounded-2xl bg-gray-50 items-center justify-center">
                                     <Text className="text-gray-300 font-black text-2xl">›</Text>

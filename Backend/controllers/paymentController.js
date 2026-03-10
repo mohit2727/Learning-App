@@ -40,11 +40,23 @@ const createOrder = asyncHandler(async (req, res) => {
         throw new Error('Item not found');
     }
 
-    const amount = item.price * 100; // Razorpay expects amount in paise (e.g., ₹10 = 1000 paise)
+    const amount = item.price * 100;
 
     if (amount <= 0) {
         res.status(400);
         throw new Error('Cannot create order for a free item');
+    }
+
+    // ─── Idempotency: return existing pending order if created < 10 min ago ──
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    const existingPayment = await Payment.findOne({
+        user: req.user._id,
+        itemId,
+        status: 'pending',
+        createdAt: { $gte: tenMinutesAgo },
+    });
+    if (existingPayment) {
+        return res.status(200).json({ id: existingPayment.razorpayOrderId, amount, currency: 'INR', _idempotent: true });
     }
 
     const options = {
@@ -60,11 +72,10 @@ const createOrder = asyncHandler(async (req, res) => {
         throw new Error('Failed to create Razorpay order');
     }
 
-    // Create a pending payment record
     await Payment.create({
         user: req.user._id,
         itemModel: itemType,
-        itemId: itemId,
+        itemId,
         amount: item.price,
         razorpayOrderId: order.id,
         status: 'pending',

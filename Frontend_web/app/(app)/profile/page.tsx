@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { UserCircle, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap } from 'lucide-react';
+import { UserCircle, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen } from 'lucide-react';
 
 export default function ProfilePage() {
     const { signOut, getToken } = useAuth();

@@ -6,8 +6,13 @@ const User = require('../models/userModel');
 // @route   GET /api/dashboard
 // @access  Private
 const getDashboardStats = asyncHandler(async (req, res) => {
-    const courseCount = await Course.countDocuments({ isActive: true });
-    const studentCount = await User.countDocuments({ role: 'student' });
+    // Return specific user stats rather than global stats for the dashboard
+    const user = await User.findById(req.user._id);
+    const enrolledCoursesCount = user ? (user.enrolledCourses?.length || 0) : 0;
+
+    const TestAttempt = require('../models/testAttemptModel');
+    const uniqueTests = await TestAttempt.distinct('test', { user: req.user._id });
+    const quizzesTakenCount = uniqueTests.length;
 
     // Get newest courses
     const newestCourses = await Course.find({ isActive: true })
@@ -17,8 +22,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     res.json({
         stats: {
-            courses: courseCount,
-            students: studentCount,
+            enrolled: enrolledCoursesCount,
+            quizzesTaken: quizzesTakenCount,
         },
         newestCourses,
     });

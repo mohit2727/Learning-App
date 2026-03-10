@@ -2,31 +2,64 @@
 import { useState, useEffect, use } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { dataService, setAuthToken } from '@/lib/api';
-import { useRouter } from 'next/navigation';
-import { Trophy, Home, RotateCcw, Award, Star, ShieldCheck } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Trophy, Home, RotateCcw, Award, Star, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TestResultPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
+    const searchParams = useSearchParams();
     const { isLoaded, isSignedIn, getToken } = useAuth();
     const [result, setResult] = useState<any>(null);
+    const [test, setTest] = useState<any>(null);
+    const [userAnswers, setUserAnswers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
         if (!isLoaded || !isSignedIn) return;
-        const load = async () => {
+
+        // Give priority to query params from an immediate submission
+        const scoreParam = searchParams.get('score');
+        const totalParam = searchParams.get('total');
+
+        if (scoreParam !== null && totalParam !== null) {
+            setResult({
+                score: Number(scoreParam),
+                totalMarks: Number(totalParam)
+            });
+        }
+
+        const loadContent = async () => {
             try {
                 const token = await getToken();
                 setAuthToken(token);
-                const attempts = await dataService.getMyTests();
-                const latestAttempt = attempts.find((a: any) => a.testId === id || a.quiz?._id === id);
-                setResult(latestAttempt);
-            } catch (e) { console.error(e); }
-            finally { setLoading(false); }
+
+                // 1. Fetch test details to know the correct answers
+                const testData = await dataService.getTestById(id);
+                setTest(testData);
+
+                // 2. Load user's selected answers from session storage
+                const storedAnswers = sessionStorage.getItem(`test_answers_${id}`);
+                if (storedAnswers) {
+                    setUserAnswers(JSON.parse(storedAnswers));
+                }
+
+                // 3. If no query params exist, try to grab the attempt from the backend
+                if (scoreParam === null || totalParam === null) {
+                    const attempts = await dataService.getMyTests();
+                    const latestAttempt = attempts.find((a: any) => a.testId === id || a.quiz?._id === id);
+                    if (latestAttempt) setResult(latestAttempt);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
         };
-        load();
-    }, [id, isLoaded, isSignedIn, getToken]);
+
+        loadContent();
+    }, [id, isLoaded, isSignedIn, getToken, searchParams]);
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">
@@ -106,6 +139,57 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
                         <p className="text-[10px] text-emerald-700 font-extrabold uppercase tracking-widest">RECORDED IN LEADERBOARD</p>
                     </div>
                 </div>
+
+                {/* Answers Review Section */}
+                {test && test.questions && userAnswers.length > 0 && (
+                    <div className="mt-8 bg-white rounded-[3rem] p-8 shadow-2xl border border-gray-50 flex flex-col">
+                        <span className="text-[10px] text-gray-300 font-extrabold uppercase tracking-[0.4em] mb-6 text-center">Quiz Review</span>
+
+                        <div className="space-y-6">
+                            {test.questions.map((q: any, i: number) => {
+                                const userAnswerEntry = userAnswers.find(ua => ua.questionId === q._id);
+                                const selectedIdx = userAnswerEntry ? userAnswerEntry.selectedOption : null;
+                                const isCorrect = selectedIdx === q.correctOption;
+
+                                return (
+                                    <div key={q._id} className={`p-5 rounded-3xl border-2 ${isCorrect ? 'border-emerald-100 bg-emerald-50/30' : 'border-rose-100 bg-rose-50/30'}`}>
+                                        <div className="flex items-start gap-3 mb-4">
+                                            <div className="mt-0.5">
+                                                {isCorrect ? (
+                                                    <CheckCircle2 size={20} className="text-emerald-500" />
+                                                ) : (
+                                                    <XCircle size={20} className="text-rose-500" />
+                                                )}
+                                            </div>
+                                            <p className="text-sm font-bold text-gray-800 leading-tight">
+                                                {i + 1}. {q.question}
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-2 pl-8">
+                                            {q.options.map((opt: string, optIdx: number) => {
+                                                const isThisCorrect = optIdx === q.correctOption;
+                                                const isThisSelected = optIdx === selectedIdx;
+
+                                                let style = "bg-white border-gray-100 text-gray-500";
+                                                if (isThisCorrect) style = "bg-emerald-100 border-emerald-500 text-emerald-800 font-bold";
+                                                else if (isThisSelected && !isCorrect) style = "bg-rose-100 border-rose-500 text-rose-800 font-bold line-through opacity-70";
+
+                                                return (
+                                                    <div key={optIdx} className={`px-4 py-3 rounded-2xl border ${style} flex justify-between items-center`}>
+                                                        <span className="text-xs">{opt}</span>
+                                                        {isThisCorrect && <CheckCircle2 size={14} className="text-emerald-600" />}
+                                                        {isThisSelected && !isCorrect && <XCircle size={14} className="text-rose-600" />}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* Navigation Buttons */}
                 <div className="grid grid-cols-2 gap-4 mt-8">

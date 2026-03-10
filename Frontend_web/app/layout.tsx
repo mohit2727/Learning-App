@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import TokenProvider from "@/components/TokenProvider";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
-    title: "Ravina App",
-    description: "Learn, practice and grow with Ravina App",
+    title: "Physical Education with Ravina",
+    description: "Learn, practice and grow with Physical Education with Ravina app",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -14,8 +15,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <html lang="en">
                 <body className="app-shell">
                     <div className="app-container">
-                        <TokenProvider />
-                        {children}
+                        <ErrorBoundary>
+                            <TokenProvider />
+                            {children}
+                        </ErrorBoundary>
                     </div>
                 </body>
             </html>

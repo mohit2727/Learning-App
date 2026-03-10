@@ -94,7 +94,10 @@ const submitTest = asyncHandler(async (req, res) => {
         throw new Error('Test not found');
     }
 
-    const marksPerQuestion = test.marksPerQuestion;
+    const totalMarks = test.totalMarks || 0;
+    const totalQuestions = test.totalQuestions || test.questions.length || 1; // Prevent division by zero
+    const marksPerQuestion = totalMarks / totalQuestions;
+
     const negRatio = test.negativeRatio || 0;
     const isNegativeEnabled = test.negativeMarkingEnabled;
 
@@ -127,26 +130,48 @@ const submitTest = asyncHandler(async (req, res) => {
     // Ensure score doesn't go below 0 if that's a requirement (optional)
     // totalScore = Math.max(0, totalScore);
 
-    const user = req.user;
-    user.totalScore += totalScore;
-    await user.save();
+    try {
+        const user = req.user;
+        const TestAttempt = require('../models/testAttemptModel');
 
-    const TestAttempt = require('../models/testAttemptModel');
-    const attempt = await TestAttempt.create({
-        user: user._id,
-        test: testId,
-        score: totalScore,
-        totalMarks: test.totalMarks,
-        answers: formattedAnswers
-    });
+        // Check past attempts to prevent infinite score farming
+        const pastAttempts = await TestAttempt.find({ user: user._id, test: testId });
 
-    res.json({
-        message: 'Test score submitted successfully',
-        score: totalScore,
-        totalMarks: test.totalMarks,
-        newTotalUserScore: user.totalScore,
-        attemptId: attempt._id
-    });
+        // Calculate how many points to add to the user's leaderboard total
+        let scoreDelta = 0;
+        if (pastAttempts.length === 0) {
+            scoreDelta = totalScore; // First time taking the test
+        } else {
+            const highestPastScore = Math.max(...pastAttempts.map(a => a.score), 0);
+            if (totalScore > highestPastScore) {
+                scoreDelta = totalScore - highestPastScore; // Only award the improvement points
+            }
+        }
+
+        if (scoreDelta > 0) {
+            user.totalScore = (user.totalScore || 0) + scoreDelta;
+            await user.save();
+        }
+
+        const attempt = await TestAttempt.create({
+            user: user._id,
+            test: testId,
+            score: totalScore,
+            totalMarks: test.totalMarks,
+            answers: formattedAnswers
+        });
+
+        res.json({
+            message: 'Test score submitted successfully',
+            score: totalScore,
+            totalMarks: test.totalMarks,
+            newTotalUserScore: user.totalScore,
+            attemptId: attempt._id
+        });
+    } catch (error) {
+        res.status(500);
+        throw new Error('Error saving test attempt: ' + error.message);
+    }
 });
 
 // @desc    Update a test
@@ -160,7 +185,8 @@ const updateTest = asyncHandler(async (req, res) => {
         totalQuestions,
         negativeMarkingEnabled,
         negativeRatio,
-        isActive
+        isActive,
+        price
     } = req.body;
 
     const test = await Test.findById(req.params.id);
@@ -173,6 +199,7 @@ const updateTest = asyncHandler(async (req, res) => {
         test.negativeMarkingEnabled = negativeMarkingEnabled !== undefined ? negativeMarkingEnabled : test.negativeMarkingEnabled;
         test.negativeRatio = negativeRatio !== undefined ? Number(negativeRatio) : test.negativeRatio;
         test.isActive = isActive !== undefined ? isActive : test.isActive;
+        test.price = price !== undefined ? Number(price) : test.price;
 
         const updatedTest = await test.save();
         res.json(updatedTest);

@@ -3,7 +3,7 @@ import { View, FlatList, ActivityIndicator, TouchableOpacity, ScrollView } from 
 import { Text } from '../../components/Text';
 import { dataService } from '../../api/dataService';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ClipboardList, ChevronLeft, Award, Star, Target } from 'lucide-react-native';
+import { ClipboardList, ChevronLeft, Award, Star, Target, ShieldCheck } from 'lucide-react-native';
 
 export const MyTestsScreen = ({ navigation }: any) => {
     const [attempts, setAttempts] = useState<any[]>([]);
@@ -34,24 +34,26 @@ export const MyTestsScreen = ({ navigation }: any) => {
     return (
         <View className="flex-1 bg-gray-50">
             {/* Header */}
-            <LinearGradient
-                colors={['#6366F1', '#4F46E5']}
-                className="pt-16 pb-12 px-6 rounded-b-[3rem] shadow-xl"
-            >
-                <TouchableOpacity onPress={() => navigation?.goBack()} className="mb-4 flex-row items-center gap-1">
-                    <ChevronLeft size={20} color="#C7D2FE" />
-                    <Text className="text-indigo-100 font-black text-[10px] uppercase tracking-widest">BACK</Text>
-                </TouchableOpacity>
-                <View className="flex-row items-center gap-3">
-                    <View className="bg-white/10 p-2 rounded-xl border border-white/20">
-                        <ClipboardList size={22} color="white" />
+            <View className="rounded-b-[3rem] overflow-hidden shadow-xl">
+                <LinearGradient
+                    colors={['#6366F1', '#4F46E5']}
+                    className="pt-16 pb-12 px-6"
+                >
+                    <TouchableOpacity onPress={() => navigation?.goBack()} className="mb-4 flex-row items-center gap-1">
+                        <ChevronLeft size={20} color="#C7D2FE" />
+                        <Text className="text-indigo-100 font-black text-[10px] uppercase tracking-widest">BACK</Text>
+                    </TouchableOpacity>
+                    <View className="flex-row items-center gap-3">
+                        <View className="bg-white/10 p-2 rounded-xl border border-white/20">
+                            <ClipboardList size={22} color="white" />
+                        </View>
+                        <View>
+                            <Text variant="h2" className="text-white font-black text-xl tracking-tight uppercase">Test History</Text>
+                            <Text className="text-indigo-100 text-[9px] font-black tracking-widest uppercase">Performance Archives</Text>
+                        </View>
                     </View>
-                    <View>
-                        <Text variant="h2" className="text-white font-black text-xl tracking-tight uppercase">Test History</Text>
-                        <Text className="text-indigo-100 text-[9px] font-black tracking-widest uppercase">Performance Archives</Text>
-                    </View>
-                </View>
-            </LinearGradient>
+                </LinearGradient>
+            </View>
 
             {attempts.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-10">
@@ -103,7 +105,7 @@ export const MyTestsScreen = ({ navigation }: any) => {
                                 <View className="flex-row items-center gap-4 pt-4 border-t border-gray-50">
                                     <View className="items-center min-w-[40px]">
                                         <Text className={`text-xl font-black ${passed ? 'text-emerald-600' : 'text-rose-500'}`}>{item.score}<Text className="text-gray-300 text-[9px]">/{item.totalMarks || '?'}</Text></Text>
-                                        <Text className="text-gray-400 text-[7px] font-black uppercase tracking-[0.2em] mt-0.5">SCORE</Text>
+                                        <Text className="text-gray-400 text-[7px] font-black uppercase tracking-[2] mt-0.5">SCORE</Text>
                                     </View>
 
                                     <View className="flex-1 bg-gray-50 rounded-full h-2 overflow-hidden shadow-inner">
@@ -115,7 +117,7 @@ export const MyTestsScreen = ({ navigation }: any) => {
 
                                     <View className="items-end">
                                         <Text className={`text-sm font-black ${passed ? 'text-emerald-600' : 'text-rose-500'}`}>{pct}%</Text>
-                                        <Text className="text-gray-400 text-[7px] font-black uppercase tracking-[0.2em] mt-0.5">GRADE</Text>
+                                        <Text className="text-gray-400 text-[7px] font-black uppercase tracking-[2] mt-0.5">GRADE</Text>
                                     </View>
                                 </View>
                             </View>
