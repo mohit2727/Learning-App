@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -26,18 +27,13 @@ const navItems = [
 
 export default function Sidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boolean, onMobileClose?: () => void }) {
     const pathname = usePathname();
-    const { signOut } = useAuth();
+    const { logout } = useAuth();
+    const router = useRouter();
 
     const handleLogout = async () => {
-        // Clear old manual auth traces
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminData');
-
-        // Let Clerk handle the real session logout
-        await signOut();
-
-        // Force redirect to login page
-        window.location.href = '/login';
+        if (!confirm('Are you sure you want to sign out?')) return;
+        await logout();
+        router.push('/login');
     };
 
     return (

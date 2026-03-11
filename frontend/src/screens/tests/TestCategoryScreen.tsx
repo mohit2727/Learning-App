@@ -4,13 +4,12 @@ import { WebView } from 'react-native-webview';
 import { Text } from '../../components/Text';
 import { dataService } from '../../api/dataService';
 import { paymentService } from '../../api/paymentService';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth } from '../../context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Lock, Play, ClipboardList, Target, Award, Sparkles, ShieldCheck } from 'lucide-react-native';
 
 export const TestCategoryScreen = ({ navigation }: any) => {
-    const { isLoaded, isSignedIn } = useAuth();
-    const { user } = useUser();
+    const { user, loading: authLoading } = useAuth();
     const [tests, setTests] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -20,10 +19,10 @@ export const TestCategoryScreen = ({ navigation }: any) => {
     const [activeTest, setActiveTest] = useState<any>(null);
 
     useEffect(() => {
-        if (isLoaded && isSignedIn) {
+        if (!authLoading && user) {
             fetchTests();
         }
-    }, [isLoaded, isSignedIn]);
+    }, [authLoading, user]);
 
     const fetchTests = async () => {
         setIsLoading(true);
@@ -106,8 +105,8 @@ export const TestCategoryScreen = ({ navigation }: any) => {
                             }));
                         },
                         "prefill": {
-                            "name": "${user?.fullName || ''}",
-                            "email": "${user?.primaryEmailAddress?.emailAddress || ''}"
+                            "name": "${user?.displayName || ''}",
+                            "email": "${user?.email || ''}"
                         },
                         "theme": { "color": "#6366F1" },
                         "modal": {

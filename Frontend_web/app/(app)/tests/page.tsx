@@ -1,13 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import { dataService, paymentService, setAuthToken } from '@/lib/api';
 import { Lock, Unlock, Clock, Target, ChevronRight, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function TestsPage() {
-    const { isLoaded, isSignedIn, getToken } = useAuth();
-    const { user } = useUser();
+    const { user, dbUser, loading: authLoading } = useAuth();
     const [tests, setTests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [razorpayKey, setRazorpayKey] = useState('');
@@ -20,7 +19,7 @@ export default function TestsPage() {
     const fetchTests = async () => {
         setLoading(true);
         try {
-            const token = await getToken();
+            const token = await user!.getIdToken();
             setAuthToken(token);
             const [t, d] = await Promise.all([dataService.getTests(), dataService.getDashboard()]);
             setTests(t);
@@ -29,7 +28,7 @@ export default function TestsPage() {
         finally { setLoading(false); }
     };
 
-    useEffect(() => { if (isLoaded && isSignedIn) fetchTests(); }, [isLoaded, isSignedIn]);
+    useEffect(() => { if (!authLoading && user) fetchTests(); }, [authLoading, user]);
 
     const handleStart = async (test: any) => {
         if (test.isPurchased || test.price === 0) {
@@ -37,7 +36,7 @@ export default function TestsPage() {
         } else {
             setProcessing(true);
             try {
-                const token = await getToken();
+                const token = await user!.getIdToken();
                 setAuthToken(token);
                 const order = await paymentService.createOrder(test._id, 'Test');
                 setPaymentOrder(order);
@@ -51,7 +50,7 @@ export default function TestsPage() {
         }
     };
 
-    const razorpayHtml = paymentOrder && razorpayKey ? `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://checkout.razorpay.com/v1/checkout.js"></script></head><body><script>var options={"key":"${razorpayKey}","amount":"${paymentOrder.amount}","currency":"INR","name":"Ravina App","description":"Unlock Quiz: ${activeTest?.title ?? ''}","order_id":"${paymentOrder.id}","handler":function(r){document.getElementById('rp-result').textContent=JSON.stringify({status:'success',...r});},"prefill":{"name":"${user?.fullName ?? ''}","email":"${user?.primaryEmailAddress?.emailAddress ?? ''}"},"theme":{"color":"#7c3aed"},"modal":{"ondismiss":function(){document.getElementById('rp-result').textContent=JSON.stringify({status:'cancel'});}}};var rzp=new Razorpay(options);rzp.open();</script><div id="rp-result" style="display:none"></div></body></html>` : '';
+    const razorpayHtml = paymentOrder && razorpayKey ? `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://checkout.razorpay.com/v1/checkout.js"></script></head><body><script>var options={"key":"${razorpayKey}","amount":"${paymentOrder.amount}","currency":"INR","name":"Ravina App","description":"Unlock Quiz: ${activeTest?.title ?? ''}","order_id":"${paymentOrder.id}","handler":function(r){document.getElementById('rp-result').textContent=JSON.stringify({status:'success',...r});},"prefill":{"name":"${dbUser?.name ?? ''}","contact":"${dbUser?.mobile || user?.phoneNumber || ''}"},"theme":{"color":"#7c3aed"},"modal":{"ondismiss":function(){document.getElementById('rp-result').textContent=JSON.stringify({status:'cancel'});}}};var rzp=new Razorpay(options);rzp.open();</script><div id="rp-result" style="display:none"></div></body></html>` : '';
 
     return (
         <div className="flex flex-col min-h-full bg-gray-50">

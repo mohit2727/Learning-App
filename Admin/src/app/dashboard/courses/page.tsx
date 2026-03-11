@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import {
     BookOpen,
     Plus,
@@ -21,7 +21,7 @@ export default function CoursesPage() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState<any>(null);
-    const { getToken, isLoaded, isSignedIn } = useAuth();
+    const { user, loading: authLoading } = useAuth();
 
     // Form state
     const [title, setTitle] = useState('');
@@ -31,13 +31,10 @@ export default function CoursesPage() {
     const [isUploading, setIsUploading] = useState(false);
 
     const fetchCourses = async () => {
-        if (!isLoaded || !isSignedIn) return;
+        if (authLoading || !user) return;
         setLoading(true);
         try {
-            const token = await getToken();
-            const { data } = await api.get('/courses', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const { data } = await api.get('/courses');
             setCourses(data);
         } catch (err) {
             console.error('Failed to fetch courses');
@@ -48,7 +45,7 @@ export default function CoursesPage() {
 
     useEffect(() => {
         fetchCourses();
-    }, [getToken, isLoaded, isSignedIn]);
+    }, [authLoading, user]);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -59,11 +56,9 @@ export default function CoursesPage() {
         formData.append('image', file);
 
         try {
-            const token = await getToken();
             const { data } = await api.post('/upload/image', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${token}`
+                    'Content-Type': 'multipart/form-data'
                 }
             });
             setImage(data);
@@ -78,10 +73,7 @@ export default function CoursesPage() {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const token = await getToken();
-            await api.post('/courses', { title, description, image, price }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.post('/courses', { title, description, image, price });
             setShowCreateModal(false);
             fetchCourses();
             setTitle('');
@@ -97,10 +89,7 @@ export default function CoursesPage() {
         e.preventDefault();
         if (!selectedCourse) return;
         try {
-            const token = await getToken();
-            await api.put(`/courses/${selectedCourse._id}`, { title, description, image, price }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.put(`/courses/${selectedCourse._id}`, { title, description, image, price });
             setShowEditModal(false);
             fetchCourses();
             setTitle('');
@@ -124,10 +113,7 @@ export default function CoursesPage() {
 
     const toggleStatus = async (id: string, currentStatus: boolean) => {
         try {
-            const token = await getToken();
-            await api.put(`/courses/${id}/status`, { isActive: !currentStatus }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.put(`/courses/${id}/status`, { isActive: !currentStatus });
             setCourses(courses.map(c => c._id === id ? { ...c, isActive: !currentStatus } : c));
         } catch (err) {
             alert('Failed to update status');
@@ -138,10 +124,7 @@ export default function CoursesPage() {
         if (!window.confirm("Are you sure you want to delete this playlist? This action cannot be undone.")) return;
 
         try {
-            const token = await getToken();
-            await api.delete(`/courses/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/courses/${id}`);
             setCourses(courses.filter(c => c._id !== id));
         } catch (err) {
             alert('Failed to delete playlist');

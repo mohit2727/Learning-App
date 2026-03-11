@@ -13,10 +13,7 @@ const apiClient = axios.create({
 
 import { getItemAsync } from '../utils/storage';
 
-// We need to fetch the token Clerk uses. Clerk's key format is usually `__clerk_client_jwt`.
-// However, the easiest way to inject the hook into Axios is to either pass it from a component 
-// or read SecureStore directly if we know the key.
-// But another robust way is to export a function to set the token globally, or just read it from SecureStore.
+// Token is managed and synchronized via AuthSync component using the tokenProvider.ts
 
 import { getAuthToken } from './tokenProvider';
 

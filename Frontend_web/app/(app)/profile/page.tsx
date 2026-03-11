@@ -1,13 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { UserCircle, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen } from 'lucide-react';
 
 export default function ProfilePage() {
-    const { signOut, getToken } = useAuth();
-    const { user } = useUser();
+    const { user, dbUser, logout, loading: authLoading } = useAuth();
     const router = useRouter();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -16,9 +15,10 @@ export default function ProfilePage() {
     const [form, setForm] = useState({ mobile: '', age: '', city: '', state: '', pincode: '' });
 
     useEffect(() => {
+        if (authLoading || !user) return;
         const load = async () => {
             try {
-                const token = await getToken();
+                const token = await user.getIdToken();
                 setAuthToken(token);
                 const p = await dataService.getProfile();
                 setProfile(p);
@@ -27,12 +27,13 @@ export default function ProfilePage() {
             finally { setLoading(false); }
         };
         load();
-    }, [getToken]);
+    }, [authLoading, user]);
 
     const handleSave = async () => {
+        if (!user) return;
         setSaving(true);
         try {
-            const token = await getToken();
+            const token = await user.getIdToken();
             setAuthToken(token);
             const updated = await dataService.updateProfile(form);
             setProfile(updated);
@@ -42,9 +43,9 @@ export default function ProfilePage() {
         finally { setSaving(false); }
     };
 
-    const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : profile?.name || 'Student';
-    const email = user?.primaryEmailAddress?.emailAddress || profile?.email || '';
-    const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+    const displayName = dbUser?.name || 'Student';
+    const email = dbUser?.email || '';
+    const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'S';
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">
@@ -60,15 +61,9 @@ export default function ProfilePage() {
                 <div className="flex flex-col items-center relative z-10">
                     <div className="relative mb-4">
                         <div className="w-24 h-24 rounded-[30%] bg-white p-1.5 shadow-2xl shadow-black/20 rotate-3">
-                            {user?.imageUrl ? (
-                                <div className="w-full h-full rounded-[25%] overflow-hidden -rotate-3">
-                                    <img src={user.imageUrl} alt="Profile" className="w-full h-full object-cover" />
-                                </div>
-                            ) : (
-                                <div className="w-full h-full rounded-[25%] bg-violet-100 flex items-center justify-center -rotate-3">
-                                    <span className="text-violet-600 font-black text-2xl">{initials}</span>
-                                </div>
-                            )}
+                            <div className="w-full h-full rounded-[25%] bg-violet-100 flex items-center justify-center -rotate-3">
+                                <span className="text-violet-600 font-black text-2xl">{initials}</span>
+                            </div>
                         </div>
                         <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-7 h-7 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
                             <ShieldCheck size={14} className="text-white" strokeWidth={3} />
@@ -157,7 +152,7 @@ export default function ProfilePage() {
                         </button>
                     </div>
 
-                    <button onClick={() => { if (confirm('Are you sure you want to logout?')) signOut(); }}
+                    <button onClick={() => { if (confirm('Are you sure you want to logout?')) logout(); }}
                         className="w-full h-14 bg-rose-50 rounded-2xl flex items-center px-4 border border-rose-100 mt-6 group card-hover">
                         <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600">
                             <LogOut size={18} />

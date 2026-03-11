@@ -1,16 +1,21 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
-import { auth } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, BookOpen, Activity, GraduationCap } from 'lucide-react';
+import { useEffect } from 'react';
 
-export default async function Home() {
-    const { userId } = await auth();
+export default function Home() {
+    const { user, loading } = useAuth();
+    const router = useRouter();
 
-    // If logged in, send them straight to the app
-    if (userId) {
-        redirect('/dashboard');
-    }
+    useEffect(() => {
+        if (!loading && user) {
+            router.push('/dashboard');
+        }
+    }, [user, loading, router]);
 
     return (
         <div className="min-h-[100dvh] bg-slate-50 flex flex-col relative overflow-hidden">
@@ -33,12 +38,22 @@ export default async function Home() {
                     </div>
                     <span className="font-bold text-xl text-slate-900 tracking-tight">Ravina App</span>
                 </div>
-                <Link
-                    href="/sign-in"
-                    className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors px-4 py-2 rounded-full hover:bg-indigo-50"
-                >
-                    Log In
-                </Link>
+                {!user && !loading && (
+                    <Link
+                        href="/sign-in"
+                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors px-4 py-2 rounded-full hover:bg-indigo-50"
+                    >
+                        Log In
+                    </Link>
+                )}
+                {user && !loading && (
+                    <Link
+                        href="/dashboard"
+                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors px-4 py-2 rounded-full hover:bg-indigo-50"
+                    >
+                        Dashboard
+                    </Link>
+                )}
             </header>
 
             {/* Main Content Area */}
@@ -73,21 +88,35 @@ export default async function Home() {
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-8">
-                        <Link
-                            href="/sign-up"
-                            className="group relative flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold text-lg py-4 px-8 rounded-full shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
-                        >
-                            <span className="relative z-10">Get Started Now</span>
-                            <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
-                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </Link>
+                        {!user && !loading && (
+                            <>
+                                <Link
+                                    href="/sign-in"
+                                    className="group relative flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold text-lg py-4 px-8 rounded-full shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                                >
+                                    <span className="relative z-10">Get Started Now</span>
+                                    <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                </Link>
 
-                        <Link
-                            href="/sign-in"
-                            className="flex items-center justify-center bg-white text-slate-800 ring-1 ring-slate-200 font-bold text-lg py-4 px-8 rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:ring-slate-300 transition-all duration-300"
-                        >
-                            I already have an account
-                        </Link>
+                                <Link
+                                    href="/sign-in"
+                                    className="flex items-center justify-center bg-white text-slate-800 ring-1 ring-slate-200 font-bold text-lg py-4 px-8 rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:ring-slate-300 transition-all duration-300"
+                                >
+                                    I already have an account
+                                </Link>
+                            </>
+                        )}
+                        {user && !loading && (
+                            <Link
+                                href="/dashboard"
+                                className="group relative flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold text-lg py-4 px-8 rounded-full shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                            >
+                                <span className="relative z-10">Go to Dashboard</span>
+                                <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            </Link>
+                        )}
                     </div>
 
                     {/* Features Quick List */}

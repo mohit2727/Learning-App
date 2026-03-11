@@ -1,24 +1,26 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useUser, useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import Link from 'next/link';
 import { TrendingUp, Target, Sparkles, MessageCircle, Send } from 'lucide-react';
 
 export default function DashboardPage() {
-    const { user } = useUser();
-    const { isLoaded, isSignedIn, getToken } = useAuth();
+    const { user, dbUser, loading: authLoading } = useAuth();
     const [dashboard, setDashboard] = useState<any>(null);
     const [announcements, setAnnouncements] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [current, setCurrent] = useState(0);
 
     useEffect(() => {
-        if (!isLoaded || !isSignedIn) return;
+        if (authLoading || !user) return;
         const load = async () => {
             try {
-                const token = await getToken();
+                // The global interceptor should handle token updates, but 
+                // we can also force token setting here if needed
+                const token = await user.getIdToken();
                 setAuthToken(token);
+
                 const [d, a] = await Promise.all([dataService.getDashboard(), dataService.getAnnouncements()]);
                 setDashboard(d);
                 setAnnouncements(a);
@@ -26,7 +28,7 @@ export default function DashboardPage() {
             finally { setLoading(false); }
         };
         load();
-    }, [isLoaded, isSignedIn]);
+    }, [authLoading, user]);
 
     useEffect(() => {
         if (!announcements.length) return;
@@ -34,10 +36,10 @@ export default function DashboardPage() {
         return () => clearInterval(t);
     }, [announcements.length]);
 
-    const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Student';
-    const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+    const displayName = dbUser?.name || 'Student';
+    const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'S';
 
-    if (loading) return (
+    if (loading || authLoading) return (
         <div className="flex-1 flex items-center justify-center h-screen">
             <div className="flex flex-col items-center gap-3">
                 <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />

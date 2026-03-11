@@ -1,21 +1,22 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, BookOpen, Play, ShieldCheck, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MyCoursesPage() {
-    const { getToken } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [courses, setCourses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (authLoading || !user) return;
         const load = async () => {
             try {
-                const token = await getToken();
+                const token = await user.getIdToken();
                 setAuthToken(token);
                 const data = await dataService.getMyCourses();
                 setCourses(data);
@@ -23,7 +24,7 @@ export default function MyCoursesPage() {
             finally { setLoading(false); }
         };
         load();
-    }, [getToken]);
+    }, [authLoading, user]);
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">

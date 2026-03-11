@@ -3,6 +3,7 @@ const Test = require('../models/testModel');
 const { extractTextFromFile } = require('../utils/fileParser');
 const { generateQuestionsFromText } = require('../services/quizGeneratorService');
 const fs = require('fs');
+const { invalidateCache } = require('../middleware/cacheMiddleware');
 
 // @desc    Upload file and generate quiz
 // @route   POST /api/upload/quiz
@@ -18,7 +19,8 @@ const uploadAndGenerateQuiz = asyncHandler(async (req, res) => {
         duration,
         totalMarks,
         negativeMarkingEnabled,
-        negativeRatio
+        negativeRatio,
+        price
     } = req.body;
 
     if (!title || !duration) {
@@ -44,11 +46,13 @@ const uploadAndGenerateQuiz = asyncHandler(async (req, res) => {
             totalQuestions: questions.length,
             negativeMarkingEnabled: negativeMarkingEnabled === 'true' || negativeMarkingEnabled === true,
             negativeRatio: Number(negativeRatio) || 0.25,
+            price: Number(price) || 0,
             fileSource: req.file.originalname,
             isActive: false, // Admin needs to manually turn it ON
         });
 
         const createdTest = await test.save();
+        invalidateCache('/tests');
 
         // Cleanup: remove the uploaded file from server after processing
         if (req.file.path) fs.unlinkSync(req.file.path);

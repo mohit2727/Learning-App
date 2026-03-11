@@ -1,27 +1,32 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
-import TokenProvider from "@/components/TokenProvider";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { AuthProvider } from '@/context/AuthContext';
 import ErrorBoundary from "@/components/ErrorBoundary";
 
+const inter = Inter({ subsets: ['latin'] });
+
 export const metadata: Metadata = {
-    title: "Physical Education with Ravina",
-    description: "Learn, practice and grow with Physical Education with Ravina app",
+    title: 'Physical Education with Ravina',
+    description: 'Learn physical education through our comprehensive platform',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+    children,
+}: Readonly<{
+    children: React.ReactNode;
+}>) {
     return (
-        <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
-            <html lang="en">
-                <body className="app-shell">
+        <html lang="en">
+            <body className="app-shell">
+                <AuthProvider>
                     <div className="app-container">
                         <ErrorBoundary>
-                            <TokenProvider />
                             {children}
                         </ErrorBoundary>
                     </div>
-                </body>
-            </html>
-        </ClerkProvider>
+                </AuthProvider>
+            </body>
+        </html>
     );
 }

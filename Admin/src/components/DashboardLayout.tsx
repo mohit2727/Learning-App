@@ -1,21 +1,21 @@
 'use client';
 
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import { Menu, X } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { isLoaded, isSignedIn } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
-        if (isLoaded && !isSignedIn) {
+        if (!authLoading && !user) {
             router.push('/login');
         }
-    }, [isLoaded, isSignedIn, router]);
+    }, [authLoading, user, router]);
 
     // Close mobile menu when screen resizes to desktop
     useEffect(() => {
@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    if (!isLoaded || !isSignedIn) {
+    if (authLoading || !user) {
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center space-y-4">
                 <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />

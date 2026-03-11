@@ -12,7 +12,7 @@ const runTest = async () => {
         let user = await User.findOne({ email: 'test_scorer@example.com' });
         if (!user) {
             user = await User.create({
-                clerkId: 'test_scorer_clerk',
+                firebaseUid: 'test_scorer_firebase',
                 name: 'Test Scorer',
                 email: 'test_scorer@example.com',
                 role: 'student'

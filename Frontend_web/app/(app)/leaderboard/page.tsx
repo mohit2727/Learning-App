@@ -1,19 +1,19 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import { Trophy, Medal, Award, Crown } from 'lucide-react';
 
 export default function LeaderboardPage() {
-    const { isLoaded, isSignedIn, getToken } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [board, setBoard] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     const load = async () => {
-        if (!isLoaded || !isSignedIn) return;
+        if (authLoading || !user) return;
         setLoading(true);
         try {
-            const token = await getToken();
+            const token = await user.getIdToken();
             setAuthToken(token);
             const data = await dataService.getLeaderboard();
             setBoard(data);
@@ -21,7 +21,7 @@ export default function LeaderboardPage() {
         finally { setLoading(false); }
     };
 
-    useEffect(() => { load(); }, [isLoaded, isSignedIn]);
+    useEffect(() => { load(); }, [authLoading, user]);
 
     const top3 = board.slice(0, 3);
     const others = board.slice(3);

@@ -4,7 +4,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Megaphone, Clock, Upload, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AnnouncementsPage() {
     const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -14,23 +14,24 @@ export default function AnnouncementsPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const { getToken } = useAuth();
+    const { user, loading: authLoading } = useAuth();
 
     const fetchAnnouncements = async () => {
+        if (authLoading || !user) return;
+        setIsLoading(true);
         try {
-            const token = await getToken();
-            const { data } = await api.get('/announcements/all', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const { data } = await api.get('/announcements/all');
             setAnnouncements(data);
         } catch (error) {
             console.error('Failed to fetch announcements:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
         fetchAnnouncements();
-    }, [getToken]);
+    }, [authLoading, user]);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -41,11 +42,9 @@ export default function AnnouncementsPage() {
         formData.append('image', file);
 
         try {
-            const token = await getToken();
             const { data } = await api.post('/upload/image', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${token}`
+                    'Content-Type': 'multipart/form-data'
                 }
             });
             setImage(data);
@@ -63,15 +62,10 @@ export default function AnnouncementsPage() {
 
         setIsLoading(true);
         try {
-            const token = await getToken();
             if (editingId) {
-                await api.put(`/announcements/${editingId}`, { title, body, image, isActive: true }, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.put(`/announcements/${editingId}`, { title, body, image, isActive: true });
             } else {
-                await api.post('/announcements', { title, body, image, isActive: true }, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.post('/announcements', { title, body, image, isActive: true });
             }
             setTitle('');
             setBody('');
@@ -97,10 +91,7 @@ export default function AnnouncementsPage() {
         if (!confirm('Are you sure you want to delete this announcement?')) return;
 
         try {
-            const token = await getToken();
-            await api.delete(`/announcements/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/announcements/${id}`);
             fetchAnnouncements();
         } catch (error) {
             console.error('Failed to delete announcement:', error);

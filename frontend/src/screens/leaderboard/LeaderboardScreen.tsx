@@ -5,17 +5,17 @@ import { dataService } from '../../api/dataService';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Crown, Trophy, Award, Medal } from 'lucide-react-native';
 
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 export const LeaderboardScreen = () => {
-    const { isLoaded, isSignedIn } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchLeaderboard = async () => {
-        if (!isLoaded || !isSignedIn) return;
+        if (authLoading || !user) return;
         setLoading(true);
         try {
             const data = await dataService.getLeaderboard();
@@ -29,7 +29,7 @@ export const LeaderboardScreen = () => {
 
     useEffect(() => {
         fetchLeaderboard();
-    }, [isLoaded, isSignedIn]);
+    }, [authLoading, user]);
 
     const top3 = leaderboard.slice(0, 3);
     const others = leaderboard.slice(3);

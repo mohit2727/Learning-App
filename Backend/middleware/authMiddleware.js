@@ -1,8 +1,6 @@
-const { createClerkClient } = require('@clerk/clerk-sdk-node');
+const admin = require('../config/firebase-admin');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel');
-
-const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 const protect = asyncHandler(async (req, res, next) => {
     let token;
@@ -20,62 +18,59 @@ const protect = asyncHandler(async (req, res, next) => {
     }
 
     try {
-        // Verify the Clerk session token
-        let clerkId;
-        try {
-            const result = await clerkClient.verifyToken(token);
-            clerkId = result.sub;
-        } catch (verifyErr) {
-            console.error('Token verification failed:', verifyErr.message);
-            const result = await clerkClient.verifyToken(token, {
-                authorizedParties: undefined,
-            });
-            clerkId = result.sub;
-        }
+        // Verify the Firebase ID token
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        const firebaseUid = decodedToken.uid;
+
+        // Mobile numbers are normally included in the Firebase OTP token payload as phone_number
+        const mobile = decodedToken.phone_number || '';
 
         console.log('--- AUTH DEBUG ---');
-        console.log('Incoming Token Clerk ID:', clerkId);
+        console.log('Incoming Token Firebase UID:', firebaseUid);
 
         // Find user in DB
-        let user = await User.findOne({ clerkId });
+        let user = await User.findOne({ firebaseUid });
 
         if (!user) {
-            console.log('User not found in DB by Clerk ID. Auto-creating...');
+            console.log('User not found in DB by Firebase UID. Auto-creating...');
             try {
-                const clerkUser = await clerkClient.users.getUser(clerkId);
-                const email = clerkUser.emailAddresses?.[0]?.emailAddress || '';
-                const role = clerkUser.publicMetadata?.role || 'student';
-
-                console.log('Fetched Clerk User Email:', email, '| Role:', role);
+                // Determine a fallback name and an email stub (required fields historically)
+                const fallbackName = mobile ? `Student ${mobile.slice(-4)}` : 'Student';
+                const fallbackEmail = `${firebaseUid}@firebase-auth.local`;
 
                 user = await User.create({
-                    clerkId,
-                    name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || email.split('@')[0],
-                    email,
-                    role,
+                    firebaseUid,
+                    name: fallbackName,
+                    email: fallbackEmail,
+                    mobile: mobile,
+                    role: 'student',
                 });
                 console.log('User created:', user._id);
             } catch (createErr) {
-                // If Clerk API is unreachable, fail gracefully
-                console.error('Failed to auto-create user from Clerk:', createErr.message);
+                console.error('Failed to auto-create user from Firebase:', createErr.message);
                 res.status(503).set('Cache-Control', 'no-store');
                 throw new Error('Auth service temporarily unavailable. Please try again.');
             }
         } else {
             console.log('User found in DB with role:', user.role);
+            // If the user didn't have a mobile saved yet (due to migration), save it
+            if (mobile && !user.mobile) {
+                user.mobile = mobile;
+                await user.save();
+            }
         }
 
         req.user = user;
         next();
     } catch (error) {
-        console.error('Clerk auth error:', error.message);
+        console.error('Firebase auth error:', error.message);
         res.set('Cache-Control', 'no-store');
         if (!res.statusCode || res.statusCode === 200) res.status(401);
-        throw new Error('Not authorized: ' + error.message);
+        throw new Error('Not authorized: Invalid token');
     }
 });
 
-const admin = (req, res, next) => {
+const adminCheck = (req, res, next) => {
     if (req.user && req.user.role === 'admin') {
         next();
     } else {
@@ -84,4 +79,4 @@ const admin = (req, res, next) => {
     }
 };
 
-module.exports = { protect, admin };
+module.exports = { protect, admin: adminCheck };

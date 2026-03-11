@@ -11,7 +11,7 @@ import {
 import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
-import { useUser, useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../../context/AuthContext';
 import { dataService } from '../../api/dataService';
 import { LinearGradient } from 'expo-linear-gradient';
 import { User, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen, ClipboardList } from 'lucide-react-native';
@@ -19,8 +19,7 @@ import { User, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap
 const { width } = Dimensions.get('window');
 
 export const ProfileScreen = ({ navigation }: any) => {
-    const { user } = useUser();
-    const { signOut } = useAuth();
+    const { user, signOut } = useAuth();
 
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -82,8 +81,8 @@ export const ProfileScreen = ({ navigation }: any) => {
         );
     }
 
-    const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (profile?.name || 'Student');
-    const email = user?.primaryEmailAddress?.emailAddress || profile?.email || 'Not set';
+    const displayName = user?.displayName || profile?.name || 'Student';
+    const email = user?.email || profile?.email || 'Not set';
     const initials = displayName.split(' ').map((n: any) => n[0]).join('').slice(0, 2).toUpperCase();
 
     return (
@@ -98,7 +97,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                     >
                         <View className="relative mb-6">
                             <View className="w-24 h-24 rounded-[30%] bg-white p-1.5 shadow-2xl rotate-3">
-                                {user?.imageUrl ? (
+                                {user?.photoURL ? (
                                     <View className="w-full h-full rounded-[25%] overflow-hidden -rotate-3 bg-indigo-50">
                                         <ActivityIndicator size="small" color="#6366F1" style={{ position: 'absolute', top: '40%', left: '40%' }} />
                                         <View style={{ width: '100%', height: '100%' }}>

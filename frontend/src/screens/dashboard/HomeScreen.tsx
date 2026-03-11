@@ -10,7 +10,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { Text } from '../../components/Text';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth } from '../../context/AuthContext';
 import { dataService } from '../../api/dataService';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Play, Video, BookOpen, PenTool as Tool, User, Award, MessageCircle, Send } from 'lucide-react-native';
@@ -106,15 +106,14 @@ const CourseCard = ({ item }: { item: any }) => (
 );
 
 export const HomeScreen = ({ navigation }: any) => {
-    const { user } = useUser();
-    const { isLoaded, isSignedIn } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [dashboardData, setDashboardData] = useState<any>(null);
     const [announcements, setAnnouncements] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
-            if (!isLoaded || !isSignedIn) return;
+            if (authLoading || !user) return;
             setIsLoading(true);
             try {
                 const [dashboardRes, announcementsRes] = await Promise.all([
@@ -130,7 +129,7 @@ export const HomeScreen = ({ navigation }: any) => {
             }
         };
         fetchDashboardData();
-    }, [isLoaded, isSignedIn]);
+    }, [authLoading, user]);
 
     if (isLoading) {
         return (
@@ -141,7 +140,7 @@ export const HomeScreen = ({ navigation }: any) => {
         );
     }
 
-    const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Student';
+    const displayName = user?.displayName || 'Student';
     const init = displayName.charAt(0).toUpperCase();
 
     return (

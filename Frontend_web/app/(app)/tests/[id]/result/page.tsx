@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, use } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Trophy, Home, RotateCcw, Award, Star, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
@@ -9,7 +9,7 @@ import Link from 'next/link';
 export default function TestResultPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const searchParams = useSearchParams();
-    const { isLoaded, isSignedIn, getToken } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [result, setResult] = useState<any>(null);
     const [test, setTest] = useState<any>(null);
     const [userAnswers, setUserAnswers] = useState<any[]>([]);
@@ -17,7 +17,7 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
     const router = useRouter();
 
     useEffect(() => {
-        if (!isLoaded || !isSignedIn) return;
+        if (authLoading || !user) return;
 
         // Give priority to query params from an immediate submission
         const scoreParam = searchParams.get('score');
@@ -32,7 +32,7 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
 
         const loadContent = async () => {
             try {
-                const token = await getToken();
+                const token = await user.getIdToken();
                 setAuthToken(token);
 
                 // 1. Fetch test details to know the correct answers
@@ -59,7 +59,7 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
         };
 
         loadContent();
-    }, [id, isLoaded, isSignedIn, getToken, searchParams]);
+    }, [id, authLoading, user, searchParams]);
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">

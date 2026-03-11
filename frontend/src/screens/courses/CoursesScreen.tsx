@@ -44,17 +44,17 @@ const CourseCard = ({ course, onPress }: any) => (
     </TouchableOpacity>
 );
 
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../../context/AuthContext';
 import { ComingSoon } from '../../components/ComingSoon';
 
 export const CoursesScreen = ({ navigation }: any) => {
-    const { isLoaded, isSignedIn } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [courses, setCourses] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchCourses = async () => {
-            if (!isLoaded || !isSignedIn) return;
+            if (authLoading || !user) return;
             setIsLoading(true);
             try {
                 const data = await dataService.getCourses();
@@ -66,7 +66,7 @@ export const CoursesScreen = ({ navigation }: any) => {
             }
         };
         fetchCourses();
-    }, [isLoaded, isSignedIn]);
+    }, [authLoading, user]);
 
     if (isLoading) {
         return (

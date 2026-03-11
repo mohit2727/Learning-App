@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Announcement = require('../models/announcementModel');
+const { invalidateCache } = require('../middleware/cacheMiddleware');
 
 // @desc    Get all active announcements (Public/Student)
 // @route   GET /api/announcements
@@ -31,6 +32,7 @@ const createAnnouncement = asyncHandler(async (req, res) => {
     });
 
     const createdAnnouncement = await announcement.save();
+    invalidateCache('/announcements');
     res.status(201).json(createdAnnouncement);
 });
 
@@ -49,6 +51,7 @@ const updateAnnouncement = asyncHandler(async (req, res) => {
         if (isActive !== undefined) announcement.isActive = isActive;
 
         const updatedAnnouncement = await announcement.save();
+        invalidateCache('/announcements');
         res.json(updatedAnnouncement);
     } else {
         res.status(404);
@@ -64,6 +67,7 @@ const deleteAnnouncement = asyncHandler(async (req, res) => {
 
     if (announcement) {
         await announcement.deleteOne();
+        invalidateCache('/announcements');
         res.json({ message: 'Announcement removed' });
     } else {
         res.status(404);

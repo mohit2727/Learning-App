@@ -1,13 +1,13 @@
 'use client';
 import { useState, useEffect, use } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Clock, ChevronLeft, ChevronRight, Send, HelpCircle, Target } from 'lucide-react';
 
 export default function ActiveTestPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-    const { isLoaded, isSignedIn, getToken } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [test, setTest] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [currentIdx, setCurrentIdx] = useState(0);
@@ -16,10 +16,10 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
     const router = useRouter();
 
     useEffect(() => {
-        if (!isLoaded || !isSignedIn) return;
+        if (authLoading || !user) return;
         const load = async () => {
             try {
-                const token = await getToken();
+                const token = await user.getIdToken();
                 setAuthToken(token);
                 const data = await dataService.getTestById(id);
                 setTest(data);
@@ -29,7 +29,7 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
             finally { setLoading(false); }
         };
         load();
-    }, [id, isLoaded, isSignedIn]);
+    }, [id, authLoading, user]);
 
     useEffect(() => {
         if (timeLeft <= 0) return;
@@ -62,7 +62,7 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
     const handleSubmit = async () => {
         if (!confirm('Are you sure you want to submit your test?')) return;
         try {
-            const token = await getToken();
+            const token = await user!.getIdToken();
             setAuthToken(token);
 
             // Format answers to match backend expectation: [{ questionId, selectedOption }]

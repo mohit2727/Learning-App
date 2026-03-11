@@ -1,15 +1,15 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../context/AuthContext';
 import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
 import { ActivityIndicator, View } from 'react-native';
 import { AuthSync } from '../components/AuthSync';
 
 export const RootNavigator = () => {
-    const { isLoaded, isSignedIn } = useAuth();
+    const { user, loading } = useAuth();
 
-    if (!isLoaded) {
+    if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
                 <ActivityIndicator size="large" color="#2563EB" />
@@ -20,7 +20,7 @@ export const RootNavigator = () => {
     return (
         <NavigationContainer>
             <AuthSync />
-            {isSignedIn ? <MainNavigator /> : <AuthNavigator />}
+            {user ? <MainNavigator /> : <AuthNavigator />}
         </NavigationContainer>
     );
 };

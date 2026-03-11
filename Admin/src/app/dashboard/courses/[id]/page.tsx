@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import api from '@/lib/api';
 import { useParams } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Video,
@@ -23,7 +23,7 @@ import Link from 'next/link';
 
 export default function CourseDetailPage() {
     const { id } = useParams();
-    const { getToken, isLoaded, isSignedIn } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [course, setCourse] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -38,13 +38,10 @@ export default function CourseDetailPage() {
     const [isUploading, setIsUploading] = useState(false);
 
     const fetchCourse = async () => {
-        if (!id || !isLoaded || !isSignedIn) return;
+        if (!id || authLoading || !user) return;
         setLoading(true);
         try {
-            const token = await getToken();
-            const { data } = await api.get(`/courses/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const { data } = await api.get(`/courses/${id}`);
             setCourse(data);
         } catch (err) {
             console.error('Failed to fetch course');
@@ -54,8 +51,8 @@ export default function CourseDetailPage() {
     };
 
     useEffect(() => {
-        if (id && isLoaded && isSignedIn) fetchCourse();
-    }, [id, isLoaded, isSignedIn]);
+        if (id && !authLoading && user) fetchCourse();
+    }, [id, authLoading, user]);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -66,11 +63,9 @@ export default function CourseDetailPage() {
         formData.append('image', file);
 
         try {
-            const token = await getToken();
             const { data } = await api.post('/upload/image', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${token}`
+                    'Content-Type': 'multipart/form-data'
                 }
             });
             setImage(data);
@@ -85,10 +80,7 @@ export default function CourseDetailPage() {
     const handleAddVideo = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const token = await getToken();
-            await api.post(`/courses/${id}/lessons`, { title, videoUrl, content, image }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.post(`/courses/${id}/lessons`, { title, videoUrl, content, image });
             setShowAddModal(false);
             fetchCourse();
             setTitle('');
@@ -104,10 +96,7 @@ export default function CourseDetailPage() {
         e.preventDefault();
         if (!selectedLesson) return;
         try {
-            const token = await getToken();
-            await api.put(`/courses/${id}/lessons/${selectedLesson._id}`, { title, videoUrl, content, image }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.put(`/courses/${id}/lessons/${selectedLesson._id}`, { title, videoUrl, content, image });
             setShowEditModal(false);
             fetchCourse();
             setTitle('');
@@ -132,10 +121,7 @@ export default function CourseDetailPage() {
     const handleDeleteVideo = async (lessonId: string) => {
         if (!window.confirm("Are you sure you want to delete this video?")) return;
         try {
-            const token = await getToken();
-            await api.delete(`/courses/${id}/lessons/${lessonId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/courses/${id}/lessons/${lessonId}`);
             fetchCourse();
         } catch (err) {
             alert('Failed to delete video');

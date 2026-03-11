@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, use } from 'react';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Play, ChevronLeft, Clock, BookOpen, Info, ShieldCheck } from 'lucide-react';
@@ -8,16 +8,16 @@ import Link from 'next/link';
 
 export default function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-    const { isLoaded, isSignedIn, getToken } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [course, setCourse] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
-        if (!isLoaded || !isSignedIn) return;
+        if (authLoading || !user) return;
         const load = async () => {
             try {
-                const token = await getToken();
+                const token = await user.getIdToken();
                 setAuthToken(token);
                 const data = await dataService.getCourseDetail(id);
                 setCourse(data);
@@ -25,7 +25,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
             finally { setLoading(false); }
         };
         load();
-    }, [id, isLoaded, isSignedIn]);
+    }, [id, authLoading, user]);
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">

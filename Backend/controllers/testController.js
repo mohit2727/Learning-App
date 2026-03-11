@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Test = require('../models/testModel');
+const { invalidateCache } = require('../middleware/cacheMiddleware');
 
 // @desc    Get all tests
 // @route   GET /api/tests
@@ -42,7 +43,8 @@ const createTest = asyncHandler(async (req, res) => {
         totalMarks,
         totalQuestions,
         negativeMarkingEnabled,
-        negativeRatio
+        negativeRatio,
+        price
     } = req.body;
 
     const test = new Test({
@@ -54,10 +56,12 @@ const createTest = asyncHandler(async (req, res) => {
         totalQuestions: totalQuestions || questions?.length || 0,
         negativeMarkingEnabled: negativeMarkingEnabled || false,
         negativeRatio: negativeRatio || 0.25,
+        price: Number(price) || 0,
         isActive: false,
     });
 
     const createdTest = await test.save();
+    invalidateCache('/tests');
     res.status(201).json(createdTest);
 });
 
@@ -70,6 +74,7 @@ const updateTestStatus = asyncHandler(async (req, res) => {
     if (test) {
         test.isActive = req.body.isActive !== undefined ? req.body.isActive : !test.isActive;
         const updatedTest = await test.save();
+        invalidateCache('/tests');
         res.json(updatedTest);
     } else {
         res.status(404);
@@ -202,6 +207,7 @@ const updateTest = asyncHandler(async (req, res) => {
         test.price = price !== undefined ? Number(price) : test.price;
 
         const updatedTest = await test.save();
+        invalidateCache('/tests');
         res.json(updatedTest);
     } else {
         res.status(404);
@@ -217,6 +223,7 @@ const deleteTest = asyncHandler(async (req, res) => {
 
     if (test) {
         await test.deleteOne();
+        invalidateCache('/tests');
         res.json({ message: 'Test removed' });
     } else {
         res.status(404);

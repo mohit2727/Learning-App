@@ -1,20 +1,21 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ClipboardList, Target, Award, Star } from 'lucide-react';
 
 export default function MyTestsPage() {
-    const { getToken } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [attempts, setAttempts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (authLoading || !user) return;
         const load = async () => {
             try {
-                const token = await getToken();
+                const token = await user.getIdToken();
                 setAuthToken(token);
                 const data = await dataService.getMyTests();
                 setAttempts(data);
@@ -22,7 +23,7 @@ export default function MyTestsPage() {
             finally { setLoading(false); }
         };
         load();
-    }, [getToken]);
+    }, [authLoading, user]);
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">

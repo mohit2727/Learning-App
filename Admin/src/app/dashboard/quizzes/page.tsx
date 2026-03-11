@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 import {
     FileUp,
     Search,
@@ -27,7 +27,7 @@ export default function QuizzesPage() {
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [viewQuiz, setViewQuiz] = useState<any | null>(null);
     const [editingQuiz, setEditingQuiz] = useState<any | null>(null);
-    const { getToken, isLoaded, isSignedIn } = useAuth();
+    const { user, loading: authLoading } = useAuth();
 
     // Form state
     const [title, setTitle] = useState('');
@@ -39,13 +39,10 @@ export default function QuizzesPage() {
     const [file, setFile] = useState<File | null>(null);
 
     const fetchQuizzes = async () => {
-        if (!isLoaded || !isSignedIn) return;
+        if (authLoading || !user) return;
         setLoading(true);
         try {
-            const token = await getToken();
-            const { data } = await api.get('/tests', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const { data } = await api.get('/tests');
             setQuizzes(data);
         } catch (err) {
             console.error('Failed to fetch quizzes');
@@ -56,15 +53,13 @@ export default function QuizzesPage() {
 
     useEffect(() => {
         fetchQuizzes();
-    }, [getToken, isLoaded, isSignedIn]);
+    }, [authLoading, user]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setUploading(true);
 
         try {
-            const token = await getToken();
-
             if (editingQuiz) {
                 // Update implementation
                 await api.put(`/tests/${editingQuiz._id}`, {
@@ -74,8 +69,6 @@ export default function QuizzesPage() {
                     negativeMarkingEnabled,
                     negativeRatio,
                     price
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
                 });
             } else {
                 // Upload/Generate implementation
@@ -95,8 +88,7 @@ export default function QuizzesPage() {
 
                 await api.post('/upload/quiz', formData, {
                     headers: {
-                        'Content-Type': 'multipart/form-data',
-                        Authorization: `Bearer ${token}`
+                        'Content-Type': 'multipart/form-data'
                     }
                 });
             }
@@ -128,10 +120,7 @@ export default function QuizzesPage() {
 
     const toggleStatus = async (id: string, currentStatus: boolean) => {
         try {
-            const token = await getToken();
-            await api.put(`/tests/${id}/status`, { isActive: !currentStatus }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.put(`/tests/${id}/status`, { isActive: !currentStatus });
             setQuizzes(quizzes.map(q => q._id === id ? { ...q, isActive: !currentStatus } : q));
         } catch (err) {
             alert('Failed to update status');
@@ -142,10 +131,7 @@ export default function QuizzesPage() {
         if (!window.confirm("Are you sure you want to delete this quiz? This action cannot be undone.")) return;
 
         try {
-            const token = await getToken();
-            await api.delete(`/tests/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/tests/${id}`);
             setQuizzes(quizzes.filter(q => q._id !== id));
         } catch (err) {
             alert('Failed to delete quiz');

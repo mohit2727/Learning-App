@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Course = require('../models/courseModel');
+const { invalidateCache } = require('../middleware/cacheMiddleware');
 
 // @desc    Get all courses (Active only for students)
 // @route   GET /api/courses
@@ -51,6 +52,7 @@ const createCourse = asyncHandler(async (req, res) => {
     });
 
     const createdCourse = await course.save();
+    invalidateCache('/courses');
     res.status(201).json(createdCourse);
 });
 
@@ -63,6 +65,7 @@ const updateCourseStatus = asyncHandler(async (req, res) => {
     if (course) {
         course.isActive = req.body.isActive !== undefined ? req.body.isActive : !course.isActive;
         const updatedCourse = await course.save();
+        invalidateCache('/courses');
         res.json(updatedCourse);
     } else {
         res.status(404);
@@ -89,6 +92,7 @@ const addLesson = asyncHandler(async (req, res) => {
 
         course.lessons.push(lesson);
         await course.save();
+        invalidateCache('/courses');
         res.status(201).json(course);
     } else {
         res.status(404);
@@ -104,6 +108,7 @@ const deleteCourse = asyncHandler(async (req, res) => {
 
     if (course) {
         await course.deleteOne();
+        invalidateCache('/courses');
         res.json({ message: 'Course removed' });
     } else {
         res.status(404);
@@ -122,6 +127,7 @@ const deleteLesson = asyncHandler(async (req, res) => {
             (lesson) => lesson._id.toString() !== req.params.lessonId
         );
         await course.save();
+        invalidateCache('/courses');
         res.json(course);
     } else {
         res.status(404);
@@ -143,6 +149,7 @@ const updateCourse = asyncHandler(async (req, res) => {
         course.price = price !== undefined ? price : course.price;
 
         const updatedCourse = await course.save();
+        invalidateCache('/courses');
         res.json(updatedCourse);
     } else {
         res.status(404);
@@ -169,6 +176,7 @@ const updateLesson = asyncHandler(async (req, res) => {
             lesson.isActive = isActive !== undefined ? isActive : lesson.isActive;
 
             await course.save();
+            invalidateCache('/courses');
             res.json(course);
         } else {
             res.status(404);

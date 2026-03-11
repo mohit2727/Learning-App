@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Users, BookOpen, FileText, TrendingUp, ArrowRight, Heart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/context/AuthContext';
 
 const StatCard = ({ title, value, icon: Icon, color, bg }: any) => (
     <motion.div
@@ -24,26 +24,21 @@ const StatCard = ({ title, value, icon: Icon, color, bg }: any) => (
 
 export default function DashboardPage() {
     const [stats, setStats] = useState<any>(null);
-    const { getToken, isLoaded, isSignedIn } = useAuth();
+    const { user, loading: authLoading } = useAuth();
 
     useEffect(() => {
         const fetchStats = async () => {
-            if (!isLoaded || !isSignedIn) return;
+            if (authLoading || !user) return;
 
             try {
-                const token = await getToken();
-                if (!token) return;
-
-                const { data } = await api.get('/users/dashboard-stats', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const { data } = await api.get('/users/dashboard-stats');
                 setStats(data);
             } catch (err) {
                 console.error('Failed to fetch stats:', err);
             }
         };
         fetchStats();
-    }, [getToken, isLoaded, isSignedIn]);
+    }, [authLoading, user]);
 
     const formatTimeAgo = (dateString: string) => {
         const date = new Date(dateString);
