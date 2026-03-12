@@ -62,7 +62,7 @@ export const dataService = {
     getCourseDetail: (id: string) => apiClient.get(`/courses/${id}`).then(r => r.data),
     getTests: () => apiClient.get('/tests').then(r => r.data),
     getTestById: (id: string) => apiClient.get(`/tests/${id}`).then(r => r.data),
-    submitTest: (testId: string, answers: { questionId: string, selectedOption: number | null }[]) => apiClient.post('/tests/submit', { testId, answers }).then(r => r.data),
+    submitTest: (testId: string, answers: { questionId: string, selectedOption: number | null }[], timeSpent?: number) => apiClient.post('/tests/submit', { testId, answers, timeSpent }).then(r => r.data),
     getLeaderboard: () => apiClient.get('/users/leaderboard').then(r => r.data),
     getProfile: () => apiClient.get('/users/profile').then(r => r.data),
     updateProfile: (data: any) => apiClient.put('/users/profile', data).then(r => r.data),

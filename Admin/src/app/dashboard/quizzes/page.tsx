@@ -137,6 +137,15 @@ export default function QuizzesPage() {
             alert('Failed to delete quiz');
         }
     };
+    const toggleLeaderboard = async (id: string, currentStatus: boolean) => {
+        try {
+            await api.put(`/tests/${id}/leaderboard`, { isActive: !currentStatus });
+            // Deactivate all others locally
+            setQuizzes(quizzes.map(q => q._id === id ? { ...q, isLeaderboardActive: !currentStatus } : { ...q, isLeaderboardActive: false }));
+        } catch (err) {
+            alert('Failed to update leaderboard status');
+        }
+    };
 
     return (
         <DashboardLayout>
@@ -185,6 +194,7 @@ export default function QuizzesPage() {
                                 <th className="px-6 py-4">Price</th>
                                 <th className="px-6 py-4">Duration</th>
                                 <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4 text-center">Leaderboard</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -232,6 +242,17 @@ export default function QuizzesPage() {
                                                 }`}
                                         >
                                             {quiz.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                        </button>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <button
+                                            onClick={() => toggleLeaderboard(quiz._id, quiz.isLeaderboardActive)}
+                                            className={`px-3 py-1 rounded-lg text-[9px] font-black transition-all border ${quiz.isLeaderboardActive
+                                                ? "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100"
+                                                : "bg-slate-50 text-slate-300 border-slate-100 hover:bg-slate-100"
+                                                }`}
+                                        >
+                                            {quiz.isLeaderboardActive ? 'ACTIVE' : 'ENABLE'}
                                         </button>
                                     </td>
                                     <td className="px-6 py-4 text-right">

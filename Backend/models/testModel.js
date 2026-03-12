@@ -57,6 +57,10 @@ const testSchema = mongoose.Schema(
             type: String,
             default: '',
         },
+        isLeaderboardActive: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,

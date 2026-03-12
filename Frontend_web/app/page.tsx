@@ -36,7 +36,7 @@ export default function Home() {
                             className="object-cover"
                         />
                     </div>
-                    <span className="font-bold text-xl text-slate-900 tracking-tight">Ravina App</span>
+                    <span className="font-bold text-xl text-slate-900 tracking-tight">Physical Education</span>
                 </div>
                 {!user && !loading && (
                     <Link

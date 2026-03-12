@@ -53,7 +53,7 @@ function VideoContent() {
                         </div>
                         <div>
                             <h3 className="text-white font-black text-lg tracking-tight uppercase">Now Playing</h3>
-                            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest italic">Ravina App Education Premiere</p>
+                            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest italic">Physical Education Premiere</p>
                         </div>
                     </div>
                     <p className="text-gray-400 text-sm leading-relaxed font-medium mt-6 border-l-2 border-violet-500 pl-6">

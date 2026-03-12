@@ -9,6 +9,7 @@ interface AuthContextType {
     user: User | null;
     dbUser: any | null;
     loading: boolean;
+    isOnboarded: boolean;
     logout: () => Promise<void>;
 }
 
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
     user: null,
     dbUser: null,
     loading: true,
+    isOnboarded: false,
     logout: async () => { },
 });
 
@@ -61,8 +63,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await auth.signOut();
     };
 
+    const isOnboarded = !!(dbUser && dbUser.name && dbUser.age && dbUser.city);
+
     return (
-        <AuthContext.Provider value={{ user, dbUser, loading, logout }}>
+        <AuthContext.Provider value={{ user, dbUser, loading, isOnboarded, logout }}>
             {children}
         </AuthContext.Provider>
     );

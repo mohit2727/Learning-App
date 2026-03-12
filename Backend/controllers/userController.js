@@ -47,17 +47,49 @@ const syncUser = asyncHandler(async (req, res) => {
     });
 });
 
-// @desc    Get leaderboard (top 10 active students by totalScore)
+// @desc    Get leaderboard (top students for the currently active quiz)
 // @route   GET /api/users/leaderboard
 // @access  Public
 const getLeaderboard = asyncHandler(async (req, res) => {
-    // We only want students on the leaderboard, not admins
-    const topUsers = await User.find({ role: 'student' })
-        .sort({ totalScore: -1 })
-        .limit(10)
-        .select('name totalScore');
+    // 1. Find the test marking "isLeaderboardActive"
+    const activeTest = await Test.findOne({ isLeaderboardActive: true });
 
-    res.json(topUsers);
+    if (!activeTest) {
+        // Fallback to global total score if no quiz is specific
+        const topUsers = await User.find({ role: 'student' })
+            .sort({ totalScore: -1 })
+            .limit(10)
+            .select('name totalScore');
+        return res.json({ quizTitle: 'Global Leaderboard', rankings: topUsers });
+    }
+
+    // 2. Fetch all attempts for this test
+    const TestAttempt = require('../models/testAttemptModel');
+    const attempts = await TestAttempt.find({ test: activeTest._id })
+        .populate('user', 'name')
+        .sort({ score: -1 });
+
+    // 3. Filter to only show each student once (unique student with highest score)
+    const uniqueRankings = [];
+    const seenUsers = new Set();
+
+    for (const attempt of attempts) {
+        if (attempt.user && !seenUsers.has(attempt.user._id.toString())) {
+            uniqueRankings.push({
+                _id: attempt.user._id,
+                name: attempt.user.name,
+                score: attempt.score,
+                timeSpent: attempt.timeSpent
+            });
+            seenUsers.add(attempt.user._id.toString());
+        }
+        if (uniqueRankings.length >= 20) break; // Top 20 for specific quiz
+    }
+
+    res.json({
+        quizTitle: activeTest.title,
+        rankings: uniqueRankings
+    });
 });
 
 const TestAttempt = require('../models/testAttemptModel');

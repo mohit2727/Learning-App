@@ -6,7 +6,7 @@ import { Trophy, Medal, Award, Crown } from 'lucide-react';
 
 export default function LeaderboardPage() {
     const { user, loading: authLoading } = useAuth();
-    const [board, setBoard] = useState<any[]>([]);
+    const [board, setBoard] = useState<{ quizTitle: string, rankings: any[] }>({ quizTitle: 'Leaderboard', rankings: [] });
     const [loading, setLoading] = useState(true);
 
     const load = async () => {
@@ -23,8 +23,8 @@ export default function LeaderboardPage() {
 
     useEffect(() => { load(); }, [authLoading, user]);
 
-    const top3 = board.slice(0, 3);
-    const others = board.slice(3);
+    const top3 = board.rankings.slice(0, 3);
+    const others = board.rankings.slice(3);
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">
@@ -40,10 +40,12 @@ export default function LeaderboardPage() {
             {/* Gradient Header with Podium */}
             <div className="grad-header pb-12 pt-16">
                 <div className="text-center mb-8 relative z-10">
-                    <h1 className="text-white text-2xl font-black tracking-tight flex items-center justify-center gap-2">
-                        <Trophy size={24} className="text-yellow-400" /> Leaderboard
+                    <h1 className="text-white text-2xl font-black tracking-tight flex flex-col items-center justify-center gap-1">
+                        <div className="flex items-center gap-2">
+                            <Trophy size={24} className="text-yellow-400" /> Leaderboard
+                        </div>
+                        <span className="text-yellow-300 text-[10px] font-black uppercase tracking-[0.3em] bg-white/10 px-3 py-1 rounded-full border border-white/20">{board.quizTitle}</span>
                     </h1>
-                    <p className="text-violet-200 text-xs font-semibold mt-1">THE ELITE TOP 10 RANKINGS</p>
                 </div>
 
                 {/* Podium */}
@@ -62,7 +64,7 @@ export default function LeaderboardPage() {
                                 </div>
                                 <p className="text-white text-[10px] font-black truncate w-full text-center mb-1">{top3[1].name.split(' ')[0]}</p>
                                 <div className="h-14 w-full bg-white/10 backdrop-blur-md rounded-t-xl border-x border-t border-white/20 flex flex-col items-center justify-center">
-                                    <span className="text-white font-black text-xs">{top3[1].totalScore}</span>
+                                    <span className="text-white font-black text-xs">{top3[1].score}</span>
                                     <span className="text-violet-200 text-[7px] font-bold uppercase tracking-wider">PTS</span>
                                 </div>
                             </div>
@@ -83,7 +85,7 @@ export default function LeaderboardPage() {
                             </div>
                             <p className="text-white text-xs font-black truncate w-full text-center mb-1">{top3[0].name.split(' ')[0]}</p>
                             <div className="h-24 w-full bg-white/20 backdrop-blur-md rounded-t-2xl border-x border-t border-white/30 flex flex-col items-center justify-center shadow-2xl">
-                                <span className="text-white font-black text-sm">{top3[0].totalScore}</span>
+                                <span className="text-white font-black text-sm">{top3[0].score}</span>
                                 <span className="text-violet-200 text-[8px] font-bold uppercase tracking-widest">POINTS</span>
                             </div>
                         </div>
@@ -101,7 +103,7 @@ export default function LeaderboardPage() {
                                 </div>
                                 <p className="text-white text-[10px] font-black truncate w-full text-center mb-1">{top3[2].name.split(' ')[0]}</p>
                                 <div className="h-10 w-full bg-white/5 backdrop-blur-sm rounded-t-xl border-x border-t border-white/10 flex flex-col items-center justify-center">
-                                    <span className="text-white font-black text-[10px]">{top3[2].totalScore}</span>
+                                    <span className="text-white font-black text-[10px]">{top3[2].score}</span>
                                     <span className="text-violet-300 text-[6px] font-bold uppercase tracking-wider">PTS</span>
                                 </div>
                             </div>
@@ -133,12 +135,12 @@ export default function LeaderboardPage() {
                             <div className="flex-1">
                                 <p className="font-extrabold text-gray-800 text-xs tracking-tight">{student.name}</p>
                                 <div className="mt-0.5 w-full bg-gray-200 rounded-full h-1">
-                                    <div className="bg-violet-300 h-1 rounded-full" style={{ width: `${Math.min(100, (student.totalScore / (top3[0]?.totalScore || 1) * 100))}%` }} />
+                                    <div className="bg-violet-300 h-1 rounded-full" style={{ width: `${Math.min(100, (student.score / (top3[0]?.score || 1) * 100))}%` }} />
                                 </div>
                             </div>
 
                             <div className="text-right">
-                                <p className="font-black text-xs text-violet-700">{student.totalScore}</p>
+                                <p className="font-black text-xs text-violet-700">{student.score}</p>
                                 <p className="text-[7px] text-gray-400 font-black uppercase tracking-widest">PTS</p>
                             </div>
                         </div>

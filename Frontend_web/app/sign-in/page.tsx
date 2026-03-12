@@ -5,6 +5,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'fi
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 
 declare global {
@@ -23,6 +24,8 @@ export default function SignInPage() {
     const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
     const [error, setError] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+
+    const [mode, setMode] = useState<'LANDING' | 'AUTH'>('LANDING');
 
     // Redirect if already logged in
     useEffect(() => {
@@ -44,17 +47,13 @@ export default function SignInPage() {
         setError('');
 
         let formattedMobile = mobile.trim();
-        // Basic naive Indian layout (+91) if no country code provided. Adjust as needed.
-        if (formattedMobile.length === 10) {
-            formattedMobile = '+91' + formattedMobile;
-        }
+        if (formattedMobile.length === 10) formattedMobile = '+91' + formattedMobile;
 
         if (!formattedMobile.startsWith('+')) {
             return setError('Please enter a valid mobile number with country code (e.g. +91 9876543210)');
         }
 
         setIsProcessing(true);
-
         try {
             setupRecaptcha();
             const appVerifier = window.recaptchaVerifier;
@@ -62,7 +61,6 @@ export default function SignInPage() {
             setConfirmationResult(confirmation);
             setStep('OTP');
         } catch (err: any) {
-            console.error(err);
             setError(err.message || 'Failed to send OTP. Please try again.');
         } finally {
             setIsProcessing(false);
@@ -72,26 +70,100 @@ export default function SignInPage() {
     const handleVerifyOtp = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-
-        if (otp.length !== 6 || !confirmationResult) {
-            return setError('Please enter a valid 6-digit OTP.');
-        }
+        if (otp.length !== 6 || !confirmationResult) return setError('Please enter a valid 6-digit OTP.');
 
         setIsProcessing(true);
-
         try {
-            const result = await confirmationResult.confirm(otp);
-            // On success, the AuthContext onAuthStateChanged listener will automatically 
-            // set the user state and log them in globally.
-            // Wait briefly for context to pick up state, or redirect directly if needed.
+            await confirmationResult.confirm(otp);
             router.push('/dashboard');
         } catch (err: any) {
-            console.error(err);
             setError('Invalid OTP. Please check the code and try again.');
         } finally {
             setIsProcessing(false);
         }
     };
+
+    if (mode === 'LANDING') {
+        return (
+            <div className="min-h-screen bg-white flex flex-col items-center relative overflow-hidden">
+                {/* Decorative Background Elements */}
+                <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-indigo-50 rounded-full blur-[120px] opacity-60 animate-pulse"></div>
+                <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-purple-50 rounded-full blur-[100px] opacity-60"></div>
+
+                {/* Header/Nav - Simplified */}
+                <div className="w-full max-w-7xl mx-auto px-6 py-8 flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 relative rounded-xl bg-white shadow-md border border-slate-100 p-1.5 overflow-hidden">
+                            <Image src="/logo.png" alt="Logo" fill sizes="40px" className="object-contain p-1" />
+                        </div>
+                        <span className="font-black text-slate-900 tracking-tight text-xl uppercase">Physical <span className="text-indigo-600">Education</span></span>
+                    </div>
+                </div>
+
+                {/* Main Content */}
+                <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-4xl mx-auto text-center relative z-10 -mt-20">
+                    <div className="relative mb-12">
+                        {/* Orbiting element effect */}
+                        <div className="absolute inset-0 bg-indigo-400/20 rounded-full blur-3xl scale-150 animate-pulse"></div>
+                        <div className="w-40 h-40 md:w-56 md:h-56 relative rounded-[3rem] bg-white p-8 border-2 border-white/50 shadow-[0_32px_64px_-16px_rgba(79,70,229,0.2)] overflow-hidden card-hover">
+                            <Image src="/logo.png" alt="Logo" fill sizes="(max-width: 768px) 160px, 224px" className="object-contain p-8" priority />
+                        </div>
+                    </div>
+
+                    <h1 className="text-5xl md:text-8xl font-black text-slate-950 mb-8 tracking-tighter leading-[0.9] md:leading-[0.85]">
+                        Physical <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 drop-shadow-sm">Education</span> <br />
+                        <span className="text-slate-900">with Ravina</span>
+                    </h1>
+
+                    <p className="text-slate-500 text-lg md:text-2xl max-w-2xl mb-12 font-semibold leading-relaxed">
+                        The ultimate fitness & academic ecosystem. <br className="hidden md:block" />
+                        Master concepts, ace tests, and dominate the leaderboard.
+                    </p>
+
+                    <div className="flex flex-col items-center gap-6 w-full max-w-md">
+                        <button
+                            onClick={() => setMode('AUTH')}
+                            className="group w-full relative h-[72px] flex items-center justify-center font-black text-white text-xl uppercase tracking-widest transition-all duration-300 bg-slate-950 rounded-3xl hover:bg-slate-900 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] hover:-translate-y-1 active:scale-95 overflow-hidden"
+                        >
+                            <span className="relative z-10 flex items-center gap-2">
+                                Get Started Now
+                                <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" strokeWidth={3} />
+                            </span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </button>
+                    </div>
+
+                    {/* Trust/Footer info */}
+                    <div className="mt-20 flex flex-col items-center gap-4">
+                        <div className="flex -space-x-4">
+                            {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center shadow-sm overflow-hidden text-[10px] font-black text-indigo-600">
+                                    {String.fromCharCode(64 + i)}
+                                </div>
+                            ))}
+                            <div className="w-10 h-10 rounded-full border-2 border-white bg-indigo-600 flex items-center justify-center shadow-sm text-[10px] font-black text-white">
+                                +10K
+                            </div>
+                        </div>
+                        <p className="text-slate-400 text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">
+                            Trusted by learners worldwide
+                        </p>
+                    </div>
+                </div>
+
+                {/* Animated Bottom Info */}
+                <div className="w-full py-10 opacity-30 select-none pointer-events-none">
+                    <div className="flex whitespace-nowrap gap-20 animate-marquee uppercase font-black text-8xl md:text-9xl text-slate-100">
+                        <span>Physical Fitness</span>
+                        <span>Academic Excellence</span>
+                        <span>Leadership</span>
+                        <span>Progress</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-white">
@@ -104,7 +176,7 @@ export default function SignInPage() {
                 </div>
                 <div className="relative z-10 flex flex-col items-center max-w-md text-center">
                     <div className="w-32 h-32 relative mb-8 rounded-full bg-white/10 p-4 ring-1 ring-white/30 backdrop-blur-sm">
-                        <Image src="/logo.png" alt="Logo" fill className="object-contain p-2" priority />
+                        <Image src="/logo.png" alt="Logo" fill sizes="128px" className="object-contain p-2" priority />
                     </div>
                     <h1 className="text-4xl font-bold mb-4">Physical Education <br />with Ravina</h1>
                     <p className="text-indigo-100 text-lg">Sign in to access premium courses, tests, and track your fitness and academic progress seamlessly.</p>
@@ -115,10 +187,10 @@ export default function SignInPage() {
             <div className="flex flex-col justify-center p-8 sm:p-12 md:p-16 lg:p-24 w-full max-w-lg mx-auto md:max-w-none">
                 <div className="flex flex-col items-start w-full">
                     <div className="w-12 h-12 relative mb-6 rounded-lg bg-indigo-600 md:hidden overflow-hidden">
-                        <Image src="/logo.png" alt="Logo" fill className="object-cover" />
+                        <Image src="/logo.png" alt="Logo" fill sizes="48px" className="object-cover" />
                     </div>
-                    <h2 className="text-3xl font-extrabold text-slate-900 mb-2">Welcome Back</h2>
-                    <p className="text-slate-500 mb-8">Sign in with your mobile number to continue.</p>
+                    <h2 className="text-4xl font-black text-slate-900 mb-2 tracking-tight">Let's Sign You In</h2>
+                    <p className="text-slate-500 mb-8 font-medium">Please enter your mobile number to continue.</p>
 
                     {error && (
                         <div className="w-full bg-red-50 text-red-600 text-sm py-3 px-4 rounded-xl border border-red-100 mb-6 font-medium">

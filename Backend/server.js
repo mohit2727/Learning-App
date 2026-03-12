@@ -30,6 +30,8 @@ const allowedOrigins = [
     'http://localhost:3002',
     'https://physical-education-with-ravina.web.app',
     'https://physical-education-with-ravina.firebaseapp.com',
+    'https://physical-education-with-ravina-admin.web.app',
+    'https://physical-education-with-ravina-admin.firebaseapp.com',
     ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : []),
 ];
 app.use(cors({
@@ -79,7 +81,7 @@ const __dirname_path = path.resolve();
 app.use('/uploads', express.static(path.join(__dirname_path, '/uploads')));
 
 app.get('/', (req, res) => {
-    res.json({ message: 'Ravina App API is running', status: 'ok' });
+    res.json({ message: 'Physical Education API is running', status: 'ok' });
 });
 
 // ─── Error Handling ──────────────────────────────────────────────────────────

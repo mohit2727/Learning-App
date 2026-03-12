@@ -132,8 +132,21 @@ const submitTest = asyncHandler(async (req, res) => {
         }
     });
 
-    // Ensure score doesn't go below 0 if that's a requirement (optional)
-    // totalScore = Math.max(0, totalScore);
+    // Time Bonus Logic: Reward students who finish faster
+    // Only if they got at least 50% of the questions right to avoid rushing
+    const { timeSpent } = req.body; // In seconds
+    const totalTimeAllowed = (test.duration || 0) * 60;
+
+    if (timeSpent && timeSpent < totalTimeAllowed && totalScore >= (totalMarks / 2)) {
+        // Bonus = (Percent of time saved) * (Total Marks) * 0.1
+        // Example: Saved 50% of time -> 5% bonus points.
+        const timeSavedRatio = (totalTimeAllowed - timeSpent) / totalTimeAllowed;
+        const timeBonus = totalMarks * 0.1 * timeSavedRatio;
+        totalScore += timeBonus;
+    }
+
+    // Round to 2 decimal places
+    totalScore = Math.round(totalScore * 100) / 100;
 
     try {
         const user = req.user;
@@ -163,7 +176,8 @@ const submitTest = asyncHandler(async (req, res) => {
             test: testId,
             score: totalScore,
             totalMarks: test.totalMarks,
-            answers: formattedAnswers
+            answers: formattedAnswers,
+            timeSpent: timeSpent || 0
         });
 
         res.json({
@@ -231,11 +245,35 @@ const deleteTest = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Update test leaderboard status (toggle isLeaderboardActive)
+// @route   PUT /api/tests/:id/leaderboard
+// @access  Private/Admin
+const updateLeaderboardStatus = asyncHandler(async (req, res) => {
+    const { isActive } = req.body;
+
+    // If we are activating this one, deactivate all others
+    if (isActive) {
+        await Test.updateMany({}, { isLeaderboardActive: false });
+    }
+
+    const test = await Test.findById(req.params.id);
+
+    if (test) {
+        test.isLeaderboardActive = isActive;
+        const updatedTest = await test.save();
+        res.json(updatedTest);
+    } else {
+        res.status(404);
+        throw new Error('Test not found');
+    }
+});
+
 module.exports = {
     getTests,
     getTestById,
     createTest,
     updateTestStatus,
+    updateLeaderboardStatus,
     updateTest,
     submitTest,
     deleteTest,

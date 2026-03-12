@@ -26,6 +26,10 @@ const testAttemptSchema = mongoose.Schema(
                 selectedOption: { type: Number }, // Index of the option
             }
         ],
+        timeSpent: {
+            type: Number, // In seconds
+            default: 0,
+        },
     },
     {
         timestamps: true,

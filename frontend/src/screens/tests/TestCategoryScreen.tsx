@@ -93,7 +93,7 @@ export const TestCategoryScreen = ({ navigation }: any) => {
                         "key": "${razorpayKey}",
                         "amount": "${paymentOrder?.amount}",
                         "currency": "INR",
-                        "name": "Ravina App",
+                        "name": "Physical Education",
                         "description": "Unlock Quiz: ${activeTest?.title}",
                         "order_id": "${paymentOrder?.id}",
                         "handler": function (response){

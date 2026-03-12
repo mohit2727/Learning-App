@@ -65,13 +65,16 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
             const token = await user!.getIdToken();
             setAuthToken(token);
 
+            const totalTimeAllowed = (test.duration || 20) * 60;
+            const timeSpent = totalTimeAllowed - timeLeft;
+
             // Format answers to match backend expectation: [{ questionId, selectedOption }]
             const formattedAnswers = answers.map((ans, idx) => ({
                 questionId: test.questions[idx]._id,
                 selectedOption: ans
             }));
 
-            const response = await dataService.submitTest(id, formattedAnswers);
+            const response = await dataService.submitTest(id, formattedAnswers, timeSpent);
 
             // Save the exact answers to session storage for instant review on the next page
             sessionStorage.setItem(`test_answers_${id}`, JSON.stringify(formattedAnswers));
