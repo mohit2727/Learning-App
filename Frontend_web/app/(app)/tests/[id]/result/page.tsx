@@ -16,12 +16,14 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
+    const scoreParam = searchParams.get('score');
+    const totalParam = searchParams.get('total');
+
+    // If we have params, we don't need to block the initial render with a loading spinner
+    const [loading, setLoading] = useState(scoreParam === null || totalParam === null);
+
     useEffect(() => {
         if (authLoading || !user) return;
-
-        // Give priority to query params from an immediate submission
-        const scoreParam = searchParams.get('score');
-        const totalParam = searchParams.get('total');
 
         if (scoreParam !== null && totalParam !== null) {
             setResult({
@@ -59,7 +61,7 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
         };
 
         loadContent();
-    }, [id, authLoading, user, searchParams]);
+    }, [id, authLoading, user, searchParams, scoreParam, totalParam]);
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">

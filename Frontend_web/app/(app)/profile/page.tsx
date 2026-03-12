@@ -152,7 +152,7 @@ export default function ProfilePage() {
                         </button>
                     </div>
 
-                    <button onClick={() => { if (confirm('Are you sure you want to logout?')) logout(); }}
+                    <button onClick={() => { if (confirm('Are you sure you want to logout?')) logout().then(() => router.push('/sign-in')); }}
                         className="w-full h-14 bg-rose-50 rounded-2xl flex items-center px-4 border border-rose-100 mt-6 group card-hover">
                         <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600">
                             <LogOut size={18} />

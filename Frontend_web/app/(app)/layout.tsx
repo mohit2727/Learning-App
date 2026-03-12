@@ -11,8 +11,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
 
     useEffect(() => {
-        if (!loading && user && !isOnboarded && pathname !== '/onboarding') {
-            router.push('/onboarding');
+        if (!loading) {
+            if (!user) {
+                router.push('/sign-in');
+            } else if (!isOnboarded && pathname !== '/onboarding') {
+                router.push('/onboarding');
+            }
         }
     }, [user, loading, isOnboarded, pathname, router]);
 
