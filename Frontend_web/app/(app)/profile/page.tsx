@@ -12,7 +12,7 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [showEdit, setShowEdit] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [form, setForm] = useState({ mobile: '', age: '', city: '', state: '', pincode: '' });
+    const [form, setForm] = useState({ name: '', mobile: '', age: '', city: '', state: '', pincode: '' });
 
     useEffect(() => {
         if (authLoading || !user) return;
@@ -22,7 +22,7 @@ export default function ProfilePage() {
                 setAuthToken(token);
                 const p = await dataService.getProfile();
                 setProfile(p);
-                setForm({ mobile: p.mobile || '', age: p.age || '', city: p.city || '', state: p.state || '', pincode: p.pincode || '' });
+                setForm({ name: p.name || '', mobile: p.mobile || '', age: p.age || '', city: p.city || '', state: p.state || '', pincode: p.pincode || '' });
             } catch (e) { console.error(e); }
             finally { setLoading(false); }
         };
@@ -37,7 +37,7 @@ export default function ProfilePage() {
             setAuthToken(token);
             const updated = await dataService.updateProfile(form);
             setProfile(updated);
-            setForm({ mobile: updated.mobile || '', age: updated.age || '', city: updated.city || '', state: updated.state || '', pincode: updated.pincode || '' });
+            setForm({ name: updated.name || '', mobile: updated.mobile || '', age: updated.age || '', city: updated.city || '', state: updated.state || '', pincode: updated.pincode || '' });
             setShowEdit(false);
         } catch { alert('Failed to update profile.'); }
         finally { setSaving(false); }
@@ -174,6 +174,7 @@ export default function ProfilePage() {
 
                         <div className="grid grid-cols-2 gap-4">
                             {[
+                                { label: 'Full Name', key: 'name', type: 'text', full: true },
                                 { label: 'Mobile Number', key: 'mobile', type: 'tel', full: true },
                                 { label: 'Age', key: 'age', type: 'number' },
                                 { label: 'Pincode', key: 'pincode', type: 'text' },

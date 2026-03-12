@@ -232,23 +232,33 @@ const getUserById = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/:id
 // @access  Private/Admin
 const updateUserAdmin = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
+    try {
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    name: req.body.name,
+                    mobile: req.body.mobile,
+                    email: req.body.email,
+                    age: req.body.age,
+                    city: req.body.city,
+                    state: req.body.state,
+                    pincode: req.body.pincode,
+                    role: req.body.role,
+                }
+            },
+            { new: true, runValidators: true }
+        );
 
-    if (user) {
-        user.name = req.body.name ?? user.name;
-        user.mobile = req.body.mobile ?? user.mobile;
-        user.email = req.body.email ?? user.email;
-        user.age = req.body.age ?? user.age;
-        user.city = req.body.city ?? user.city;
-        user.state = req.body.state ?? user.state;
-        user.pincode = req.body.pincode ?? user.pincode;
-        user.role = req.body.role ?? user.role;
-
-        const updatedUser = await user.save();
-        res.json(updatedUser);
-    } else {
-        res.status(404);
-        throw new Error('User not found');
+        if (updatedUser) {
+            res.json(updatedUser);
+        } else {
+            res.status(404);
+            throw new Error('User not found');
+        }
+    } catch (error) {
+        res.status(error.name === 'ValidationError' ? 400 : 500);
+        throw new Error(error.message);
     }
 });
 

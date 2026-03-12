@@ -158,12 +158,10 @@ const submitTest = asyncHandler(async (req, res) => {
         // Calculate how many points to add to the user's leaderboard total
         let scoreDelta = 0;
         if (pastAttempts.length === 0) {
-            scoreDelta = totalScore; // First time taking the test
+            scoreDelta = totalScore; // Only first time taking the test adds to leaderboard
         } else {
-            const highestPastScore = Math.max(...pastAttempts.map(a => a.score), 0);
-            if (totalScore > highestPastScore) {
-                scoreDelta = totalScore - highestPastScore; // Only award the improvement points
-            }
+            // Retries do not add points to the leaderboard totalScore
+            scoreDelta = 0;
         }
 
         if (scoreDelta > 0) {

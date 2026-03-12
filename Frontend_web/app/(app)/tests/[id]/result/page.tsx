@@ -67,7 +67,10 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
         </div>
     );
 
-    const pct = result?.totalMarks > 0 ? Math.round((result.score / result.totalMarks) * 100) : 0;
+    const totalQuestions = test?.questions?.length || 0;
+    const backendTotal = result?.totalMarks || 0;
+    const displayedTotal = backendTotal > 0 ? backendTotal : (totalQuestions > 0 ? totalQuestions : 1);
+    const pct = Math.round(((result?.score || 0) / displayedTotal) * 100);
     const passed = pct >= 60;
 
     return (

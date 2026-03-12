@@ -93,6 +93,14 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
         </div>
     );
 
+    if (!test || !test.questions || test.questions.length === 0) return (
+        <div className="flex-1 flex flex-col items-center justify-center h-screen bg-gray-50 p-10 text-center">
+            <HelpCircle size={48} className="text-gray-200 mb-4" />
+            <p className="text-gray-400 font-black uppercase tracking-widest">No questions available in this test.</p>
+            <button onClick={() => router.back()} className="mt-6 text-violet-600 font-bold text-sm">Go Back</button>
+        </div>
+    );
+
     const q = test.questions[currentIdx];
     const progress = ((currentIdx + 1) / test.questions.length) * 100;
 
