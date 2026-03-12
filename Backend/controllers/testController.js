@@ -99,7 +99,7 @@ const submitTest = asyncHandler(async (req, res) => {
         throw new Error('Test not found');
     }
 
-    const totalMarks = test.totalMarks || 0;
+    const totalMarks = test.totalMarks > 0 ? test.totalMarks : (test.questions?.length || 1);
     const totalQuestions = test.totalQuestions || test.questions.length || 1; // Prevent division by zero
     const marksPerQuestion = totalMarks / totalQuestions;
 

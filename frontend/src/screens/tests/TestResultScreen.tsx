@@ -18,7 +18,8 @@ export const TestResultScreen = ({ route, navigation }: any) => {
     const total = questions.length;
     // Prioritize backend calculated score and total marks
     const displayedScore = backendScore !== undefined ? backendScore : correct;
-    const displayedTotal = backendTotalMarks !== undefined ? backendTotalMarks : total;
+    const backendTotal = backendTotalMarks || 0;
+    const displayedTotal = backendTotal > 0 ? backendTotal : (total > 0 ? total : 1);
     const pct = displayedTotal > 0 ? Math.round((displayedScore / displayedTotal) * 100) : 0;
 
     return (
@@ -93,7 +94,10 @@ export const TestResultScreen = ({ route, navigation }: any) => {
             })}
 
             <View className="px-4 pb-8 mt-2 gap-3">
-                <Button label="Try Another Test" onPress={() => navigation?.navigate?.('Main', { screen: 'Tests' })} />
+                {route?.params?.testId && (
+                    <Button label="Retry Quiz" onPress={() => navigation?.replace?.('ActiveTest', { testId: route.params.testId })} />
+                )}
+                <Button label="Try Another Test" variant="outline" onPress={() => navigation?.navigate?.('Main', { screen: 'Tests' })} />
                 <Button label="Go to Home" variant="outline" onPress={() => navigation?.navigate?.('Main', { screen: 'Home' })} />
             </View>
 

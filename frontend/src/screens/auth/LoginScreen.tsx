@@ -4,6 +4,7 @@ import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { useAuth } from '../../context/AuthContext';
+import { toast } from '../../utils/toast';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { auth } from '../../lib/firebase';
 
@@ -19,7 +20,7 @@ export const LoginScreen = () => {
 
     const handleSendOtp = async () => {
         if (!phoneNumber || phoneNumber.length < 10) {
-            Alert.alert('Error', 'Please enter a valid phone number with country code (e.g., +91...)');
+            toast.error('Error', 'Please enter a valid phone number with country code (e.g., +91...)');
             return;
         }
 
@@ -28,10 +29,10 @@ export const LoginScreen = () => {
             const vid = await signInWithPhone(phoneNumber, recaptchaVerifier.current);
             setVerificationId(vid);
             setIsOtpSent(true);
-            Alert.alert('OTP Sent', `A 6-digit code has been sent to ${phoneNumber}`);
+            toast.success('OTP Sent', `A 6-digit code has been sent to ${phoneNumber}`);
         } catch (error: any) {
             console.error("OTP Error:", error);
-            Alert.alert('Error', error.message || 'Failed to send OTP. Ensure the phone number is correct and has a country code.');
+            toast.error('Error', error.message || 'Failed to send OTP. Ensure the phone number is correct and has a country code.');
         } finally {
             setIsLoading(false);
         }
@@ -39,7 +40,7 @@ export const LoginScreen = () => {
 
     const handleVerifyOtp = async () => {
         if (otp.length < 6) {
-            Alert.alert('Error', 'Please enter the 6-digit OTP sent to your phone');
+            toast.error('Error', 'Please enter the 6-digit OTP sent to your phone');
             return;
         }
         setIsLoading(true);
@@ -48,7 +49,7 @@ export const LoginScreen = () => {
             // Redirection is handled by RootNavigator
         } catch (error: any) {
             console.error("Verification error:", error);
-            Alert.alert('Error', error.message || 'Invalid OTP. Please try again.');
+            toast.error('Error', error.message || 'Invalid OTP. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -59,10 +60,10 @@ export const LoginScreen = () => {
             className="flex-1 bg-white dark:bg-gray-900"
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-            <FirebaseRecaptchaVerifierModal
+             <FirebaseRecaptchaVerifierModal
                 ref={recaptchaVerifier}
                 firebaseConfig={auth.app.options}
-                attemptInvisibleRetaptcha={true}
+                attemptInvisibleVerification={true}
             />
 
             <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>

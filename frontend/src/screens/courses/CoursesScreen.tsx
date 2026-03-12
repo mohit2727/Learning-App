@@ -29,7 +29,7 @@ const CourseCard = ({ course, onPress }: any) => (
 
         <View className="p-6">
             <Text className="text-gray-800 font-black text-base uppercase tracking-tight mb-1" numberOfLines={1}>{course.title}</Text>
-            <Text className="text-gray-400 text-[10px] font-black uppercase tracking-[1] mb-4 italic">Exclusive Learning Path</Text>
+            <Text className="text-gray-400 text-[10px] font-black uppercase tracking-[1px] mb-4 italic">Exclusive Learning Path</Text>
 
             <View className="flex-row items-center justify-between mt-2 pt-4 border-t border-gray-50">
                 <View className="flex-row items-center gap-2">
@@ -72,7 +72,7 @@ export const CoursesScreen = ({ navigation }: any) => {
         return (
             <View className="flex-1 items-center justify-center bg-gray-50">
                 <ActivityIndicator size="large" color="#6366F1" />
-                <Text className="text-gray-400 text-[10px] font-black mt-4 tracking-[2]">FETCHING COURSES...</Text>
+                <Text className="text-gray-400 text-[10px] font-black mt-4 tracking-[2px]">FETCHING COURSES...</Text>
             </View>
         );
     }
@@ -84,7 +84,7 @@ export const CoursesScreen = ({ navigation }: any) => {
                     colors={['#6366F1', '#4F46E5']}
                     className="pt-16 pb-12 px-6"
                 >
-                    <Text className="text-indigo-100 text-[10px] font-black uppercase tracking-[3] mb-1">Knowledge Library</Text>
+                    <Text className="text-indigo-100 text-[10px] font-black uppercase tracking-[3px] mb-1">Knowledge Library</Text>
                     <Text variant="h2" className="text-white font-black text-2xl tracking-tighter">Premium Playlists</Text>
                     <Text variant="caption" className="text-indigo-200 mt-0.5">Learn from the best educators</Text>
                 </LinearGradient>

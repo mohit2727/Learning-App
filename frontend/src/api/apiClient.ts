@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
 // For Android emulator, use 10.0.2.2. For iOS or real device, use your local IP.
-const API_URL = 'http://10.80.127.71:5000/api';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://learning-app-4xa9.onrender.com/api';
 
 const apiClient = axios.create({
     baseURL: API_URL,

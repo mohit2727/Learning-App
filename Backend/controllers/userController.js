@@ -148,6 +148,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (user) {
+        user.name = req.body.name ?? user.name;
         user.mobile = req.body.mobile ?? user.mobile;
         user.age = req.body.age ?? user.age;
         user.city = req.body.city ?? user.city;
@@ -195,6 +196,79 @@ const getMyAttempts = asyncHandler(async (req, res) => {
     res.json(attempts);
 });
 
+// @desc    Get all users (Admin only)
+// @route   GET /api/users
+// @access  Private/Admin
+const getUsers = asyncHandler(async (req, res) => {
+    const users = await User.find({ role: 'student' })
+        .sort({ createdAt: -1 });
+    res.json(users);
+});
+
+// @desc    Get detailed user info for admin
+// @route   GET /api/users/:id
+// @access  Private/Admin
+const getUserById = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id)
+        .populate('enrolledCourses', 'title')
+        .populate('purchasedQuizzes', 'title');
+
+    if (user) {
+        const attempts = await TestAttempt.find({ user: user._id })
+            .populate('test', 'title totalMarks')
+            .sort({ createdAt: -1 });
+
+        res.json({
+            ...user._doc,
+            attempts
+        });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+// @desc    Update any user (Admin only)
+// @route   PUT /api/users/:id
+// @access  Private/Admin
+const updateUserAdmin = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+
+    if (user) {
+        user.name = req.body.name ?? user.name;
+        user.mobile = req.body.mobile ?? user.mobile;
+        user.email = req.body.email ?? user.email;
+        user.age = req.body.age ?? user.age;
+        user.city = req.body.city ?? user.city;
+        user.state = req.body.state ?? user.state;
+        user.pincode = req.body.pincode ?? user.pincode;
+        user.role = req.body.role ?? user.role;
+
+        const updatedUser = await user.save();
+        res.json(updatedUser);
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+// @desc    Delete user (Admin only)
+// @route   DELETE /api/users/:id
+// @access  Private/Admin
+const deleteUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+
+    if (user) {
+        // Optional: Delete their test attempts too
+        await TestAttempt.deleteMany({ user: user._id });
+        await user.deleteOne();
+        res.json({ message: 'User removed' });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
 module.exports = {
     getUserProfile,
     syncUser,
@@ -203,4 +277,8 @@ module.exports = {
     updateUserProfile,
     getMyCourses,
     getMyAttempts,
+    getUsers,
+    getUserById,
+    updateUserAdmin,
+    deleteUser,
 };

@@ -1,6 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { getUserProfile, syncUser, getLeaderboard, getDashboardStats, updateUserProfile, getMyCourses, getMyAttempts } = require('../controllers/userController');
+const {
+    getUserProfile,
+    syncUser,
+    getLeaderboard,
+    getDashboardStats,
+    updateUserProfile,
+    getMyCourses,
+    getMyAttempts,
+    getUsers,
+    getUserById,
+    updateUserAdmin,
+    deleteUser
+} = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 router.post('/sync', protect, syncUser);
@@ -11,5 +23,14 @@ router.route('/profile')
 router.get('/my-courses', protect, getMyCourses);
 router.get('/my-attempts', protect, getMyAttempts);
 router.get('/dashboard-stats', protect, admin, getDashboardStats);
+
+// Admin routes
+router.route('/')
+    .get(protect, admin, getUsers);
+
+router.route('/:id')
+    .get(protect, admin, getUserById)
+    .put(protect, admin, updateUserAdmin)
+    .delete(protect, admin, deleteUser);
 
 module.exports = router;

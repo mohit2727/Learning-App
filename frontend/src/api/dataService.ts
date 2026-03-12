@@ -27,8 +27,8 @@ export const dataService = {
         return response.data;
     },
 
-    submitTestScore: async (testId: string, answers: { questionId: string; selectedOption: number | null }[]) => {
-        const response = await apiClient.post('/tests/submit', { testId, answers });
+    submitTestScore: async (testId: string, answers: { questionId: string; selectedOption: number | null }[], timeSpent?: number) => {
+        const response = await apiClient.post('/tests/submit', { testId, answers, timeSpent });
         return response.data;
     },
 
@@ -47,7 +47,7 @@ export const dataService = {
         return response.data;
     },
 
-    updateProfile: async (data: { mobile?: string; age?: string; city?: string; state?: string; pincode?: string; }) => {
+    updateProfile: async (data: { name?: string; mobile?: string; age?: string; city?: string; state?: string; pincode?: string; }) => {
         const response = await apiClient.put('/users/profile', data);
         return response.data;
     },

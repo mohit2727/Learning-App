@@ -12,6 +12,7 @@ import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
 
 import { dataService } from '../../api/dataService';
+import { toast } from '../../utils/toast';
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D'];
 
@@ -52,7 +53,7 @@ export const ActiveTestScreen = ({ route, navigation }: any) => {
                 if (data.duration) setTimeLeft(data.duration * 60);
             } catch (error) {
                 console.error("Failed to load test:", error);
-                Alert.alert("Error", "Could not load the test.");
+                toast.error("Error", "Could not load the test.");
                 navigation?.goBack();
             } finally {
                 setIsLoading(false);
@@ -96,19 +97,22 @@ export const ActiveTestScreen = ({ route, navigation }: any) => {
             selectedOption: ans
         }));
 
+        const timeSpent = (questions[0]?.duration || 30) * 60 - timeLeft;
+
         try {
-            const result = await dataService.submitTestScore(testId, formattedAnswers);
+            const result = await dataService.submitTestScore(testId, formattedAnswers, timeSpent);
             // The result now contains the backend-calculated score
             navigation?.navigate?.('TestResult', {
                 answers: finalAnswers,
                 questions: questions,
                 backendScore: result.score,
-                backendTotalMarks: result.totalMarks
+                backendTotalMarks: result.totalMarks,
+                testId: testId
             });
         } catch (error) {
             console.error('Failed to submit score via API', error);
             // Fallback navigation in case of error
-            navigation?.navigate?.('TestResult', { answers: finalAnswers, questions: questions });
+            navigation?.navigate?.('TestResult', { answers: finalAnswers, questions: questions, testId: testId });
         }
     };
 

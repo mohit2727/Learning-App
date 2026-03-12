@@ -13,14 +13,12 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
     const [result, setResult] = useState<any>(null);
     const [test, setTest] = useState<any>(null);
     const [userAnswers, setUserAnswers] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const router = useRouter();
-
     const scoreParam = searchParams.get('score');
     const totalParam = searchParams.get('total');
 
     // If we have params, we don't need to block the initial render with a loading spinner
     const [loading, setLoading] = useState(scoreParam === null || totalParam === null);
+    const router = useRouter();
 
     useEffect(() => {
         if (authLoading || !user) return;

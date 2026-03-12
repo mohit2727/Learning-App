@@ -83,7 +83,7 @@ export const CourseDetailScreen = ({ route, navigation }: any) => {
                     <View className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-black/5 border border-gray-50 mb-8">
                         <View className="flex-row items-center gap-2 mb-3">
                             <Info size={16} color="#6366F1" />
-                            <Text className="font-black text-gray-800 text-[10px] uppercase tracking-[2]">Course Syllabus</Text>
+                            <Text className="font-black text-gray-800 text-[10px] uppercase tracking-[2px]">Course Syllabus</Text>
                         </View>
                         <Text className="text-gray-400 text-xs font-medium leading-relaxed">
                             {course?.description || 'Comprehensive learning module designed for top preparation performance.'}
@@ -91,7 +91,7 @@ export const CourseDetailScreen = ({ route, navigation }: any) => {
                     </View>
 
                     {/* Lessons */}
-                    <Text className="font-black text-gray-400 text-[9px] uppercase tracking-[3] ml-4 mb-4">Lessons list</Text>
+                    <Text className="font-black text-gray-400 text-[9px] uppercase tracking-[3px] ml-4 mb-4">Lessons list</Text>
                     {course?.lessons?.map((lesson: any, i: number) => (
                         <TouchableOpacity
                             key={lesson._id || i}
@@ -123,7 +123,7 @@ export const CourseDetailScreen = ({ route, navigation }: any) => {
                     onPress={() => { if (course?.lessons?.[0]) navigation.navigate('VideoPlayer', { videoUrl: course.lessons[0].videoUrl }) }}
                 >
                     <Play size={18} color="white" fill="white" />
-                    <Text className="text-white font-black text-xs uppercase tracking-[2]">Start Learning Now</Text>
+                    <Text className="text-white font-black text-xs uppercase tracking-[2px]">Start Learning Now</Text>
                 </TouchableOpacity>
             </View>
         </View>

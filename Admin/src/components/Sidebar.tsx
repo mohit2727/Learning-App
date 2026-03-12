@@ -7,7 +7,8 @@ import {
     FileUp,
     Youtube,
     LogOut,
-    BookOpen
+    BookOpen,
+    Users
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -23,6 +24,7 @@ const navItems = [
     { name: 'Quiz Management', href: '/dashboard/quizzes', icon: FileUp },
     { name: 'Playlists & Videos', href: '/dashboard/courses', icon: Youtube },
     { name: 'Announcements', href: '/dashboard/announcements', icon: BookOpen },
+    { name: 'User Management', href: '/dashboard/users', icon: Users },
 ];
 
 export default function Sidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boolean, onMobileClose?: () => void }) {

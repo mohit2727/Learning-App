@@ -126,7 +126,7 @@ export const TestCategoryScreen = ({ navigation }: any) => {
         return (
             <View className="flex-1 items-center justify-center bg-gray-50">
                 <ActivityIndicator size="large" color="#6366F1" />
-                <Text className="text-gray-400 text-[10px] font-black mt-4 tracking-[2]">FETCHING QUIZZES...</Text>
+                <Text className="text-gray-400 text-[10px] font-black mt-4 tracking-[2px]">FETCHING QUIZZES...</Text>
             </View>
         );
     }
@@ -138,7 +138,7 @@ export const TestCategoryScreen = ({ navigation }: any) => {
                     colors={['#6366F1', '#4F46E5']}
                     className="pt-16 pb-12 px-6"
                 >
-                    <Text className="text-indigo-100 text-[10px] font-black uppercase tracking-[3] mb-1">Practice Suite</Text>
+                    <Text className="text-indigo-100 text-[10px] font-black uppercase tracking-[3px] mb-1">Practice Suite</Text>
                     <Text variant="h2" className="text-white font-black text-2xl tracking-tighter">Quizzes & Tests</Text>
                     <Text variant="caption" className="text-indigo-200 mt-0.5">Test your logic and preparation</Text>
                 </LinearGradient>
@@ -208,7 +208,7 @@ export const TestCategoryScreen = ({ navigation }: any) => {
                     {isProcessing ? (
                         <View className="flex-1 justify-center items-center">
                             <ActivityIndicator size="large" color="#6366F1" />
-                            <Text className="mt-4 text-gray-400 font-black text-[10px] uppercase tracking-[2]">Initializing...</Text>
+                            <Text className="mt-4 text-gray-400 font-black text-[10px] uppercase tracking-[2px]">Initializing...</Text>
                         </View>
                     ) : (
                         <WebView

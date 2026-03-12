@@ -13,6 +13,7 @@ import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { useAuth } from '../../context/AuthContext';
 import { dataService } from '../../api/dataService';
+import { toast } from '../../utils/toast';
 import { LinearGradient } from 'expo-linear-gradient';
 import { User, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen, ClipboardList } from 'lucide-react-native';
 
@@ -25,6 +26,7 @@ export const ProfileScreen = ({ navigation }: any) => {
     const [loading, setLoading] = useState(true);
 
     const [showEdit, setShowEdit] = useState(false);
+    const [name, setName] = useState('');
     const [mobile, setMobile] = useState('');
     const [age, setAge] = useState('');
     const [city, setCity] = useState('');
@@ -37,11 +39,17 @@ export const ProfileScreen = ({ navigation }: any) => {
             try {
                 const data = await dataService.getProfile();
                 setProfile(data);
+                setName(data.name || '');
                 setMobile(data.mobile || '');
                 setAge(data.age || '');
                 setCity(data.city || '');
                 setState(data.state || '');
                 setPincode(data.pincode || '');
+
+                // Automatically show name prompt if user has a default name
+                if (data.name && (data.name.startsWith('Student ') || data.name === 'Student' || data.name === 'User')) {
+                    setShowEdit(true);
+                }
             } catch (error) {
                 console.error('Failed to fetch profile:', error);
             } finally {
@@ -52,22 +60,27 @@ export const ProfileScreen = ({ navigation }: any) => {
     }, []);
 
     const handleSave = async () => {
+        if (!name.trim()) {
+            Alert.alert('Error', 'Please enter your name.');
+            return;
+        }
         setIsSaving(true);
         try {
             const updatedProfile = await dataService.updateProfile({
-                mobile, age, city, state, pincode,
+                name: name.trim(), mobile, age, city, state, pincode,
             });
             setProfile(updatedProfile);
+            setName(updatedProfile.name || '');
             setMobile(updatedProfile.mobile || '');
             setAge(updatedProfile.age || '');
             setCity(updatedProfile.city || '');
             setState(updatedProfile.state || '');
             setPincode(updatedProfile.pincode || '');
             setShowEdit(false);
-            Alert.alert('Success', 'Profile updated successfully.');
+            toast.success('Success', 'Profile updated successfully.');
         } catch (error) {
             console.error('Update failed:', error);
-            Alert.alert('Error', 'Failed to update profile.');
+            toast.error('Error', 'Failed to update profile.');
         } finally {
             setIsSaving(false);
         }
@@ -81,8 +94,9 @@ export const ProfileScreen = ({ navigation }: any) => {
         );
     }
 
-    const displayName = user?.displayName || profile?.name || 'Student';
+    const displayName = profile?.name || user?.displayName || 'Student';
     const email = user?.email || profile?.email || 'Not set';
+    const isPlaceholderEmail = email.includes('@firebase-auth.local');
     const initials = displayName.split(' ').map((n: any) => n[0]).join('').slice(0, 2).toUpperCase();
 
     return (
@@ -119,10 +133,12 @@ export const ProfileScreen = ({ navigation }: any) => {
                         </View>
 
                         <Text variant="h2" className="text-white font-black text-xl tracking-tight leading-none mb-1">{displayName}</Text>
-                        <View className="flex-row items-center bg-white/10 px-3 py-1 rounded-full border border-white/20">
-                            <Mail size={10} color="#C7D2FE" />
-                            <Text className="text-indigo-100 text-[9px] font-black uppercase tracking-wider ml-1.5">{email}</Text>
-                        </View>
+                        {!isPlaceholderEmail && (
+                            <View className="flex-row items-center bg-white/10 px-3 py-1 rounded-full border border-white/20">
+                                <Mail size={10} color="#C7D2FE" />
+                                <Text className="text-indigo-100 text-[9px] font-black uppercase tracking-wider ml-1.5">{email}</Text>
+                            </View>
+                        )}
                     </LinearGradient>
                 </View>
 
@@ -131,7 +147,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                     <View className="flex-row justify-between items-center mb-6">
                         <View className="flex-row items-center gap-2">
                             <User size={16} color="#4F46E5" />
-                            <Text className="font-black text-gray-800 text-[10px] uppercase tracking-[2]">Personal Details</Text>
+                            <Text className="font-black text-gray-800 text-[10px] uppercase tracking-[2px]">Personal Details</Text>
                         </View>
                         <TouchableOpacity onPress={() => setShowEdit(true)} className="bg-indigo-50 px-3 py-1.5 rounded-xl">
                             <Text className="text-indigo-600 text-[8px] font-black uppercase tracking-widest">Edit</Text>
@@ -161,7 +177,7 @@ export const ProfileScreen = ({ navigation }: any) => {
 
                 {/* Action Links */}
                 <View className="mx-6 space-y-3 mb-10">
-                    <Text className="text-gray-400 font-black text-[9px] uppercase tracking-[3] ml-4 mb-2">Learning Progress</Text>
+                    <Text className="text-gray-400 font-black text-[9px] uppercase tracking-[3px] ml-4 mb-2">Learning Progress</Text>
 
                     <View className="bg-white rounded-[2.5rem] shadow-lg border border-gray-50 overflow-hidden">
                         <TouchableOpacity
@@ -203,7 +219,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                         }
                     >
                         <LogOut size={16} color="#E11D48" />
-                        <Text className="text-rose-600 font-black text-xs uppercase tracking-[2]">Logout Session</Text>
+                        <Text className="text-rose-600 font-black text-xs uppercase tracking-[2px]">Logout Session</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -223,6 +239,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                         </View>
 
                         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" className="mb-6">
+                            <Input label="Full Name" placeholder="e.g. John Doe" value={name} onChangeText={setName} />
                             <Input label="Mobile Number" placeholder="e.g. 9876543210" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" />
                             <View className="flex-row gap-4">
                                 <View className="flex-1">

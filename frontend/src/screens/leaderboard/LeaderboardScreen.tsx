@@ -12,6 +12,7 @@ const { width } = Dimensions.get('window');
 export const LeaderboardScreen = () => {
     const { user, loading: authLoading } = useAuth();
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
+    const [quizTitle, setQuizTitle] = useState<string>('Rankings');
     const [loading, setLoading] = useState(true);
 
     const fetchLeaderboard = async () => {
@@ -19,7 +20,12 @@ export const LeaderboardScreen = () => {
         setLoading(true);
         try {
             const data = await dataService.getLeaderboard();
-            setLeaderboard(data);
+            if (data && data.rankings) {
+                setLeaderboard(data.rankings);
+                setQuizTitle(data.quizTitle || 'Leaderboard');
+            } else if (Array.isArray(data)) {
+                setLeaderboard(data);
+            }
         } catch (error) {
             console.error('Failed to fetch leaderboard:', error);
         } finally {
@@ -31,8 +37,9 @@ export const LeaderboardScreen = () => {
         fetchLeaderboard();
     }, [authLoading, user]);
 
-    const top3 = leaderboard.slice(0, 3);
-    const others = leaderboard.slice(3);
+    const safeLeaderboard = Array.isArray(leaderboard) ? leaderboard : [];
+    const top3 = safeLeaderboard.slice(0, 3);
+    const others = safeLeaderboard.slice(3);
 
     return (
         <View className="flex-1 bg-gray-50">
@@ -44,7 +51,7 @@ export const LeaderboardScreen = () => {
                 >
                     <View className="flex-row items-center justify-center gap-2 mb-8">
                         <Trophy size={20} color="#FBBF24" fill="#FBBF24" />
-                        <Text className="text-white font-black text-xl tracking-tight uppercase">Leaderboard</Text>
+                        <Text className="text-white font-black text-xl tracking-tight uppercase">{quizTitle}</Text>
                     </View>
 
                     {/* Podium */}
@@ -63,8 +70,8 @@ export const LeaderboardScreen = () => {
                                     </View>
                                     <Text className="text-white text-[9px] font-black truncate w-full text-center mb-2">{top3[1].name.split(' ')[0]}</Text>
                                     <View className="h-16 w-full bg-white/10 rounded-t-2xl border-x border-t border-white/10 items-center justify-center">
-                                        <Text className="text-white font-black text-xs leading-none">{top3[1].totalScore}</Text>
-                                        <Text className="text-indigo-200 text-[6px] font-black uppercase tracking-widest mt-1">PTS</Text>
+                                        <Text className="text-white font-black text-xs leading-none">{top3[1].score || top3[1].totalScore || 0}</Text>
+                                        <Text className="text-indigo-200 text-[6px] font-black uppercase tracking-wider mt-1">PTS</Text>
                                     </View>
                                 </View>
                             )}
@@ -84,7 +91,7 @@ export const LeaderboardScreen = () => {
                                 </View>
                                 <Text className="text-white text-[11px] font-black truncate w-full text-center mb-2 uppercase">{top3[0].name.split(' ')[0]}</Text>
                                 <View className="h-24 w-full bg-white/20 rounded-t-[2rem] border-x border-t border-white/20 items-center justify-center shadow-lg">
-                                    <Text className="text-white font-black text-sm leading-none">{top3[0].totalScore}</Text>
+                                    <Text className="text-white font-black text-sm leading-none">{top3[0].score || top3[0].totalScore || 0}</Text>
                                     <Text className="text-indigo-100 text-[8px] font-black uppercase tracking-widest mt-1">POINTS</Text>
                                 </View>
                             </View>
@@ -102,8 +109,8 @@ export const LeaderboardScreen = () => {
                                     </View>
                                     <Text className="text-white text-[9px] font-black truncate w-full text-center mb-2">{top3[2].name.split(' ')[0]}</Text>
                                     <View className="h-12 w-full bg-white/5 rounded-t-2xl border-x border-t border-white/5 items-center justify-center">
-                                        <Text className="text-white font-black text-[10px] leading-none opacity-80">{top3[2].totalScore}</Text>
-                                        <Text className="text-indigo-300 text-[6px] font-black uppercase tracking-widest mt-1">PTS</Text>
+                                        <Text className="text-white font-black text-[10px] leading-none opacity-80">{top3[2].score || top3[2].totalScore || 0}</Text>
+                                        <Text className="text-indigo-300 text-[6px] font-black uppercase tracking-wider mt-1">PTS</Text>
                                     </View>
                                 </View>
                             )}
@@ -119,8 +126,9 @@ export const LeaderboardScreen = () => {
                 >
                     {others.map((student, i) => {
                         const rank = i + 4;
-                        const maxScore = top3[0]?.totalScore || 1;
-                        const progress = (student.totalScore / maxScore) * 100;
+                        const studentScore = student.score || student.totalScore || 0;
+                        const maxScore = (top3[0]?.score || top3[0]?.totalScore) || 1;
+                        const progress = (studentScore / maxScore) * 100;
 
                         return (
                             <View key={student._id || i} className="bg-white rounded-[2rem] p-4 mb-3 flex-row items-center border border-gray-50 shadow-sm">
@@ -140,7 +148,7 @@ export const LeaderboardScreen = () => {
                                 </View>
 
                                 <View className="items-end">
-                                    <Text className="text-indigo-600 font-black text-sm leading-none">{student.totalScore}</Text>
+                                    <Text className="text-indigo-600 font-black text-sm leading-none">{student.score || student.totalScore || 0}</Text>
                                     <Text className="text-gray-300 text-[7px] font-black uppercase tracking-widest mt-1">PTS</Text>
                                 </View>
                             </View>
