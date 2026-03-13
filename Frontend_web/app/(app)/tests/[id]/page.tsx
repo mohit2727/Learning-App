@@ -140,7 +140,7 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
                         <div className="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center shrink-0">
                             <HelpCircle size={24} className="text-violet-500" />
                         </div>
-                        <h2 className="text-lg font-black text-gray-800 leading-tight tracking-tight mt-1">{q.question}</h2>
+                        <h2 className="text-lg font-black text-gray-800 leading-tight tracking-tight mt-1">{q.text}</h2>
                     </div>
 
                     <div className="space-y-3 flex-1">

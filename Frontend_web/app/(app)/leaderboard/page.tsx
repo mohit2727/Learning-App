@@ -85,7 +85,7 @@ export default function LeaderboardPage() {
                             </div>
                             <p className="text-white text-xs font-black truncate w-full text-center mb-1">{top3[0].name.split(' ')[0]}</p>
                             <div className="h-24 w-full bg-white/20 backdrop-blur-md rounded-t-2xl border-x border-t border-white/30 flex flex-col items-center justify-center shadow-2xl">
-                                <span className="text-white font-black text-sm">{top3[0].totalScore ?? top3[0].score}</span>
+                                <span className="text-white font-black text-sm">{top3[0].totalScore || top3[0].score || 0}</span>
                                 <span className="text-violet-200 text-[8px] font-bold uppercase tracking-widest">POINTS</span>
                             </div>
                         </div>
@@ -140,7 +140,7 @@ export default function LeaderboardPage() {
                             </div>
 
                             <div className="text-right">
-                                <p className="font-black text-xs text-violet-700">{student.totalScore ?? student.score}</p>
+                                <p className="font-black text-xs text-violet-700">{student.totalScore || student.score || 0}</p>
                                 <p className="text-[7px] text-gray-400 font-black uppercase tracking-widest">PTS</p>
                             </div>
                         </div>

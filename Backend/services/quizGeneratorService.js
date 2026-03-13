@@ -14,11 +14,12 @@ const generateQuestionsFromText = async (text) => {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `
-    Analyze the following text and differenciate the each question and 
-    each question should have 4 options and 1 correct option (index 0-3).
+    Analyze the following text and extract ALL quiz questions found within it.
+    Each question must have exactly 4 options and 1 correct option (index 0-3).
+    Provide a comprehensive list of all questions identified in the text.
     Return the response ONLY as a JSON array of objects with the following structure:
     [
         {
@@ -29,13 +30,15 @@ const generateQuestionsFromText = async (text) => {
     ]
 
     Text content:
-    ${text.substring(0, 10000)} // Limiting text to 10k characters for safety
+    ${text.substring(0, 100000)}
     `;
 
     try {
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        const jsonText = response.text().replace(/```json|```/g, '').trim();
+        const textResponse = response.text();
+        // Remove markdown formatting if present
+        const jsonText = textResponse.replace(/```json|```/g, '').trim();
         const questions = JSON.parse(jsonText);
         return questions;
     } catch (error) {

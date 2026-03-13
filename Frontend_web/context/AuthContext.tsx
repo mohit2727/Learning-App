@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await auth.signOut();
     };
 
-    const isOnboarded = !!(dbUser && dbUser.name && dbUser.age && dbUser.city);
+    const isOnboarded = !!(dbUser && dbUser.name); // only require name for core access, others can be filled later
 
     return (
         <AuthContext.Provider value={{ user, dbUser, loading, isOnboarded, logout }}>
