@@ -14,7 +14,7 @@ const generateQuestionsFromText = async (text) => {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
     Analyze the following text and extract ALL quiz questions found within it.
