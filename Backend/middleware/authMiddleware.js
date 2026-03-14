@@ -32,25 +32,9 @@ const protect = asyncHandler(async (req, res, next) => {
         let user = await User.findOne({ firebaseUid });
 
         if (!user) {
-            console.log('User not found in DB by Firebase UID. Auto-creating...');
-            try {
-                // Determine a fallback name and an email stub (required fields historically)
-                const fallbackName = mobile ? `Student ${mobile.slice(-4)}` : 'Student';
-                const fallbackEmail = `${firebaseUid}@firebase-auth.local`;
-
-                user = await User.create({
-                    firebaseUid,
-                    name: fallbackName,
-                    email: fallbackEmail,
-                    mobile: mobile,
-                    role: 'student',
-                });
-                console.log('User created:', user._id);
-            } catch (createErr) {
-                console.error('Failed to auto-create user from Firebase:', createErr.message);
-                res.status(503).set('Cache-Control', 'no-store');
-                throw new Error('Auth service temporarily unavailable. Please try again.');
-            }
+            console.log('User not found in DB by Firebase UID:', firebaseUid);
+            res.status(401).set('Cache-Control', 'no-store');
+            throw new Error('User not found in database');
         } else {
             console.log('User found in DB with role:', user.role);
             // If the user didn't have a mobile saved yet (due to migration), save it
@@ -66,7 +50,7 @@ const protect = asyncHandler(async (req, res, next) => {
         console.error('Firebase auth error:', error.message);
         res.set('Cache-Control', 'no-store');
         if (!res.statusCode || res.statusCode === 200) res.status(401);
-        throw new Error('Not authorized: Invalid token');
+        throw new Error(error.message || 'Not authorized: Invalid token');
     }
 });
 

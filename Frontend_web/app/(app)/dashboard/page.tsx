@@ -172,12 +172,12 @@ export default function DashboardPage() {
                 <div>
                     <h2 className="font-bold text-gray-800 text-sm mb-3">📲 Join Community</h2>
                     <div className="flex gap-3">
-                        <a href="https://whatsapp.com" target="_blank" rel="noreferrer"
+                        <a href="https://chat.whatsapp.com/IFdWKamfnWNCAd4y0KSTv4?mode=gi_t" target="_blank" rel="noreferrer"
                             className="flex-1 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl py-3 flex items-center justify-center gap-2 card-hover shadow-sm">
                             <MessageCircle size={16} className="text-white" />
                             <span className="text-white font-bold text-xs">WhatsApp</span>
                         </a>
-                        <a href="https://t.me/" target="_blank" rel="noreferrer"
+                        <a href="https://t.me/+zYMb_hNz96IxZDg1" target="_blank" rel="noreferrer"
                             className="flex-1 bg-gradient-to-br from-sky-400 to-blue-600 rounded-2xl py-3 flex items-center justify-center gap-2 card-hover shadow-sm">
                             <Send size={16} className="text-white" />
                             <span className="text-white font-bold text-xs">Telegram</span>

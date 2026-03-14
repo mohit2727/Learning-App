@@ -11,6 +11,7 @@ const {
     submitTest,
     deleteTest,
     getTestLeaderboardAdmin,
+    getMergedTestLeaderboardsAdmin
 } = require('../controllers/testController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -23,6 +24,7 @@ router.put('/:id/status', protect, admin, updateTestStatus);
 router.put('/:id/lock', protect, admin, updateTestLockStatus);
 router.put('/:id/leaderboard', protect, admin, updateLeaderboardStatus);
 router.get('/:id/leaderboard', protect, admin, getTestLeaderboardAdmin);
+router.post('/merged-leaderboard', protect, admin, getMergedTestLeaderboardsAdmin);
 router.delete('/:id', protect, admin, deleteTest);
 
 module.exports = router;

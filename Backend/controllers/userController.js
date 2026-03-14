@@ -3,8 +3,35 @@ const User = require('../models/userModel');
 const Course = require('../models/courseModel');
 const Test = require('../models/testModel');
 const Announcement = require('../models/announcementModel');
+const admin = require('../config/firebase-admin');
 
-// @desc    Get user profile
+// @desc    Delete user (Admin only)
+// @route   DELETE /api/users/:id
+// @access  Private/Admin
+const deleteUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+
+    if (user) {
+        // Delete from Firebase Auth if firebaseUid exists
+        if (user.firebaseUid) {
+            try {
+                await admin.auth().deleteUser(user.firebaseUid);
+                console.log('User deleted from Firebase Auth:', user.firebaseUid);
+            } catch (fbError) {
+                // If user is already deleted from Firebase, we can ignore and continue
+                console.error('Error deleting user from Firebase:', fbError.message);
+            }
+        }
+
+        // Delete their test attempts
+        await TestAttempt.deleteMany({ user: user._id });
+        await user.deleteOne();
+        res.json({ message: 'User removed' });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
 // @route   GET /api/users/profile
 // @access  Private (Clerk protected)
 const getUserProfile = asyncHandler(async (req, res) => {
@@ -279,23 +306,6 @@ const updateUserAdmin = asyncHandler(async (req, res) => {
     } catch (error) {
         res.status(error.name === 'ValidationError' ? 400 : 500);
         throw new Error(error.message);
-    }
-});
-
-// @desc    Delete user (Admin only)
-// @route   DELETE /api/users/:id
-// @access  Private/Admin
-const deleteUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
-
-    if (user) {
-        // Optional: Delete their test attempts too
-        await TestAttempt.deleteMany({ user: user._id });
-        await user.deleteOne();
-        res.json({ message: 'User removed' });
-    } else {
-        res.status(404);
-        throw new Error('User not found');
     }
 });
 

@@ -22,9 +22,9 @@ const getTests = asyncHandler(async (req, res) => {
 
         const processedTests = tests.map(t => {
             const testObj = t.toObject();
-            testObj.isPurchased = req.user.purchasedQuizzes?.some(id => id.toString() === testObj._id.toString()) || 
-                                 playlistQuizIds.includes(testObj._id.toString());
-            
+            testObj.isPurchased = req.user.purchasedQuizzes?.some(id => id.toString() === testObj._id.toString()) ||
+                playlistQuizIds.includes(testObj._id.toString());
+
             // Hide questions always for student in list view
             delete testObj.questions;
             return testObj;
@@ -44,7 +44,7 @@ const getTestById = asyncHandler(async (req, res) => {
     if (test) {
         // Access Control: Check if test is FREE or user is ADMIN or user has PURCHASED it
         let hasAccess = false;
-        
+
         if (test.price === 0 || (req.user && req.user.role === 'admin')) {
             hasAccess = true;
         } else if (req.user) {
@@ -365,6 +365,85 @@ const getTestLeaderboardAdmin = asyncHandler(async (req, res) => {
     });
 });
 
+// @desc    Get merged leaderboard for multiple equivalent tests (Admin only)
+// @route   POST /api/tests/merged-leaderboard
+// @access  Private/Admin
+const getMergedTestLeaderboardsAdmin = asyncHandler(async (req, res) => {
+    const { testIds } = req.body;
+    
+    if (!testIds || !Array.isArray(testIds) || testIds.length === 0) {
+        res.status(400);
+        throw new Error('Please provide an array of test IDs');
+    }
+
+    // 1. Fetch Tests
+    const tests = await Test.find({ _id: { $in: testIds } });
+    if (tests.length === 0) {
+        res.status(404);
+        throw new Error('No tests found for provided IDs');
+    }
+
+    // Combine titles and use max total marks (treating them as the same quiz)
+    const combinedTitle = tests.map(t => t.title).join(' / ');
+    let combinedTotalMarks = Math.max(...tests.map(t => t.totalMarks || t.questions?.length || 1));
+
+    // 2. Fetch Attempts for all selected tests
+    const TestAttempt = require('../models/testAttemptModel');
+    // Sort by createdAt ASC so we encounter the absolute FIRST attempt first
+    const attempts = await TestAttempt.find({ test: { $in: testIds } })
+        .populate('user', 'name email role')
+        .sort({ createdAt: 1 });
+
+    // 3. Process attempts: we want only the absolute FIRST attempt per student across ANY selected test
+    // Map structure: userId => attempt_object
+    const studentAttemptsMap = {};
+
+    for (const attempt of attempts) {
+        if (attempt.user && attempt.user.role === 'student') {
+            const userIdStr = attempt.user._id.toString();
+
+            // Since attempts are sorted by createdAt ASC, the first one we see is the absolute first attempt
+            if (!studentAttemptsMap[userIdStr]) {
+                studentAttemptsMap[userIdStr] = {
+                    user: attempt.user,
+                    score: attempt.score,
+                    timeSpent: attempt.timeSpent,
+                    submittedAt: attempt.createdAt
+                };
+            }
+        }
+    }
+
+    // 4. Calculate combined scores and rankings
+    const rankings = [];
+    
+    for (const [userIdStr, data] of Object.entries(studentAttemptsMap)) {
+        rankings.push({
+            _id: userIdStr,
+            name: data.user.name,
+            email: data.user.email,
+            score: Math.round(data.score * 100) / 100, // Round to 2 decimals
+            timeSpent: data.timeSpent,
+            submittedAt: data.submittedAt, // First test completion
+            testsCompletedCount: 1 // Treated as single test
+        });
+    }
+
+    // 5. Sort Rankings: Highest Score -> Lowest Time Spent
+    rankings.sort((a, b) => {
+        if (b.score !== a.score) {
+            return b.score - a.score;
+        }
+        return a.timeSpent - b.timeSpent;
+    });
+
+    res.json({
+        quizTitle: combinedTitle,
+        totalMarks: combinedTotalMarks,
+        rankings: rankings
+    });
+});
+
 module.exports = {
     getTests,
     getTestById,
@@ -375,5 +454,6 @@ module.exports = {
     updateTest,
     submitTest,
     deleteTest,
-    getTestLeaderboardAdmin
+    getTestLeaderboardAdmin,
+    getMergedTestLeaderboardsAdmin
 };

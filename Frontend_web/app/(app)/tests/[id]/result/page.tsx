@@ -165,7 +165,7 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
                                                 )}
                                             </div>
                                             <p className="text-sm font-bold text-gray-800 leading-tight">
-                                                {i + 1}. {q.question}
+                                                {i + 1}. {q.text || q.question}
                                             </p>
                                         </div>
 

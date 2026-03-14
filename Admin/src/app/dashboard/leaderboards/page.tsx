@@ -11,14 +11,15 @@ import {
     Loader2,
     Calendar,
     Clock,
-    Award
+    Award,
+    X
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export default function LeaderboardsPage() {
     const [quizzes, setQuizzes] = useState<any[]>([]);
-    const [selectedQuizId, setSelectedQuizId] = useState<string>('');
+    const [selectedQuizIds, setSelectedQuizIds] = useState<string[]>([]);
     const [leaderboardData, setLeaderboardData] = useState<any | null>(null);
     const [loadingQuizzes, setLoadingQuizzes] = useState(true);
     const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
@@ -32,8 +33,8 @@ export default function LeaderboardsPage() {
             const { data } = await api.get('/tests');
             setQuizzes(data);
             if (data.length > 0) {
-                // Optionally auto-select the first quiz
-                setSelectedQuizId('');
+                // Not automatically selecting anymore, to allow explicit merging choices
+                setSelectedQuizIds([]);
             }
         } catch (err) {
             console.error('Failed to fetch quizzes');
@@ -46,16 +47,16 @@ export default function LeaderboardsPage() {
         fetchQuizzes();
     }, [authLoading, user]);
 
-    // Fetch leaderboard when quiz is selected
+    // Fetch leaderboard when quizzes are selected
     useEffect(() => {
         const fetchLeaderboard = async () => {
-            if (!selectedQuizId) {
+            if (selectedQuizIds.length === 0) {
                 setLeaderboardData(null);
                 return;
             }
             setLoadingLeaderboard(true);
             try {
-                const { data } = await api.get(`/tests/${selectedQuizId}/leaderboard`);
+                const { data } = await api.post('/tests/merged-leaderboard', { testIds: selectedQuizIds });
                 setLeaderboardData(data);
             } catch (err) {
                 console.error('Failed to fetch leaderboard data');
@@ -66,7 +67,18 @@ export default function LeaderboardsPage() {
         };
 
         fetchLeaderboard();
-    }, [selectedQuizId]);
+    }, [selectedQuizIds]);
+
+    const handleQuizSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const quizId = e.target.value;
+        if (quizId && !selectedQuizIds.includes(quizId)) {
+            setSelectedQuizIds([...selectedQuizIds, quizId]);
+        }
+    };
+
+    const removeQuiz = (quizId: string) => {
+        setSelectedQuizIds(selectedQuizIds.filter(id => id !== quizId));
+    };
 
     const handleDownloadPDF = () => {
         if (!leaderboardData || !leaderboardData.rankings || leaderboardData.rankings.length === 0) {
@@ -87,16 +99,20 @@ export default function LeaderboardsPage() {
         doc.text(`Total Marks: ${leaderboardData.totalMarks || '-'}`, 14, 36);
 
         // Prepare Table Data
-        const tableColumn = ["Rank", "Name", "Email", "Score", "Time Spent (min)", "Date Submitted"];
+        const tableColumn = ["Rank", "Name", "Score", "Time Spent", "Date Submitted"];
         const tableRows: any[] = [];
 
         leaderboardData.rankings.forEach((student: any, index: number) => {
+            const timeInSeconds = parseInt(student.timeSpent) || 0;
+            const minutes = Math.floor(timeInSeconds / 60);
+            const seconds = timeInSeconds % 60;
+            const formattedTime = `${minutes}m ${seconds}s`;
+
             const studentData = [
                 index + 1,
                 student.name || 'N/A',
-                student.email || 'N/A',
                 `${student.score}`,
-                `${student.timeSpent}`,
+                formattedTime,
                 new Date(student.submittedAt).toLocaleDateString()
             ];
             tableRows.push(studentData);
@@ -137,25 +153,49 @@ export default function LeaderboardsPage() {
             {/* Content */}
             <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm flex flex-col min-h-[500px]">
                 {/* Header Controls */}
-                <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/30">
-                    <div className="flex-1 w-full flex items-center gap-4">
-                        <div className="relative w-full max-w-md">
-                            <select
-                                value={selectedQuizId}
-                                onChange={(e) => setSelectedQuizId(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 shadow-sm transition-all appearance-none cursor-pointer"
-                                disabled={loadingQuizzes}
-                            >
-                                <option value="" disabled className="text-slate-400 font-normal">-- Select a Quiz to load Leaderboard --</option>
-                                {quizzes.map((quiz) => (
-                                    <option key={quiz._id} value={quiz._id}>
-                                        {quiz.title} {quiz.isActive ? '' : '(Inactive)'}
-                                    </option>
-                                ))}
-                            </select>
-                            <Trophy className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-start justify-between gap-4 bg-slate-50/30">
+                    <div className="flex-1 w-full flex flex-col gap-3">
+                        <div className="flex items-center gap-4">
+                            <div className="relative w-full max-w-md">
+                                <select
+                                    value=""
+                                    onChange={handleQuizSelect}
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 shadow-sm transition-all appearance-none cursor-pointer"
+                                    disabled={loadingQuizzes}
+                                >
+                                    <option value="" disabled className="text-slate-400 font-normal">-- Select Quizzes to Merge --</option>
+                                    {quizzes.map((quiz) => (
+                                        <option key={quiz._id} value={quiz._id} disabled={selectedQuizIds.includes(quiz._id)}>
+                                            {quiz.title} {quiz.isActive ? '' : '(Inactive)'} {selectedQuizIds.includes(quiz._id) ? ' (Selected)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                <Trophy className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            </div>
+                            {loadingQuizzes && <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />}
                         </div>
-                        {loadingQuizzes && <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />}
+
+                        {/* Selected Chips */}
+                        {selectedQuizIds.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                {selectedQuizIds.map(id => {
+                                    const quiz = quizzes.find(q => q._id === id);
+                                    return (
+                                        <div key={id} className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-100 text-xs font-bold shadow-sm">
+                                            <span className="truncate max-w-[200px]">{quiz?.title || 'Unknown Quiz'}</span>
+                                            <button onClick={() => removeQuiz(id)} className="hover:bg-blue-200/50 p-0.5 rounded-md transition-colors text-blue-400 hover:text-blue-700">
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                                {selectedQuizIds.length > 1 && (
+                                    <button onClick={() => setSelectedQuizIds([])} className="text-xs font-bold text-slate-400 hover:text-slate-600 px-2 py-1.5 transition-colors">
+                                        Clear All
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -168,15 +208,15 @@ export default function LeaderboardsPage() {
                         </div>
                     ) : null}
 
-                    {!selectedQuizId && !loadingQuizzes ? (
+                    {!loadingQuizzes && selectedQuizIds.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center py-20 px-4 text-center">
                             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-slate-100">
                                 <Search className="w-8 h-8 text-slate-300" strokeWidth={1.5} />
                             </div>
-                            <h3 className="text-xl font-black text-slate-800 tracking-tight mb-2">No Quiz Selected</h3>
-                            <p className="text-slate-500 font-medium max-w-sm">Please select a quiz from the dropdown menu above to view its leaderboard and export to PDF.</p>
+                            <h3 className="text-xl font-black text-slate-800 tracking-tight mb-2">No Quizzes Selected</h3>
+                            <p className="text-slate-500 font-medium max-w-sm">Please select one or more quizzes from the dropdown menu to view the merged leaderboard.</p>
                         </div>
-                    ) : selectedQuizId && leaderboardData && leaderboardData.rankings.length === 0 ? (
+                    ) : selectedQuizIds.length > 0 && leaderboardData && leaderboardData.rankings.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center py-20 px-4 text-center">
                             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-slate-100">
                                 <Trophy className="w-8 h-8 text-slate-300" strokeWidth={1.5} />
@@ -215,7 +255,6 @@ export default function LeaderboardsPage() {
                                                     {student.name || 'Unknown Student'}
                                                     {index === 0 && <Award className="w-4 h-4 text-amber-500 fill-amber-100" />}
                                                 </p>
-                                                <p className="text-[11px] text-slate-400 font-medium mt-0.5">{student.email || 'No email'}</p>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
@@ -228,7 +267,7 @@ export default function LeaderboardsPage() {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md w-fit">
                                                     <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                                    {student.timeSpent} min
+                                                    {Math.floor((student.timeSpent || 0) / 60)}m {(student.timeSpent || 0) % 60}s
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-right">

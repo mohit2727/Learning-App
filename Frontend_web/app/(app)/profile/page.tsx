@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { UserCircle, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen } from 'lucide-react';
 
 export default function ProfilePage() {
-    const { user, dbUser, logout, loading: authLoading } = useAuth();
+    const { user, dbUser, logout, loading: authLoading, refreshDbUser } = useAuth();
     const router = useRouter();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -36,6 +36,7 @@ export default function ProfilePage() {
             const token = await user.getIdToken();
             setAuthToken(token);
             const updated = await dataService.updateProfile(form);
+            await refreshDbUser();
             setProfile(updated);
             setForm({ name: updated.name || '', mobile: updated.mobile || '', age: updated.age || '', city: updated.city || '', state: updated.state || '', pincode: updated.pincode || '' });
             setShowEdit(false);
@@ -43,15 +44,16 @@ export default function ProfilePage() {
         finally { setSaving(false); }
     };
 
-    const displayName = dbUser?.name || 'Student';
-    const email = dbUser?.email || '';
+    const displayName = dbUser?.name || profile?.name || 'Student';
     const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'S';
 
-    if (loading) return (
+    if (loading && !dbUser) return (
         <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">
             <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
         </div>
     );
+
+    const activeProfile = profile || dbUser;
 
     return (
         <div className="flex flex-col min-h-full bg-gray-50">
@@ -71,10 +73,7 @@ export default function ProfilePage() {
                     </div>
 
                     <h1 className="text-white text-xl font-black tracking-tight">{displayName}</h1>
-                    <div className="flex items-center gap-1.5 bg-white/15 px-3 py-1 rounded-full border border-white/20 mt-1">
-                        <Mail size={12} className="text-violet-200" />
-                        <span className="text-violet-100 text-[10px] font-bold tracking-wide">{email}</span>
-                    </div>
+                    {/* Email removed as requested */}
                 </div>
             </div>
 
@@ -99,14 +98,14 @@ export default function ProfilePage() {
                             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Mobile</span>
                             <div className="flex items-center gap-2">
                                 <Phone size={12} className="text-violet-400" />
-                                <span className="text-xs font-black text-gray-800">{profile?.mobile || 'No Data'}</span>
+                                <span className="text-xs font-black text-gray-800">{activeProfile?.mobile || 'No Data'}</span>
                             </div>
                         </div>
                         <div className="flex flex-col gap-1">
                             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Age</span>
                             <div className="flex items-center gap-2">
                                 <Zap size={12} className="text-violet-400" />
-                                <span className="text-xs font-black text-gray-800">{profile?.age || '--'}</span>
+                                <span className="text-xs font-black text-gray-800">{activeProfile?.age || '--'}</span>
                             </div>
                         </div>
                         <div className="flex flex-col gap-1 col-span-2">
@@ -114,7 +113,7 @@ export default function ProfilePage() {
                             <div className="flex items-center gap-2">
                                 <MapPin size={12} className="text-violet-400" />
                                 <span className="text-xs font-black text-gray-800 line-clamp-1">
-                                    {profile?.city ? `${profile.city}, ${profile.state}` : 'Not provided'}
+                                    {activeProfile?.city ? `${activeProfile.city}, ${activeProfile.state}` : 'Not provided'}
                                 </span>
                             </div>
                         </div>

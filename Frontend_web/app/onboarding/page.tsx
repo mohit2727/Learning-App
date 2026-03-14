@@ -8,7 +8,7 @@ import { User, Calendar, MapPin, Hash, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 
 export default function OnboardingPage() {
-    const { user, dbUser, loading, isOnboarded } = useAuth();
+    const { user, dbUser, loading, isOnboarded, refreshDbUser } = useAuth();
     const router = useRouter();
     const [form, setForm] = useState({
         name: '',
@@ -49,6 +49,7 @@ export default function OnboardingPage() {
             const token = await user!.getIdToken();
             setAuthToken(token);
             await dataService.updateProfile(form);
+            await refreshDbUser();
             router.push('/dashboard');
         } catch (err) {
             setError('Failed to save profile. Please try again.');
