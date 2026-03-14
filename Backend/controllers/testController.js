@@ -183,18 +183,7 @@ const submitTest = asyncHandler(async (req, res) => {
         }
     });
 
-    // Time Bonus Logic: Reward students who finish faster
-    // Only if they got at least 50% of the questions right to avoid rushing
     const { timeSpent } = req.body; // In seconds
-    const totalTimeAllowed = (test.duration || 0) * 60;
-
-    if (timeSpent && timeSpent < totalTimeAllowed && totalScore >= (totalMarks / 2)) {
-        // Bonus = (Percent of time saved) * (Total Marks) * 0.1
-        // Example: Saved 50% of time -> 5% bonus points.
-        const timeSavedRatio = (totalTimeAllowed - timeSpent) / totalTimeAllowed;
-        const timeBonus = totalMarks * 0.1 * timeSavedRatio;
-        totalScore += timeBonus;
-    }
 
     // Round to 2 decimal places
     totalScore = Math.round(totalScore * 100) / 100;
@@ -335,6 +324,47 @@ const updateTestLockStatus = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Get leaderboard for a specific test (Admin)
+// @route   GET /api/tests/:id/leaderboard
+// @access  Private/Admin
+const getTestLeaderboardAdmin = asyncHandler(async (req, res) => {
+    const testId = req.params.id;
+    const test = await Test.findById(testId);
+
+    if (!test) {
+        res.status(404);
+        throw new Error('Test not found');
+    }
+
+    const TestAttempt = require('../models/testAttemptModel');
+    const attempts = await TestAttempt.find({ test: testId })
+        .populate('user', 'name email role')
+        .sort({ score: -1, timeSpent: 1 }); // Sort by score DESC, then timeSpent ASC for ties
+
+    const uniqueRankings = [];
+    const seenUsers = new Set();
+
+    for (const attempt of attempts) {
+        if (attempt.user && attempt.user.role === 'student' && !seenUsers.has(attempt.user._id.toString())) {
+            uniqueRankings.push({
+                _id: attempt.user._id,
+                name: attempt.user.name,
+                email: attempt.user.email,
+                score: attempt.score,
+                timeSpent: attempt.timeSpent,
+                submittedAt: attempt.createdAt
+            });
+            seenUsers.add(attempt.user._id.toString());
+        }
+    }
+
+    res.json({
+        quizTitle: test.title,
+        totalMarks: test.totalMarks,
+        rankings: uniqueRankings
+    });
+});
+
 module.exports = {
     getTests,
     getTestById,
@@ -345,4 +375,5 @@ module.exports = {
     updateTest,
     submitTest,
     deleteTest,
+    getTestLeaderboardAdmin
 };

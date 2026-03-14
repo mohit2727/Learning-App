@@ -2,15 +2,17 @@
 
 import DashboardLayout from '@/components/DashboardLayout';
 import { motion } from 'framer-motion';
-import { Users, BookOpen, FileText, TrendingUp, ArrowRight, Heart } from 'lucide-react';
+import { Users, BookOpen, FileText, TrendingUp, ArrowRight, Heart, X, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { AnimatePresence } from 'framer-motion';
 
-const StatCard = ({ title, value, icon: Icon, color, bg }: any) => (
+const StatCard = ({ title, value, icon: Icon, color, bg, onClick }: any) => (
     <motion.div
         whileHover={{ y: -4 }}
-        className="bg-white border border-slate-200 p-5 rounded-[1.5rem] shadow-sm hover:shadow-md transition-all duration-300 group flex items-center gap-4"
+        onClick={onClick}
+        className={`bg-white border border-slate-200 p-5 rounded-[1.5rem] shadow-sm hover:shadow-md transition-all duration-300 group flex items-center gap-4 ${onClick ? 'cursor-pointer' : ''}`}
     >
         <div className={`p-3.5 rounded-2xl ${bg} flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
             <Icon className={`w-6 h-6 ${color}`} strokeWidth={2.5} />
@@ -25,6 +27,10 @@ const StatCard = ({ title, value, icon: Icon, color, bg }: any) => (
 export default function DashboardPage() {
     const [stats, setStats] = useState<any>(null);
     const { user, loading: authLoading } = useAuth();
+    
+    // Modal state
+    const [modalData, setModalData] = useState<{ title: string, type: 'students' | 'paidUsers' | 'courses' | 'quizzes', items: any[] } | null>(null);
+    const [loadingModalData, setLoadingModalData] = useState(false);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -54,6 +60,42 @@ export default function DashboardPage() {
         return `${days}d ago`;
     };
 
+    const handleStatCardClick = async (type: 'students' | 'paidUsers' | 'courses' | 'quizzes', title: string) => {
+        setLoadingModalData(true);
+        setModalData({ title, type, items: [] });
+        try {
+            if (type === 'students') {
+                const { data } = await api.get('/users');
+                setModalData({ title, type, items: data });
+            } else if (type === 'paidUsers') {
+                const { data } = await api.get('/users');
+                // Calculate isPaid dynamically for each user since /users endpoint might not return it directly
+                // (Assuming they have these populated, else we simply show users who have role student)
+                // For a completely accurate list, the backend should ideally return a dedicated list or we fetch full details.
+                // For now, we will assume /users returns enrolledCourses/purchasedQuizzes, OR we will just show the first 50.
+                // To be safe, let's fetch individual details if needed, or rely on the populated arrays.
+                const paidUsers = data.filter((u: any) => 
+                    (u.enrolledCourses && u.enrolledCourses.length > 0) || 
+                    (u.purchasedQuizzes && u.purchasedQuizzes.length > 0) ||
+                    (u.purchasedPlaylists && u.purchasedPlaylists.length > 0)
+                );
+                setModalData({ title, type, items: paidUsers });
+            } else if (type === 'courses') {
+                const { data } = await api.get('/courses');
+                setModalData({ title, type, items: data });
+            } else if (type === 'quizzes') {
+                const { data } = await api.get('/tests');
+                setModalData({ title, type, items: data });
+            }
+        } catch (err) {
+            console.error('Failed to fetch modal data', err);
+            alert('Failed to load details.');
+            setModalData(null);
+        } finally {
+            setLoadingModalData(false);
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="mb-10">
@@ -68,6 +110,7 @@ export default function DashboardPage() {
                     icon={Users}
                     color="text-blue-600"
                     bg="bg-blue-50"
+                    onClick={() => handleStatCardClick('students', 'Total Students')}
                 />
                 <StatCard
                     title="Paid Users"
@@ -75,6 +118,7 @@ export default function DashboardPage() {
                     icon={Heart}
                     color="text-pink-600"
                     bg="bg-pink-50"
+                    onClick={() => handleStatCardClick('paidUsers', 'Paid Users')}
                 />
                 <StatCard
                     title="Active Courses"
@@ -82,6 +126,7 @@ export default function DashboardPage() {
                     icon={BookOpen}
                     color="text-indigo-600"
                     bg="bg-indigo-50"
+                    onClick={() => handleStatCardClick('courses', 'Active Courses')}
                 />
                 <StatCard
                     title="AI Quizzes"
@@ -89,6 +134,7 @@ export default function DashboardPage() {
                     icon={FileText}
                     color="text-emerald-600"
                     bg="bg-emerald-50"
+                    onClick={() => handleStatCardClick('quizzes', 'AI Quizzes')}
                 />
             </div>
 
@@ -166,6 +212,88 @@ export default function DashboardPage() {
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
             `}</style>
+
+            {/* Data Modal */}
+            <AnimatePresence>
+                {modalData && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setModalData(null)}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-0"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="bg-white border border-slate-200 w-full max-w-2xl max-h-[85vh] flex flex-col rounded-[2rem] shadow-2xl relative z-10 overflow-hidden"
+                        >
+                            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                                <h2 className="text-xl font-black text-slate-900 tracking-tight">{modalData.title} Detailed List</h2>
+                                <button onClick={() => setModalData(null)} className="p-2 hover:bg-slate-200/50 text-slate-400 rounded-xl transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-6">
+                                {loadingModalData ? (
+                                    <div className="flex flex-col items-center justify-center py-12">
+                                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-4" />
+                                        <p className="text-slate-500 font-bold text-xs uppercase tracking-widest">Loading Records...</p>
+                                    </div>
+                                ) : modalData.items.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <p className="text-slate-500 font-medium">No records found for {modalData.title}.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {modalData.items.map((item: any, idx: number) => {
+                                            if (modalData.type === 'students' || modalData.type === 'paidUsers') {
+                                                return (
+                                                    <div key={item._id || idx} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-sm hover:border-blue-100 transition-all">
+                                                        <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center font-black text-slate-600 text-xs shadow-sm">
+                                                            {item.name?.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-bold text-slate-900 text-sm truncate">{item.name}</p>
+                                                            <p className="text-[11px] text-slate-500 font-medium truncate">{item.email}</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="text-[10px] font-black tracking-widest uppercase text-slate-400">Score</span>
+                                                            <p className="text-sm font-black text-blue-600">{item.totalScore || 0}</p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            } else if (modalData.type === 'courses' || modalData.type === 'quizzes') {
+                                                return (
+                                                    <div key={item._id || idx} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-sm hover:border-indigo-100 transition-all">
+                                                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100/50">
+                                                            {modalData.type === 'courses' ? <BookOpen size={16} /> : <FileText size={16} />}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-bold text-slate-900 text-sm truncate">{item.title}</p>
+                                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                                                                {modalData.type === 'courses' ? `${item.price || 0} INR` : `${item.totalMarks || 0} Marks`}
+                                                            </p>
+                                                        </div>
+                                                        {item.isActive ? (
+                                                            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">ACTIVE</span>
+                                                        ) : (
+                                                            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">INACTIVE</span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            }
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </DashboardLayout>
     );
 }

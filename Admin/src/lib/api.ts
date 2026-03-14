@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://learning-app-4xa9.onrender.com/api',
     timeout: 10000,
 });
 

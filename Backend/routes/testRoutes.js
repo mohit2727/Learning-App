@@ -10,6 +10,7 @@ const {
     updateTest,
     submitTest,
     deleteTest,
+    getTestLeaderboardAdmin,
 } = require('../controllers/testController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -21,6 +22,7 @@ router.put('/:id', protect, admin, updateTest);
 router.put('/:id/status', protect, admin, updateTestStatus);
 router.put('/:id/lock', protect, admin, updateTestLockStatus);
 router.put('/:id/leaderboard', protect, admin, updateLeaderboardStatus);
+router.get('/:id/leaderboard', protect, admin, getTestLeaderboardAdmin);
 router.delete('/:id', protect, admin, deleteTest);
 
 module.exports = router;

@@ -165,7 +165,7 @@ export default function CoursesPage() {
                     >
                         <div className="h-36 bg-slate-50 flex items-center justify-center relative overflow-hidden">
                             {course.image ? (
-                                <img src={course.image.startsWith('http') ? course.image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${course.image}`} alt={course.title} className="w-full h-full object-cover relative z-10" />
+                                <img src={course.image.startsWith('http') ? course.image : `${process.env.NEXT_PUBLIC_API_URL || 'https://learning-app-4xa9.onrender.com'}${course.image}`} alt={course.title} className="w-full h-full object-cover relative z-10" />
                             ) : (
                                 <BookOpen className="w-12 h-12 text-slate-200 relative z-10 group-hover:scale-110 transition-transform duration-500" strokeWidth={1.5} />
                             )}

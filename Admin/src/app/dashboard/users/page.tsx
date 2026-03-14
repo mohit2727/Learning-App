@@ -29,6 +29,13 @@ export default function UsersPage() {
     const [viewUser, setViewUser] = useState<any | null>(null);
     const [editingUser, setEditingUser] = useState<any | null>(null);
     const [saving, setSaving] = useState(false);
+    
+    // Grant Access state
+    const [grantType, setGrantType] = useState('quiz');
+    const [grantItemId, setGrantItemId] = useState('');
+    const [availableItems, setAvailableItems] = useState<{ quizzes: any[], courses: any[], playlists: any[] }>({ quizzes: [], courses: [], playlists: [] });
+    const [grantingAccess, setGrantingAccess] = useState(false);
+
     const { user: currentUser, loading: authLoading } = useAuth();
 
     // Edit form state
@@ -50,14 +57,34 @@ export default function UsersPage() {
         }
     };
 
+    const fetchItemsForGranting = async () => {
+        try {
+            const [quizzesRes, coursesRes, playlistsRes] = await Promise.all([
+                api.get('/tests'),
+                api.get('/courses'),
+                api.get('/playlists')
+            ]);
+            setAvailableItems({
+                quizzes: quizzesRes.data,
+                courses: coursesRes.data,
+                playlists: playlistsRes.data
+            });
+        } catch (err) {
+            console.error('Failed to fetch items for granting access', err);
+        }
+    };
+
     useEffect(() => {
         fetchUsers();
+        fetchItemsForGranting();
     }, [authLoading, currentUser]);
 
     const handleViewDetails = async (id: string) => {
         try {
             const { data } = await api.get(`/users/${id}`);
             setViewUser(data);
+            setGrantType('quiz');
+            setGrantItemId('');
         } catch (err) {
             alert('Failed to load user details');
         }
@@ -96,6 +123,32 @@ export default function UsersPage() {
             if (viewUser?._id === id) setViewUser(null);
         } catch (err) {
             alert('Failed to delete user');
+        }
+    };
+
+    const handleGrantAccess = async () => {
+        if (!grantItemId || !viewUser) {
+            alert('Please select an item to grant access to.');
+            return;
+        }
+
+        setGrantingAccess(true);
+        try {
+            const { data } = await api.put(`/users/${viewUser._id}/access`, {
+                itemId: grantItemId,
+                type: grantType
+            });
+            // Update the local viewUser state
+            setViewUser({
+                ...viewUser,
+                ...data, // merge updated populated arrays
+            });
+            alert('Access granted successfully!');
+            setGrantItemId('');
+        } catch (err) {
+            alert('Failed to grant access. They may already have access or an error occurred.');
+        } finally {
+            setGrantingAccess(false);
         }
     };
 
@@ -255,7 +308,11 @@ export default function UsersPage() {
                                             <div className="flex items-center gap-4 mt-1">
                                                 <span className="text-blue-400 text-xs font-bold uppercase tracking-widest">{viewUser.role}</span>
                                                 <span className="w-1 h-1 rounded-full bg-white/20" />
-                                                <span className="text-white/60 text-xs font-semibold">Member since {new Date(viewUser.createdAt).toLocaleDateString()}</span>
+                                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest ${viewUser.isPaid ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-700 text-slate-300 border border-slate-600'}`}>
+                                                    {viewUser.isPaid ? 'Paid User' : 'Free User'}
+                                                </span>
+                                                <span className="w-1 h-1 rounded-full bg-white/20" />
+                                                <span className="text-white/60 text-xs font-semibold">Joined {new Date(viewUser.createdAt).toLocaleDateString()}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -294,7 +351,10 @@ export default function UsersPage() {
 
                                         {/* Test Attempts */}
                                         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[2] mb-4">Assessment History</h3>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[2]">Assessment History</h3>
+                                                <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">First Attempts Only</span>
+                                            </div>
                                             <div className="space-y-3">
                                                 {viewUser.attempts?.length > 0 ? (
                                                     viewUser.attempts.map((a: any) => (
@@ -335,18 +395,70 @@ export default function UsersPage() {
 
                                         {/* Enrolled Courses */}
                                         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[2] mb-4">Active Learning</h3>
+                                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[2] mb-4">Active Access</h3>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <p className="text-[10px] text-slate-500 font-bold mb-2">Courses</p>
+                                                    {viewUser.enrolledCourses?.length > 0 ? (
+                                                        viewUser.enrolledCourses.map((c: any) => (
+                                                            <div key={c._id} className="flex items-center gap-3 mb-2">
+                                                                <div className="w-6 h-6 bg-indigo-50 rounded-md flex items-center justify-center text-indigo-600"><BookOpen size={12} /></div>
+                                                                <p className="text-xs font-bold text-slate-700 truncate">{c.title}</p>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">No courses</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-slate-500 font-bold mb-2">Quizzes & Playlists</p>
+                                                    {[...(viewUser.purchasedQuizzes || []), ...(viewUser.purchasedPlaylists || [])].length > 0 ? (
+                                                        [...(viewUser.purchasedQuizzes || []), ...(viewUser.purchasedPlaylists || [])].map((item: any) => (
+                                                            <div key={item._id} className="flex items-center gap-3 mb-2">
+                                                                <div className="w-6 h-6 bg-amber-50 rounded-md flex items-center justify-center text-amber-600"><Award size={12} /></div>
+                                                                <p className="text-xs font-bold text-slate-700 truncate">{item.title}</p>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">No premium quizzes</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Grant Access Controls */}
+                                        <div className="bg-white rounded-2xl p-6 border border-blue-100 shadow-sm bg-blue-50/20">
+                                            <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-[2] mb-4">Grant Manual Access</h3>
                                             <div className="space-y-3">
-                                                {viewUser.enrolledCourses?.length > 0 ? (
-                                                    viewUser.enrolledCourses.map((c: any) => (
-                                                        <div key={c._id} className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600"><BookOpen size={14} /></div>
-                                                            <p className="text-xs font-bold text-slate-700 truncate">{c.title}</p>
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Not enrolled in any courses</p>
-                                                )}
+                                                <div className="flex gap-2">
+                                                    {['course', 'quiz', 'playlist'].map(type => (
+                                                        <button 
+                                                            key={type}
+                                                            onClick={() => { setGrantType(type); setGrantItemId(''); }}
+                                                            className={`flex-1 py-1.5 text-[10px] font-black uppercase rounded-lg border transition-all ${grantType === type ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-500'}`}
+                                                        >
+                                                            {type}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <select 
+                                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                                                    value={grantItemId}
+                                                    onChange={(e) => setGrantItemId(e.target.value)}
+                                                >
+                                                    <option value="" disabled>Select {grantType}...</option>
+                                                    {grantType === 'course' && availableItems.courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
+                                                    {grantType === 'quiz' && availableItems.quizzes.map(q => <option key={q._id} value={q._id}>{q.title}</option>)}
+                                                    {grantType === 'playlist' && availableItems.playlists.map(p => <option key={p._id} value={p._id}>{p.title}</option>)}
+                                                </select>
+
+                                                <button 
+                                                    onClick={handleGrantAccess}
+                                                    disabled={grantingAccess || !grantItemId}
+                                                    className="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-black text-[11px] uppercase tracking-wider py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    {grantingAccess ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Grant Access Now'}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>

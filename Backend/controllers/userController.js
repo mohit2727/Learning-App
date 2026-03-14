@@ -211,15 +211,35 @@ const getUsers = asyncHandler(async (req, res) => {
 const getUserById = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id)
         .populate('enrolledCourses', 'title')
-        .populate('purchasedQuizzes', 'title');
+        .populate('purchasedQuizzes', 'title')
+        .populate('purchasedPlaylists', 'title');
 
     if (user) {
-        const attempts = await TestAttempt.find({ user: user._id })
+        // Fetch all attempts sorted oldest to newest to find the FIRST attempt easily
+        const allAttempts = await TestAttempt.find({ user: user._id })
             .populate('test', 'title totalMarks')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: 1 });
+
+        // Filter to keep only the FIRST attempt per test
+        const firstAttemptsMap = new Map();
+        for (const attempt of allAttempts) {
+            if (attempt.test && !firstAttemptsMap.has(attempt.test._id.toString())) {
+                firstAttemptsMap.set(attempt.test._id.toString(), attempt);
+            }
+        }
+        
+        // Convert map back to array and sort newest first for display
+        const attempts = Array.from(firstAttemptsMap.values())
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+        // Calculate if user is paid
+        const isPaid = (user.purchasedQuizzes && user.purchasedQuizzes.length > 0) || 
+                       (user.purchasedPlaylists && user.purchasedPlaylists.length > 0) ||
+                       (user.enrolledCourses && user.enrolledCourses.length > 0);
 
         res.json({
             ...user._doc,
+            isPaid,
             attempts
         });
     } else {
@@ -279,6 +299,48 @@ const deleteUser = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Grant access to a specific item (Course/Quiz/Playlist)
+// @route   PUT /api/users/:id/access
+// @access  Private/Admin
+const grantUserAccess = asyncHandler(async (req, res) => {
+    const { itemId, type } = req.body;
+    // type should be 'course', 'quiz', or 'playlist'
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    if (type === 'course') {
+        if (!user.enrolledCourses.includes(itemId)) {
+            user.enrolledCourses.push(itemId);
+        }
+    } else if (type === 'quiz') {
+        if (!user.purchasedQuizzes.includes(itemId)) {
+            user.purchasedQuizzes.push(itemId);
+        }
+    } else if (type === 'playlist') {
+        if (!user.purchasedPlaylists.includes(itemId)) {
+            user.purchasedPlaylists.push(itemId);
+        }
+    } else {
+        res.status(400);
+        throw new Error('Invalid item type specified');
+    }
+
+    const updatedUser = await user.save();
+    
+    // Return updated populated arrays for the frontend
+    const populatedUser = await User.findById(updatedUser._id)
+        .populate('enrolledCourses', 'title')
+        .populate('purchasedQuizzes', 'title')
+        .populate('purchasedPlaylists', 'title');
+
+    res.json(populatedUser);
+});
+
 module.exports = {
     getUserProfile,
     syncUser,
@@ -291,4 +353,5 @@ module.exports = {
     getUserById,
     updateUserAdmin,
     deleteUser,
+    grantUserAccess,
 };
