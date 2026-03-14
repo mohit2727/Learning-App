@@ -6,6 +6,7 @@ const {
     createTest,
     updateTestStatus,
     updateLeaderboardStatus,
+    updateTestLockStatus,
     updateTest,
     submitTest,
     deleteTest,
