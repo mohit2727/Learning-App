@@ -33,6 +33,9 @@ const createOrder = asyncHandler(async (req, res) => {
         item = await Course.findById(itemId);
     } else if (itemType === 'Test') {
         item = await Test.findById(itemId);
+    } else if (itemType === 'QuizPlaylist') {
+        const QuizPlaylist = require('../models/quizPlaylistModel');
+        item = await QuizPlaylist.findById(itemId);
     }
 
     if (!item) {
@@ -121,6 +124,10 @@ const verifyPayment = asyncHandler(async (req, res) => {
         } else if (payment.itemModel === 'Test') {
             if (!user.purchasedQuizzes.includes(payment.itemId)) {
                 user.purchasedQuizzes.push(payment.itemId);
+            }
+        } else if (payment.itemModel === 'QuizPlaylist') {
+            if (!user.purchasedPlaylists.includes(payment.itemId)) {
+                user.purchasedPlaylists.push(payment.itemId);
             }
         }
         await user.save();

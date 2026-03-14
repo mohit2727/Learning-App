@@ -1,0 +1,24 @@
+{
+  "hosting": [
+    {
+      "site": "physical-education-with-ravina",
+      "source": "Frontend_web",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "framework": "nextjs"
+    },
+    {
+      "site": "physical-education-with-ravina-admin",
+      "source": "Admin",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "framework": "nextjs"
+    }
+  ]
+}

@@ -60,6 +60,8 @@ export const dataService = {
     getAnnouncements: () => apiClient.get('/announcements').then(r => r.data),
     getCourses: () => apiClient.get('/courses').then(r => r.data),
     getCourseDetail: (id: string) => apiClient.get(`/courses/${id}`).then(r => r.data),
+    getPlaylists: () => apiClient.get('/quiz-playlists').then(r => r.data),
+    getPlaylistById: (id: string) => apiClient.get(`/quiz-playlists/${id}`).then(r => r.data),
     getTests: () => apiClient.get('/tests').then(r => r.data),
     getTestById: (id: string) => apiClient.get(`/tests/${id}`).then(r => r.data),
     submitTest: (testId: string, answers: { questionId: string, selectedOption: number | null }[], timeSpent?: number) => apiClient.post('/tests/submit', { testId, answers, timeSpent }).then(r => r.data),

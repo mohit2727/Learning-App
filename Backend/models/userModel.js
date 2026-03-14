@@ -58,6 +58,12 @@ const userSchema = mongoose.Schema(
                 ref: 'Test',
             },
         ],
+        purchasedPlaylists: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'QuizPlaylist',
+            },
+        ],
     },
     {
         timestamps: true,

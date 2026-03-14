@@ -61,6 +61,10 @@ const testSchema = mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        isLocked: {
+            type: Boolean,
+            default: true,
+        },
     },
     {
         timestamps: true,

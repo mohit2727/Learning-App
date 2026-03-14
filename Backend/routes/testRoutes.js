@@ -18,6 +18,7 @@ router.get('/:id', protect, getTestById);
 router.post('/', protect, admin, createTest);
 router.put('/:id', protect, admin, updateTest);
 router.put('/:id/status', protect, admin, updateTestStatus);
+router.put('/:id/lock', protect, admin, updateTestLockStatus);
 router.put('/:id/leaderboard', protect, admin, updateLeaderboardStatus);
 router.delete('/:id', protect, admin, deleteTest);
 

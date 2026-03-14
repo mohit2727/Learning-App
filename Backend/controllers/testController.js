@@ -5,15 +5,33 @@ const { invalidateCache } = require('../middleware/cacheMiddleware');
 // @desc    Get all tests
 // @route   GET /api/tests
 // @access  Public
-// @desc    Get all tests
-// @route   GET /api/tests
-// @access  Public
 const getTests = asyncHandler(async (req, res) => {
     let query = {};
     if (!req.user || req.user.role !== 'admin') {
         query.isActive = true;
     }
     const tests = await Test.find(query).populate('course', 'title');
+
+    // If student, check purchase status and handle locking
+    if (req.user && req.user.role !== 'admin') {
+        const QuizPlaylist = require('../models/quizPlaylistModel');
+        const userPlaylists = await QuizPlaylist.find({
+            _id: { $in: req.user.purchasedPlaylists || [] }
+        });
+        const playlistQuizIds = userPlaylists.reduce((acc, p) => acc.concat(p.quizzes.map(id => id.toString())), []);
+
+        const processedTests = tests.map(t => {
+            const testObj = t.toObject();
+            testObj.isPurchased = req.user.purchasedQuizzes?.some(id => id.toString() === testObj._id.toString()) || 
+                                 playlistQuizIds.includes(testObj._id.toString());
+            
+            // Hide questions always for student in list view
+            delete testObj.questions;
+            return testObj;
+        });
+        return res.json(processedTests);
+    }
+
     res.json(tests);
 });
 
@@ -24,7 +42,39 @@ const getTestById = asyncHandler(async (req, res) => {
     const test = await Test.findById(req.params.id).populate('course', 'title');
 
     if (test) {
-        res.json(test);
+        // Access Control: Check if test is FREE or user is ADMIN or user has PURCHASED it
+        let hasAccess = false;
+        
+        if (test.price === 0 || (req.user && req.user.role === 'admin')) {
+            hasAccess = true;
+        } else if (req.user) {
+            // Check individual purchase
+            if (req.user.purchasedQuizzes && req.user.purchasedQuizzes.some(id => id.toString() === test._id.toString())) {
+                hasAccess = true;
+            } else {
+                // Check if any of user's purchased playlists contain this test
+                const QuizPlaylist = require('../models/quizPlaylistModel');
+                const playlists = await QuizPlaylist.find({
+                    _id: { $in: req.user.purchasedPlaylists || [] },
+                    quizzes: test._id
+                });
+                if (playlists.length > 0) {
+                    hasAccess = true;
+                }
+            }
+        }
+
+        if (hasAccess) {
+            // STRICT LOCK ENFORCEMENT: Even if purchased, if it's locked by admin, students can't fetch it
+            if (test.isLocked && (!req.user || req.user.role !== 'admin')) {
+                res.status(403);
+                throw new Error('This quiz is currently locked by the admin. Please wait for it to be unlocked.');
+            }
+            res.json(test);
+        } else {
+            res.status(403);
+            throw new Error('You do not have access to this quiz. Please purchase it or the corresponding playlist.');
+        }
     } else {
         res.status(404);
         throw new Error('Test not found');
@@ -58,6 +108,7 @@ const createTest = asyncHandler(async (req, res) => {
         negativeRatio: negativeRatio || 0.25,
         price: Number(price) || 0,
         isActive: false,
+        isLocked: true, // Default to locked
     });
 
     const createdTest = await test.save();
@@ -216,6 +267,7 @@ const updateTest = asyncHandler(async (req, res) => {
         test.negativeMarkingEnabled = negativeMarkingEnabled !== undefined ? negativeMarkingEnabled : test.negativeMarkingEnabled;
         test.negativeRatio = negativeRatio !== undefined ? Number(negativeRatio) : test.negativeRatio;
         test.isActive = isActive !== undefined ? isActive : test.isActive;
+        test.isLocked = req.body.isLocked !== undefined ? req.body.isLocked : test.isLocked;
         test.price = price !== undefined ? Number(price) : test.price;
 
         const updatedTest = await test.save();
@@ -266,12 +318,30 @@ const updateLeaderboardStatus = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Update test lock status
+// @route   PUT /api/tests/:id/lock
+// @access  Private/Admin
+const updateTestLockStatus = asyncHandler(async (req, res) => {
+    const test = await Test.findById(req.params.id);
+
+    if (test) {
+        test.isLocked = req.body.isLocked !== undefined ? req.body.isLocked : !test.isLocked;
+        const updatedTest = await test.save();
+        invalidateCache('/tests');
+        res.json(updatedTest);
+    } else {
+        res.status(404);
+        throw new Error('Test not found');
+    }
+});
+
 module.exports = {
     getTests,
     getTestById,
     createTest,
     updateTestStatus,
     updateLeaderboardStatus,
+    updateTestLockStatus,
     updateTest,
     submitTest,
     deleteTest,

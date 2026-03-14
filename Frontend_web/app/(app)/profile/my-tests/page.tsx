@@ -82,7 +82,7 @@ export default function MyTestsPage() {
 
                             <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-50">
                                 <div className="flex flex-col items-center shrink-0 min-w-[50px]">
-                                    <p className="text-xl font-black text-violet-700 leading-none">{attempt.score}<span className="text-[10px] text-gray-300 ml-0.5">/{attempt.totalMarks || '?'}</span></p>
+                                    <p className="text-xl font-black text-violet-700 leading-none">{attempt.score.toFixed(2)}<span className="text-[10px] text-gray-300 ml-0.5">/{attempt.totalMarks || '?'}</span></p>
                                     <p className="text-[8px] text-gray-400 font-black uppercase mt-1 tracking-tighter">SCORE</p>
                                 </div>
 

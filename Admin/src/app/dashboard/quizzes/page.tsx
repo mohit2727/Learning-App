@@ -17,7 +17,9 @@ import {
     X,
     Clock,
     HelpCircle,
-    Pencil
+    Pencil,
+    Lock,
+    Unlock
 } from 'lucide-react';
 
 export default function QuizzesPage() {
@@ -36,6 +38,7 @@ export default function QuizzesPage() {
     const [negativeMarkingEnabled, setNegativeMarkingEnabled] = useState(false);
     const [negativeRatio, setNegativeRatio] = useState('0.25');
     const [price, setPrice] = useState('0');
+    const [isLocked, setIsLocked] = useState(true);
     const [file, setFile] = useState<File | null>(null);
 
     const fetchQuizzes = async () => {
@@ -68,7 +71,8 @@ export default function QuizzesPage() {
                     totalMarks,
                     negativeMarkingEnabled,
                     negativeRatio,
-                    price
+                    price,
+                    isLocked
                 });
             } else {
                 // Upload/Generate implementation
@@ -89,7 +93,8 @@ export default function QuizzesPage() {
                 await api.post('/upload/quiz', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
-                    }
+                    },
+                    timeout: 300000 // 5 minutes for AI generation
                 });
             }
 
@@ -115,6 +120,7 @@ export default function QuizzesPage() {
         setNegativeMarkingEnabled(quiz.negativeMarkingEnabled || false);
         setNegativeRatio(String(quiz.negativeRatio || 0.25));
         setPrice(String(quiz.price || 0));
+        setIsLocked(quiz.isLocked !== undefined ? quiz.isLocked : true);
         setShowUploadModal(true);
     };
 
@@ -144,6 +150,14 @@ export default function QuizzesPage() {
             setQuizzes(quizzes.map(q => q._id === id ? { ...q, isLeaderboardActive: !currentStatus } : { ...q, isLeaderboardActive: false }));
         } catch (err) {
             alert('Failed to update leaderboard status');
+        }
+    };
+    const toggleLock = async (id: string, currentLocked: boolean) => {
+        try {
+            await api.put(`/tests/${id}/lock`, { isLocked: !currentLocked });
+            setQuizzes(quizzes.map(q => q._id === id ? { ...q, isLocked: !currentLocked } : q));
+        } catch (err) {
+            alert('Failed to update lock status');
         }
     };
 
@@ -194,6 +208,7 @@ export default function QuizzesPage() {
                                 <th className="px-6 py-4">Price</th>
                                 <th className="px-6 py-4">Duration</th>
                                 <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4">Access</th>
                                 <th className="px-6 py-4 text-center">Leaderboard</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
@@ -242,6 +257,18 @@ export default function QuizzesPage() {
                                                 }`}
                                         >
                                             {quiz.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                        </button>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <button
+                                            onClick={() => toggleLock(quiz._id, quiz.isLocked)}
+                                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black transition-all border ${quiz.isLocked
+                                                ? "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100"
+                                                : "bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100"
+                                                }`}
+                                        >
+                                            {quiz.isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                                            {quiz.isLocked ? 'LOCKED' : 'OPEN'}
                                         </button>
                                     </td>
                                     <td className="px-6 py-4 text-center">
@@ -487,6 +514,28 @@ export default function QuizzesPage() {
                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-4 py-2.5 text-sm text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
                                             placeholder="0 for free"
                                         />
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <label className="block text-xs font-black text-slate-700">Access Control</label>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Lock/Unlock for students</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsLocked(!isLocked)}
+                                            className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${isLocked ? 'bg-amber-500' : 'bg-indigo-500'}`}
+                                        >
+                                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isLocked ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                                        </button>
+                                    </div>
+                                    <div className="mt-2 flex items-center gap-2">
+                                        {isLocked ? <Lock className="w-3 h-3 text-amber-500" /> : <Unlock className="w-3 h-3 text-indigo-500" />}
+                                        <span className={`text-[10px] font-black uppercase ${isLocked ? 'text-amber-600' : 'text-indigo-600'}`}>
+                                            {isLocked ? 'Locked (Visibility hidden)' : 'Unlocked (Accessible)'}
+                                        </span>
                                     </div>
                                 </div>
 

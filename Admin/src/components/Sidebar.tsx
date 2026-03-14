@@ -22,6 +22,7 @@ function cn(...inputs: ClassValue[]) {
 const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Quiz Management', href: '/dashboard/quizzes', icon: FileUp },
+    { name: 'Quiz Playlists', href: '/dashboard/playlists', icon: BookOpen },
     { name: 'Playlists & Videos', href: '/dashboard/courses', icon: Youtube },
     { name: 'Announcements', href: '/dashboard/announcements', icon: BookOpen },
     { name: 'User Management', href: '/dashboard/users', icon: Users },

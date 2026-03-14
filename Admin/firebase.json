@@ -1,11 +1,14 @@
 {
-    "hosting": {
-        "target": "admin",
-        "source": ".",
-        "ignore": [
-            "firebase.json",
-            "**/.*",
-            "**/node_modules/**"
-        ]
+  "hosting": [
+    {
+      "site": "physical-education-with-ravina-admin",
+      "source": ".",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "framework": "nextjs"
     }
+  ]
 }

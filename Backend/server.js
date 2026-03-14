@@ -67,6 +67,7 @@ const testRoutes = require('./routes/testRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const quizPlaylistRoutes = require('./routes/quizPlaylistRoutes');
 
 // Public cached routes (2 min TTL)
 app.use('/api/courses', cacheMiddleware(120), courseRoutes);
@@ -77,6 +78,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/tests', cacheMiddleware(120), testRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/quiz-playlists', quizPlaylistRoutes);
 
 const __dirname_path = path.resolve();
 app.use('/uploads', express.static(path.join(__dirname_path, '/uploads')));

@@ -1,15 +1,5 @@
 {
   "projects": {
     "default": "physical-education-with-ravina"
-  },
-  "targets": {
-    "physical-education-with-ravina": {
-      "hosting": {
-        "admin": [
-          "physical-education-with-ravina-admin"
-        ]
-      }
-    }
-  },
-  "etags": {}
+  }
 }
