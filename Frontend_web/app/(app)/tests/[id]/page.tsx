@@ -13,6 +13,7 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
     const [currentIdx, setCurrentIdx] = useState(0);
     const [answers, setAnswers] = useState<(number | null)[]>([]);
     const [timeLeft, setTimeLeft] = useState(0);
+    const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -60,7 +61,10 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
     }, []);
 
     const handleSubmit = async () => {
-        if (!confirm('Are you sure you want to submit your test?')) return;
+        setShowSubmitConfirm(true);
+    };
+
+    const confirmSubmit = async () => {
         try {
             const token = await user!.getIdToken();
             setAuthToken(token);
@@ -84,6 +88,8 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
         } catch (e) {
             console.error('Submit test error:', e);
             alert('Failed to submit. Check connection.');
+        } finally {
+            setShowSubmitConfirm(false);
         }
     };
 
@@ -117,7 +123,7 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
                         <Clock size={16} className="text-yellow-300 animate-pulse" />
                         <span className="text-white font-black text-sm tracking-widest">{formatTime(timeLeft)}</span>
                     </div>
-                    <button onClick={handleSubmit} className="bg-emerald-500 text-white px-5 py-2.5 rounded-2xl font-black text-[11px] shadow-lg shadow-emerald-500/30 flex items-center gap-2 tracking-widest uppercase">
+                    <button onClick={handleSubmit} className="bg-emerald-500 text-white px-5 py-2.5 rounded-2xl font-black text-[11px] shadow-lg shadow-emerald-500/30 flex items-center gap-2 tracking-widest uppercase transition-all active:scale-95">
                         DONE <Send size={12} strokeWidth={3} />
                     </button>
                 </div>
@@ -167,7 +173,7 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
                         <button
                             disabled={currentIdx === 0}
                             onClick={() => setCurrentIdx(prev => prev - 1)}
-                            className="flex-1 bg-gray-100 text-gray-400 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest disabled:opacity-30 disabled:grayscale transition-all flex items-center justify-center gap-2"
+                            className="flex-1 bg-gray-100 text-gray-400 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest disabled:opacity-30 disabled:grayscale transition-all flex items-center justify-center gap-2 active:scale-95 transition-all"
                         >
                             <ChevronLeft size={16} strokeWidth={3} /> PREV
                         </button>
@@ -175,14 +181,14 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
                         {currentIdx === test.questions.length - 1 ? (
                             <button
                                 onClick={handleSubmit}
-                                className="flex-1 bg-emerald-500 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-200 transition-all flex items-center justify-center gap-2"
+                                className="flex-1 bg-emerald-500 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-200 transition-all flex items-center justify-center gap-2 active:scale-95 transition-all"
                             >
                                 SUBMIT <Send size={16} strokeWidth={3} />
                             </button>
                         ) : (
                             <button
                                 onClick={() => setCurrentIdx(prev => prev + 1)}
-                                className="flex-1 bg-violet-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-violet-200 transition-all flex items-center justify-center gap-2"
+                                className="flex-1 bg-violet-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-violet-200 transition-all flex items-center justify-center gap-2 active:scale-95 transition-all"
                             >
                                 NEXT <ChevronRight size={16} strokeWidth={3} />
                             </button>
@@ -195,6 +201,42 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
                     <p className="text-[10px] text-gray-300 font-bold uppercase tracking-[0.3em]">Precision Learning</p>
                 </div>
             </div>
+
+            {/* Custom Premium Submit Modal */}
+            {showSubmitConfirm && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowSubmitConfirm(false)} />
+                    <div className="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl border border-white overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="absolute top-0 right-0 p-8 opacity-5">
+                            <HelpCircle size={120} />
+                        </div>
+                        
+                        <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 mb-6">
+                            <HelpCircle size={32} />
+                        </div>
+
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-2">Finish Test?</h3>
+                        <p className="text-slate-500 font-bold text-sm leading-relaxed mb-8">
+                            Are you sure you want to submit your test? You won't be able to change your answers after this.
+                        </p>
+
+                        <div className="space-y-3">
+                            <button 
+                                onClick={confirmSubmit}
+                                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-100 transition-all active:scale-95 text-xs uppercase tracking-widest"
+                            >
+                                YES, SUBMIT NOW
+                            </button>
+                            <button 
+                                onClick={() => setShowSubmitConfirm(false)}
+                                className="w-full bg-slate-50 hover:bg-slate-100 text-slate-400 font-black py-5 rounded-2xl transition-all active:scale-95 text-xs uppercase tracking-widest"
+                            >
+                                CONTINUE QUIZ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

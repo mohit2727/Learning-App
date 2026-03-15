@@ -25,8 +25,6 @@ export default function SignInPage() {
     const [error, setError] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const [mode, setMode] = useState<'LANDING' | 'AUTH'>('LANDING');
-
     // Redirect if already logged in
     useEffect(() => {
         if (!loading && user) {
@@ -74,96 +72,28 @@ export default function SignInPage() {
 
         setIsProcessing(true);
         try {
-            await confirmationResult.confirm(otp);
-            router.push('/dashboard');
+            const credential = await confirmationResult.confirm(otp);
+            const user = credential.user;
+            
+            // Get token and set it globally
+            const token = await user.getIdToken();
+            const { setAuthToken } = await import('@/lib/api');
+            setAuthToken(token);
+
+            // Sync user explicitly to trigger auto-creation in backend if missing
+            const api = (await import('@/lib/api')).default;
+            await api.post('/users/sync');
+
+            // Force refresh dbUser context to get the newly created profile
+            // AuthContext's refreshDbUser relies on its own internal state, so reloading here is safer.
+            window.location.href = '/dashboard';
         } catch (err: any) {
+            console.error('OTP Verification Error', err);
             setError('Invalid OTP. Please check the code and try again.');
         } finally {
             setIsProcessing(false);
         }
     };
-
-    if (mode === 'LANDING') {
-        return (
-            <div className="min-h-screen bg-white flex flex-col items-center relative overflow-hidden">
-                {/* Decorative Background Elements */}
-                <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-indigo-50 rounded-full blur-[120px] opacity-60 animate-pulse"></div>
-                <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-purple-50 rounded-full blur-[100px] opacity-60"></div>
-
-                {/* Header/Nav - Simplified */}
-                <div className="w-full max-w-7xl mx-auto px-6 py-8 flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 relative rounded-xl bg-white shadow-md border border-slate-100 p-1.5 overflow-hidden">
-                            <Image src="/logo.png" alt="Logo" fill sizes="40px" className="object-contain p-1" />
-                        </div>
-                        <span className="font-black text-slate-900 tracking-tight text-xl uppercase">Physical <span className="text-indigo-600">Education</span></span>
-                    </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-4xl mx-auto text-center relative z-10 -mt-20">
-                    <div className="relative mb-12">
-                        {/* Orbiting element effect */}
-                        <div className="absolute inset-0 bg-indigo-400/20 rounded-full blur-3xl scale-150 animate-pulse"></div>
-                        <div className="w-40 h-40 md:w-56 md:h-56 relative rounded-[3rem] bg-white p-8 border-2 border-white/50 shadow-[0_32px_64px_-16px_rgba(79,70,229,0.2)] overflow-hidden card-hover">
-                            <Image src="/logo.png" alt="Logo" fill sizes="(max-width: 768px) 160px, 224px" className="object-contain p-8" priority />
-                        </div>
-                    </div>
-
-                    <h1 className="text-5xl md:text-8xl font-black text-slate-950 mb-8 tracking-tighter leading-[0.9] md:leading-[0.85]">
-                        Physical <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 drop-shadow-sm">Education</span> <br />
-                        <span className="text-slate-900">with Ravina</span>
-                    </h1>
-
-                    <p className="text-slate-500 text-lg md:text-2xl max-w-2xl mb-12 font-semibold leading-relaxed">
-                        The ultimate fitness & academic ecosystem. <br className="hidden md:block" />
-                        Master concepts, ace tests, and dominate the leaderboard.
-                    </p>
-
-                    <div className="flex flex-col items-center gap-6 w-full max-w-md">
-                        <button
-                            onClick={() => setMode('AUTH')}
-                            className="group w-full relative h-[72px] flex items-center justify-center font-black text-white text-xl uppercase tracking-widest transition-all duration-300 bg-slate-950 rounded-3xl hover:bg-slate-900 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] hover:-translate-y-1 active:scale-95 overflow-hidden"
-                        >
-                            <span className="relative z-10 flex items-center gap-2">
-                                Get Started Now
-                                <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" strokeWidth={3} />
-                            </span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        </button>
-                    </div>
-
-                    {/* Trust/Footer info */}
-                    <div className="mt-20 flex flex-col items-center gap-4">
-                        <div className="flex -space-x-4">
-                            {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center shadow-sm overflow-hidden text-[10px] font-black text-indigo-600">
-                                    {String.fromCharCode(64 + i)}
-                                </div>
-                            ))}
-                            <div className="w-10 h-10 rounded-full border-2 border-white bg-indigo-600 flex items-center justify-center shadow-sm text-[10px] font-black text-white">
-                                +10K
-                            </div>
-                        </div>
-                        <p className="text-slate-400 text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">
-                            Trusted by learners worldwide
-                        </p>
-                    </div>
-                </div>
-
-                {/* Animated Bottom Info */}
-                <div className="w-full py-10 opacity-30 select-none pointer-events-none">
-                    <div className="flex whitespace-nowrap gap-20 animate-marquee uppercase font-black text-8xl md:text-9xl text-slate-100">
-                        <span>Physical Fitness</span>
-                        <span>Academic Excellence</span>
-                        <span>Leadership</span>
-                        <span>Progress</span>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-white">

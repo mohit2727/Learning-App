@@ -31,10 +31,26 @@ const protect = asyncHandler(async (req, res, next) => {
         // Find user in DB
         let user = await User.findOne({ firebaseUid });
 
+        // IMPORTANT: We do NOT auto-create users here anymore.
+        // Instead, we attach the UID and mobile to req so the /sync endpoint can create them if needed.
         if (!user) {
             console.log('User not found in DB by Firebase UID:', firebaseUid);
-            res.status(401).set('Cache-Control', 'no-store');
-            throw new Error('User not found in database');
+            // We set these on req so that specific endpoints (like /sync) can handle user creation explicitly.
+            req.firebaseUid = firebaseUid;
+            req.firebaseMobile = mobile;
+            
+            // Note: If the missing user hits a regular protected route, the controller should check for `req.user`
+            // But to avoid changing every single controller to check `if (!req.user)`, 
+            // we will STILL throw a 401 error EXCEPT for the '/sync' route.
+            // A more robust way is checking req.originalUrl
+            if (req.originalUrl && !req.originalUrl.includes('/users/sync')) {
+                res.status(401).set('Cache-Control', 'no-store');
+                throw new Error('User not found in database');
+            }
+            
+            // If it IS the sync route, we let it pass through to the controller
+            // The controller will see req.user is undefined, but req.firebaseUid is present.
+            req.user = null;
         } else {
             console.log('User found in DB with role:', user.role);
             // If the user didn't have a mobile saved yet (due to migration), save it
@@ -42,9 +58,9 @@ const protect = asyncHandler(async (req, res, next) => {
                 user.mobile = mobile;
                 await user.save();
             }
+            req.user = user;
         }
 
-        req.user = user;
         next();
     } catch (error) {
         console.error('Firebase auth error:', error.message);

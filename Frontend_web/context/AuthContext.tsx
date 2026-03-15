@@ -39,8 +39,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.error("Failed to fetch user profile from DB", error);
             // If the backend returns 401, it means the user exists in Firebase but not in our DB (deleted)
             if (error.response?.status === 401) {
-                console.log("User not found in DB, logging out of Firebase...");
-                await auth.signOut();
+                // IMPORTANT: If they are currently on the sign-in page, DO NOT log them out here.
+                // The submit handler for `/sign-in` handles the /sync call which auto-creates them.
+                if (typeof window !== 'undefined' && !window.location.pathname.includes('/sign-in')) {
+                    console.log("User not found in DB, logging out of Firebase...");
+                    await auth.signOut();
+                }
             }
         }
     };
@@ -78,7 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (user) await fetchProfile(user);
     };
 
-    const isOnboarded = !!(dbUser && dbUser.name); // only require name for core access, others can be filled later
+    const isOnboarded = !!(dbUser && dbUser.name && dbUser.name !== 'New User'); // enforce name not default placeholder
 
     return (
         <AuthContext.Provider value={{ user, dbUser, loading, isOnboarded, logout, refreshDbUser }}>

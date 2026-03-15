@@ -27,7 +27,7 @@ export default function OnboardingPage() {
         if (dbUser) {
             setForm(f => ({
                 ...f,
-                name: dbUser.name || '',
+                name: (dbUser.name && dbUser.name !== 'New User') ? dbUser.name : '',
                 age: dbUser.age || '',
                 city: dbUser.city || '',
                 state: dbUser.state || '',

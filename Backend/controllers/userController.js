@@ -57,20 +57,37 @@ const getUserProfile = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Sync user after Clerk login (called by client after first sign-in)
+// @desc    Sync user after Clerk/Firebase login (called by client after first sign-in)
 // @route   POST /api/users/sync
-// @access  Private (Clerk protected)
+// @access  Private (Requires Firebase Auth token)
 const syncUser = asyncHandler(async (req, res) => {
-    // The authMiddleware already creates or finds the user
-    // Just return the profile
+    let user = req.user;
+
+    // If user doesn't exist in DB but they have a valid Firebase UID (attached by authMiddleware)
+    // Create the user explicitly here.
+    if (!user && req.firebaseUid) {
+        user = await User.create({
+            firebaseUid: req.firebaseUid,
+            name: 'New User',
+            email: `${req.firebaseUid}@placeholder.com`,
+            mobile: req.firebaseMobile || '',
+            role: 'student'
+        });
+        console.log('Successfully auto-created missing user via /sync:', user.firebaseUid);
+    } else if (!user) {
+         res.status(401);
+         throw new Error('Not authorized');
+    }
+
+    // Return the profile
     res.json({
-        _id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        mobile: req.user.mobile,
-        role: req.user.role,
-        enrolledCourses: req.user.enrolledCourses || [],
-        purchasedQuizzes: req.user.purchasedQuizzes || [],
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role,
+        enrolledCourses: user.enrolledCourses || [],
+        purchasedQuizzes: user.purchasedQuizzes || [],
     });
 });
 
