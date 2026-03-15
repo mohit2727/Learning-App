@@ -39,7 +39,8 @@ apiClient.interceptors.response.use(
 
         if (status === 401) {
             // Token expired or invalid — redirect to sign-in
-            if (typeof window !== 'undefined') {
+            // IMPORTANT: If we are already on sign-in, do not redirect! This breaks the OTP -> /sync flow.
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/sign-in')) {
                 window.location.href = '/sign-in';
             }
         } else if (status === 429) {
