@@ -147,7 +147,7 @@ export default function QuizzesPage() {
         try {
             await api.put(`/tests/${id}/leaderboard`, { isActive: !currentStatus });
             // Deactivate all others locally
-            setQuizzes(quizzes.map(q => q._id === id ? { ...q, isLeaderboardActive: !currentStatus } : { ...q, isLeaderboardActive: false }));
+            setQuizzes(quizzes.map(q => q._id === id ? { ...q, isLeaderboardActive: !currentStatus } : q));
         } catch (err) {
             alert('Failed to update leaderboard status');
         }

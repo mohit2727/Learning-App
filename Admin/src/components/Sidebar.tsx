@@ -9,7 +9,8 @@ import {
     LogOut,
     BookOpen,
     Users,
-    Trophy
+    Trophy,
+    Key
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -28,6 +29,7 @@ const navItems = [
     { name: 'Announcements', href: '/dashboard/announcements', icon: BookOpen },
     { name: 'User Management', href: '/dashboard/users', icon: Users },
     { name: 'Leaderboards', href: '/dashboard/leaderboards', icon: Trophy },
+    { name: 'Manual Access', href: '/dashboard/access', icon: Key },
 ];
 
 export default function Sidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boolean, onMobileClose?: () => void }) {

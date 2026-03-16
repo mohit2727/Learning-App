@@ -290,10 +290,7 @@ const deleteTest = asyncHandler(async (req, res) => {
 const updateLeaderboardStatus = asyncHandler(async (req, res) => {
     const { isActive } = req.body;
 
-    // If we are activating this one, deactivate all others
-    if (isActive) {
-        await Test.updateMany({}, { isLeaderboardActive: false });
-    }
+    // Allowed multiple active leaderboards for merging
 
     const test = await Test.findById(req.params.id);
 

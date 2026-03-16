@@ -6,7 +6,7 @@ import { Trophy, Medal, Award, Crown } from 'lucide-react';
 
 export default function LeaderboardPage() {
     const { user, loading: authLoading } = useAuth();
-    const [board, setBoard] = useState<{ quizTitle: string, rankings: any[] }>({ quizTitle: 'Leaderboard', rankings: [] });
+    const [board, setBoard] = useState<{ quizTitle: string, rankings: any[], currentUserRank?: any }>({ quizTitle: 'Leaderboard', rankings: [] });
     const [loading, setLoading] = useState(true);
 
     const load = async () => {
@@ -34,6 +34,20 @@ export default function LeaderboardPage() {
             </div>
         </div>
     );
+
+    if (board.quizTitle === 'Currently no leaderboards active') {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[80vh] bg-gray-50 px-6 text-center">
+                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-slate-200/50">
+                    <Trophy size={48} className="text-slate-300" strokeWidth={1.5} />
+                </div>
+                <h2 className="font-black text-slate-800 text-2xl tracking-tight mb-2">Currently no leaderboards active</h2>
+                <p className="text-slate-500 font-medium text-sm max-w-[280px]">
+                    The administrators haven't activated any quiz rankings yet. Check back later to see where you stand!
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col min-h-full bg-gray-50">
@@ -156,9 +170,33 @@ export default function LeaderboardPage() {
             </div>
 
             {/* Footer note */}
-            <div className="p-8 text-center">
+            <div className="p-8 pb-32 text-center">
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">Rankings updated in real-time</p>
             </div>
+
+            {/* Sticky Personal Rank Footer */}
+            {board.currentUserRank && (
+                <div className="fixed bottom-[72px] left-0 right-0 max-w-md mx-auto z-40 px-4 pb-2 animate-in slide-in-from-bottom duration-500">
+                    <div className="bg-violet-600 rounded-2xl p-4 shadow-xl shadow-violet-600/30 border border-violet-500 flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-white/20 border-2 border-white/30 flex items-center justify-center shrink-0">
+                            <span className="text-white font-black text-lg">{board.currentUserRank.name.charAt(0).toUpperCase()}</span>
+                        </div>
+                        
+                        <div className="flex-1">
+                            <p className="text-violet-200 text-[10px] font-black uppercase tracking-widest mb-0.5">Your Current Rank</p>
+                            <div className="flex items-end gap-2">
+                                <span className="text-white font-black text-2xl leading-none">#{board.currentUserRank.rank}</span>
+                                <span className="text-violet-200 font-bold text-sm mb-0.5 truncate max-w-[120px]">{board.currentUserRank.name}</span>
+                            </div>
+                        </div>
+
+                        <div className="text-right">
+                            <p className="font-black text-xl text-white">{board.currentUserRank.score || 0}</p>
+                            <p className="text-[8px] text-violet-300 font-black uppercase tracking-widest">PTS</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

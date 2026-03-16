@@ -95,44 +95,97 @@ const syncUser = asyncHandler(async (req, res) => {
 // @route   GET /api/users/leaderboard
 // @access  Public
 const getLeaderboard = asyncHandler(async (req, res) => {
-    // 1. Find the test marking "isLeaderboardActive"
-    const activeTest = await Test.findOne({ isLeaderboardActive: true });
+    // 1. Find all tests marked "isLeaderboardActive"
+    const activeTests = await Test.find({ isLeaderboardActive: true });
 
-    if (!activeTest) {
-        // Fallback to global total score if no quiz is specific
-        const topUsers = await User.find({ role: 'student' })
-            .sort({ totalScore: -1 })
-            .limit(10)
-            .select('name totalScore');
-        return res.json({ quizTitle: 'Global Leaderboard', rankings: topUsers });
+    if (!activeTests || activeTests.length === 0) {
+        return res.json({ quizTitle: 'Currently no leaderboards active', rankings: [] });
     }
 
-    // 2. Fetch all attempts for this test
+    const testIds = activeTests.map(t => t._id);
     const TestAttempt = require('../models/testAttemptModel');
-    const attempts = await TestAttempt.find({ test: activeTest._id })
-        .populate('user', 'name')
-        .sort({ score: -1 });
 
-    // 3. Filter to only show each student once (unique student with highest score)
-    const uniqueRankings = [];
-    const seenUsers = new Set();
+    // Combine titles
+    const combinedTitle = activeTests.map(t => t.title).join(' / ');
+
+    // 2. Fetch Attempts for all active tests
+    // Sort by createdAt ASC so we encounter the absolute FIRST attempt first
+    const attempts = await TestAttempt.find({ test: { $in: testIds } })
+        .populate('user', 'name email role')
+        .sort({ createdAt: 1 });
+
+    // 3. Process attempts: we want only the absolute FIRST attempt per student across ANY active test
+    // Map structure: userId => attempt_object
+    const studentAttemptsMap = {};
 
     for (const attempt of attempts) {
-        if (attempt.user && !seenUsers.has(attempt.user._id.toString())) {
-            uniqueRankings.push({
-                _id: attempt.user._id,
-                name: attempt.user.name,
-                score: attempt.score,
-                timeSpent: attempt.timeSpent
-            });
-            seenUsers.add(attempt.user._id.toString());
+        if (attempt.user && attempt.user.role === 'student') {
+            const userIdStr = attempt.user._id.toString();
+
+            // Since attempts are sorted by createdAt ASC, the first one we see is the absolute first attempt
+            if (!studentAttemptsMap[userIdStr]) {
+                studentAttemptsMap[userIdStr] = {
+                    user: attempt.user,
+                    score: attempt.score || 0,
+                    timeSpent: attempt.timeSpent || 0,
+                    submittedAt: attempt.createdAt
+                };
+            } else {
+                // Determine if we should sum up scores from DIFFERENT tests for the same student
+                // The prompt suggests "merging their scores". If a student takes 2 active tests, do they get score A + score B?
+                // The Admin merged endpoint currently just takes the FIRST attempt across ALL selected tests and sets that as the single score.
+                // To truly merge, let's track the first attempt *per test* for each student and sum them.
+                if (!studentAttemptsMap[userIdStr].testMap) {
+                    studentAttemptsMap[userIdStr].testMap = {};
+                    studentAttemptsMap[userIdStr].testMap[studentAttemptsMap[userIdStr].firstTestId] = true;
+                }
+                
+                const testIdStr = attempt.test.toString();
+                if (!studentAttemptsMap[userIdStr].testMap[testIdStr]) {
+                    // First attempt at this specific other test, add to sum
+                    studentAttemptsMap[userIdStr].score += attempt.score || 0;
+                    studentAttemptsMap[userIdStr].timeSpent += attempt.timeSpent || 0;
+                    studentAttemptsMap[userIdStr].testMap[testIdStr] = true;
+                }
+            }
         }
-        if (uniqueRankings.length >= 20) break; // Top 20 for specific quiz
+    }
+
+    // 4. Calculate rankings
+    const allRankings = [];
+    for (const [userIdStr, data] of Object.entries(studentAttemptsMap)) {
+        allRankings.push({
+            _id: userIdStr,
+            name: data.user.name,
+            score: Math.round(data.score * 100) / 100,
+            timeSpent: data.timeSpent
+        });
+    }
+
+    // 5. Sort Rankings: Highest Score -> Lowest Time Spent
+    allRankings.sort((a, b) => {
+        if (b.score !== a.score) {
+            return b.score - a.score;
+        }
+        return a.timeSpent - b.timeSpent;
+    });
+    
+    // 6. Find current user's rank
+    let currentUserRank = null;
+    if (req.user) {
+        const userIndex = allRankings.findIndex(r => r._id.toString() === req.user._id.toString());
+        if (userIndex !== -1) {
+            currentUserRank = {
+                ...allRankings[userIndex],
+                rank: userIndex + 1
+            };
+        }
     }
 
     res.json({
-        quizTitle: activeTest.title,
-        rankings: uniqueRankings
+        quizTitle: combinedTitle,
+        rankings: allRankings.slice(0, 50), // Top 50
+        currentUserRank: currentUserRank
     });
 });
 

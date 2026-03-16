@@ -16,7 +16,9 @@ import {
     CheckCircle2,
     ListChecks,
     HelpCircle,
-    Package
+    Package,
+    Lock,
+    Unlock
 } from 'lucide-react';
 
 export default function PlaylistsPage() {
@@ -105,6 +107,15 @@ export default function PlaylistsPage() {
             setPlaylists(playlists.map(p => p._id === id ? { ...p, isActive: !currentStatus } : p));
         } catch (err) {
             alert('Failed to update status');
+        }
+    };
+
+    const toggleQuizLock = async (id: string, currentStatus: boolean) => {
+        try {
+            await api.put(`/tests/${id}/lock`, { isLocked: !currentStatus });
+            setQuizzes(quizzes.map(q => q._id === id ? { ...q, isLocked: !currentStatus } : q));
+        } catch (err) {
+            alert('Failed to update quiz lock status');
         }
     };
 
@@ -250,6 +261,17 @@ export default function PlaylistsPage() {
                                                     <p className="text-xs font-bold">{q.title}</p>
                                                     <p className="text-[10px] opacity-60 font-bold uppercase">{q.totalQuestions} Questions • {q.duration} Min</p>
                                                 </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleQuizLock(q._id, q.isLocked);
+                                                    }}
+                                                    className={`px-2 py-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase rounded-lg border transition-all ${q.isLocked ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'}`}
+                                                >
+                                                    {q.isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                                                    {q.isLocked ? 'Locked' : 'Unlocked'}
+                                                </button>
                                             </div>
                                         ))}
                                     </div>

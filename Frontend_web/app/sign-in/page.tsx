@@ -15,7 +15,7 @@ declare global {
 }
 
 export default function SignInPage() {
-    const { user, loading } = useAuth();
+    const { user, dbUser, loading } = useAuth();
     const router = useRouter();
 
     const [mobile, setMobile] = useState('');
@@ -25,12 +25,28 @@ export default function SignInPage() {
     const [error, setError] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // Redirect if already logged in
+    // Redirect if already logged in and fully synced in DB
     useEffect(() => {
         if (!loading && user) {
-            router.push('/dashboard');
+            if (dbUser) {
+                router.push('/dashboard');
+            } else {
+                // If they have a Firebase session but no DB profile, they were marooned. Sync them.
+                const syncOrphanedSession = async () => {
+                    try {
+                        const api = (await import('@/lib/api')).default;
+                        await api.post('/users/sync');
+                        window.location.href = '/dashboard';
+                    } catch (e) {
+                        console.error('Failed to sync orphaned user', e);
+                        // If sync fails completely, log them out so they aren't trapped
+                        auth.signOut();
+                    }
+                };
+                syncOrphanedSession();
+            }
         }
-    }, [user, loading, router]);
+    }, [user, dbUser, loading, router]);
 
     const setupRecaptcha = () => {
         if (!window.recaptchaVerifier) {
@@ -74,7 +90,7 @@ export default function SignInPage() {
         try {
             const credential = await confirmationResult.confirm(otp);
             const user = credential.user;
-            
+
             // Get token and set it globally
             const token = await user.getIdToken();
             const { setAuthToken } = await import('@/lib/api');

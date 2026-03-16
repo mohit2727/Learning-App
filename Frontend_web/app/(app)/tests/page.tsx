@@ -68,7 +68,7 @@ export default function TestsPage() {
 
     const handlePlaylistPurchase = async (playlist: any) => {
         if (playlist.hasAccess || playlist.price === 0) {
-            // No redirection needed, just showing it's purchased
+            router.push(`/playlists/${playlist._id}`);
             return;
         } else {
             setProcessing(true);
