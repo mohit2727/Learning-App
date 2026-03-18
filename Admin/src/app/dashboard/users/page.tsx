@@ -184,6 +184,22 @@ export default function UsersPage() {
         }
     };
 
+    const handleRevokeAccess = async (itemId: string, type: string) => {
+        if (!window.confirm(`Are you sure you want to remove access to this ${type}?`)) return;
+
+        try {
+            const { data } = await api.delete(`/users/${viewUser._id}/access`, {
+                data: { itemId, type }
+            });
+            setViewUser({
+                ...viewUser,
+                ...data, // merge updated populated arrays
+            });
+        } catch (err) {
+            alert('Failed to revoke access');
+        }
+    };
+
     const filteredUsers = users.filter(u =>
         u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.mobile?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -442,9 +458,17 @@ export default function UsersPage() {
                                                     <p className="text-[10px] text-slate-500 font-bold mb-2">Courses</p>
                                                     {viewUser.enrolledCourses?.length > 0 ? (
                                                         viewUser.enrolledCourses.map((c: any) => (
-                                                            <div key={c._id} className="flex items-center gap-3 mb-2">
-                                                                <div className="w-6 h-6 bg-indigo-50 rounded-md flex items-center justify-center text-indigo-600"><BookOpen size={12} /></div>
-                                                                <p className="text-xs font-bold text-slate-700 truncate">{c.title}</p>
+                                                            <div key={c._id} className="flex items-center justify-between gap-3 mb-2 group/item">
+                                                                <div className="flex items-center gap-3 min-w-0">
+                                                                    <div className="w-6 h-6 bg-indigo-50 rounded-md flex items-center justify-center text-indigo-600 shrink-0"><BookOpen size={12} /></div>
+                                                                    <p className="text-xs font-bold text-slate-700 truncate">{c.title}</p>
+                                                                </div>
+                                                                <button 
+                                                                    onClick={() => handleRevokeAccess(c._id, 'course')}
+                                                                    className="p-1 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded-md opacity-0 group-hover/item:opacity-100 transition-all"
+                                                                >
+                                                                    <Trash2 size={12} />
+                                                                </button>
                                                             </div>
                                                         ))
                                                     ) : (
@@ -454,10 +478,21 @@ export default function UsersPage() {
                                                 <div>
                                                     <p className="text-[10px] text-slate-500 font-bold mb-2">Quizzes & Playlists</p>
                                                     {[...(viewUser.purchasedQuizzes || []), ...(viewUser.purchasedPlaylists || [])].length > 0 ? (
-                                                        [...(viewUser.purchasedQuizzes || []), ...(viewUser.purchasedPlaylists || [])].map((item: any) => (
-                                                            <div key={item._id} className="flex items-center gap-3 mb-2">
-                                                                <div className="w-6 h-6 bg-amber-50 rounded-md flex items-center justify-center text-amber-600"><Award size={12} /></div>
-                                                                <p className="text-xs font-bold text-slate-700 truncate">{item.title}</p>
+                                                        [
+                                                            ...(viewUser.purchasedQuizzes || []).map((q: any) => ({ ...q, type: 'quiz' })), 
+                                                            ...(viewUser.purchasedPlaylists || []).map((p: any) => ({ ...p, type: 'playlist' }))
+                                                        ].map((item: any) => (
+                                                            <div key={item._id} className="flex items-center justify-between gap-3 mb-2 group/item">
+                                                                <div className="flex items-center gap-3 min-w-0">
+                                                                    <div className="w-6 h-6 bg-amber-50 rounded-md flex items-center justify-center text-amber-600 shrink-0"><Award size={12} /></div>
+                                                                    <p className="text-xs font-bold text-slate-700 truncate">{item.title}</p>
+                                                                </div>
+                                                                <button 
+                                                                    onClick={() => handleRevokeAccess(item._id, item.type)}
+                                                                    className="p-1 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded-md opacity-0 group-hover/item:opacity-100 transition-all"
+                                                                >
+                                                                    <Trash2 size={12} />
+                                                                </button>
                                                             </div>
                                                         ))
                                                     ) : (

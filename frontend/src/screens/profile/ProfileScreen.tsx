@@ -7,7 +7,8 @@ import {
     Modal,
     ActivityIndicator,
     Dimensions,
-    RefreshControl
+    RefreshControl,
+    Linking
 } from 'react-native';
 import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
@@ -17,7 +18,7 @@ import { dataService } from '../../api/dataService';
 import { useRefresh } from '../../hooks/useRefresh';
 import { toast } from '../../utils/toast';
 import { LinearGradient } from 'expo-linear-gradient';
-import { User, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen, ClipboardList, ShoppingBag } from 'lucide-react-native';
+import { User, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen, ClipboardList, ShoppingBag, MessageCircle, Send, HelpCircle } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -122,7 +123,7 @@ export const ProfileScreen = ({ navigation }: any) => {
             >
 
                 {/* Header with Skewed Gradient */}
-                <View className="rounded-b-[4rem] overflow-hidden shadow-2xl mb-10">
+                <View className="rounded-b-[4rem] overflow-hidden shadow-2xl mb-8">
                     <View className="overflow-hidden rounded-b-[4rem]">
                         <LinearGradient
                             colors={['#6366F1', '#4F46E5', '#3730A3']}
@@ -130,21 +131,9 @@ export const ProfileScreen = ({ navigation }: any) => {
                         >
                             <View className="relative mb-6">
                                 <View className="w-24 h-24 rounded-[30%] bg-white p-1.5 shadow-2xl rotate-3">
-                                    {user?.photoURL ? (
-                                        <View className="w-full h-full rounded-[25%] overflow-hidden -rotate-3 bg-indigo-50">
-                                            <ActivityIndicator size="small" color="#6366F1" style={{ position: 'absolute', top: '40%', left: '40%' }} />
-                                            <View style={{ width: '100%', height: '100%' }}>
-                                                {/* React Native Image equivalent for Tailwind mapping */}
-                                                <View className="w-full h-full bg-indigo-100 items-center justify-center">
-                                                    <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
-                                                </View>
-                                            </View>
-                                        </View>
-                                    ) : (
-                                        <View className="w-full h-full rounded-[25%] bg-indigo-50 items-center justify-center -rotate-3">
-                                            <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
-                                        </View>
-                                    )}
+                                    <View className="w-full h-full rounded-[25%] bg-indigo-50 items-center justify-center -rotate-3">
+                                        <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
+                                    </View>
                                 </View>
                                 <View className="absolute -bottom-1 -right-1 bg-emerald-500 w-8 h-8 rounded-full border-4 border-white shadow-lg items-center justify-center">
                                     <ShieldCheck size={14} color="white" strokeWidth={3} />
@@ -152,8 +141,22 @@ export const ProfileScreen = ({ navigation }: any) => {
                             </View>
 
                             <Text variant="h2" className="text-white font-black text-xl tracking-tight leading-none mb-1">{displayName}</Text>
-
+                            <Text className="text-white/60 text-[10px] font-bold uppercase tracking-[2px]">{email}</Text>
                         </LinearGradient>
+                    </View>
+                </View>
+
+                {/* Quick Stats Row */}
+                <View className="flex-row mx-6 gap-3 -mt-14 mb-8">
+                    <View className="flex-1 bg-white rounded-3xl p-4 shadow-xl shadow-indigo-100/50 border border-gray-50 items-center">
+                        <Star size={16} color="#F59E0B" fill="#F59E0B" />
+                        <Text className="text-gray-800 font-black text-xs mt-1">Student</Text>
+                        <Text className="text-gray-400 text-[8px] font-black uppercase tracking-widest">Rank</Text>
+                    </View>
+                    <View className="flex-1 bg-white rounded-3xl p-4 shadow-xl shadow-indigo-100/50 border border-gray-50 items-center">
+                        <Zap size={16} color="#6366F1" fill="#6366F1" />
+                        <Text className="text-gray-800 font-black text-xs mt-1">Active</Text>
+                        <Text className="text-gray-400 text-[8px] font-black uppercase tracking-widest">Status</Text>
                     </View>
                 </View>
 
@@ -191,24 +194,10 @@ export const ProfileScreen = ({ navigation }: any) => {
                 </View>
 
                 {/* Action Links */}
-                <View className="mx-6 space-y-3 mb-10">
-                    <Text className="text-gray-400 font-black text-[9px] uppercase tracking-[3px] ml-4 mb-2">Learning Progress</Text>
+                <View className="mx-6 space-y-3 mb-8">
+                    <Text className="text-gray-400 font-black text-[9px] uppercase tracking-[3px] ml-4 mb-2">My Library</Text>
 
-                    <View className="bg-white rounded-[2.5rem] shadow-lg border border-gray-50 overflow-hidden">
-                        <TouchableOpacity
-                            className="flex-row items-center px-6 py-5 border-b border-gray-50"
-                            onPress={() => navigation?.navigate('MyTests')}
-                        >
-                            <View className="w-10 h-10 bg-amber-50 rounded-2xl items-center justify-center mr-4">
-                                <ClipboardList size={20} color="#D97706" />
-                            </View>
-                            <View className="flex-1">
-                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">Test Attempts</Text>
-                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Performance history</Text>
-                            </View>
-                            <ChevronRight size={18} color="#E2E8F0" />
-                        </TouchableOpacity>
-
+                    <View className="bg-white rounded-[2.5rem] shadow-xl shadow-indigo-100/20 border border-gray-50 overflow-hidden">
                         <TouchableOpacity
                             className="flex-row items-center px-6 py-5 border-b border-gray-50"
                             onPress={() => navigation?.navigate('MyCourses')}
@@ -217,8 +206,22 @@ export const ProfileScreen = ({ navigation }: any) => {
                                 <BookOpen size={20} color="#4F46E5" />
                             </View>
                             <View className="flex-1">
-                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">My Courses</Text>
-                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Premium Library</Text>
+                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">Video Playlists</Text>
+                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Purchased Content</Text>
+                            </View>
+                            <ChevronRight size={18} color="#E2E8F0" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            className="flex-row items-center px-6 py-5 border-b border-gray-50"
+                            onPress={() => navigation?.navigate('MyTests')}
+                        >
+                            <View className="w-10 h-10 bg-amber-50 rounded-2xl items-center justify-center mr-4">
+                                <ClipboardList size={20} color="#D97706" />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">Quiz Playlists</Text>
+                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Mock Tests & Quizzes</Text>
                             </View>
                             <ChevronRight size={18} color="#E2E8F0" />
                         </TouchableOpacity>
@@ -231,15 +234,64 @@ export const ProfileScreen = ({ navigation }: any) => {
                                 <ShoppingBag size={20} color="#059669" />
                             </View>
                             <View className="flex-1">
-                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">Order History</Text>
-                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Purchases & Enrollments</Text>
+                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">Billing History</Text>
+                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Receipts & Payments</Text>
+                            </View>
+                            <ChevronRight size={18} color="#E2E8F0" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* Help & Support Section */}
+                <View className="mx-6 space-y-3 mb-10">
+                    <Text className="text-gray-400 font-black text-[9px] uppercase tracking-[3px] ml-4 mb-2">Help & Support</Text>
+                    
+                    <View className="bg-white rounded-[2.5rem] shadow-xl shadow-indigo-100/20 border border-gray-50 overflow-hidden">
+                        <TouchableOpacity
+                            className="flex-row items-center px-6 py-5 border-b border-gray-50"
+                            onPress={() => Linking.openURL('whatsapp://send?phone=91XXXXXXXXXX')}
+                        >
+                            <View className="w-10 h-10 bg-emerald-50 rounded-2xl items-center justify-center mr-4">
+                                <MessageCircle size={20} color="#059669" />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">WhatsApp Support</Text>
+                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Instant Chat</Text>
+                            </View>
+                            <ChevronRight size={18} color="#E2E8F0" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            className="flex-row items-center px-6 py-5 border-b border-gray-50"
+                            onPress={() => Linking.openURL('https://t.me/')}
+                        >
+                            <View className="w-10 h-10 bg-sky-50 rounded-2xl items-center justify-center mr-4">
+                                <Send size={20} color="#0284C7" />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">Telegram Community</Text>
+                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Latest Updates</Text>
+                            </View>
+                            <ChevronRight size={18} color="#E2E8F0" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            className="flex-row items-center px-6 py-5"
+                            onPress={() => Alert.alert('Contact Us', 'Our official email: support@physicaleducation.com')}
+                        >
+                            <View className="w-10 h-10 bg-indigo-50 rounded-2xl items-center justify-center mr-4">
+                                <Mail size={20} color="#4F46E5" />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">Email Support</Text>
+                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Formal queries</Text>
                             </View>
                             <ChevronRight size={18} color="#E2E8F0" />
                         </TouchableOpacity>
                     </View>
 
                     <TouchableOpacity
-                        className="mt-8 bg-rose-50 rounded-2xl py-5 shadow-lg border border-rose-100 flex-row items-center justify-center gap-3"
+                        className="mt-6 bg-rose-50 rounded-3xl py-5 shadow-lg shadow-rose-100 border border-rose-100 flex-row items-center justify-center gap-3"
                         onPress={() =>
                             Alert.alert('Logout', 'Are you sure you want to logout?', [
                                 { text: 'Stay', style: 'cancel' },
@@ -269,7 +321,7 @@ export const ProfileScreen = ({ navigation }: any) => {
 
                         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" className="mb-6">
                             <Input label="Full Name" placeholder="e.g. John Doe" value={name} onChangeText={setName} />
-                            <Input label="Mobile Number" placeholder="e.g. 9876543210" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" />
+                            <Input label="Mobile Number" placeholder="e.g. 9876543210" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" maxLength={10} />
                             <View className="flex-row gap-4">
                                 <View className="flex-1">
                                     <Input label="Age" placeholder="22" value={age} onChangeText={setAge} keyboardType="numeric" />

@@ -121,12 +121,12 @@ export default function DashboardPage() {
                     onClick={() => handleStatCardClick('paidUsers', 'Paid Users')}
                 />
                 <StatCard
-                    title="Active Courses"
-                    value={stats?.courses || '0'}
+                    title="Total Playlists"
+                    value={stats?.playlists || '0'}
                     icon={BookOpen}
                     color="text-indigo-600"
                     bg="bg-indigo-50"
-                    onClick={() => handleStatCardClick('courses', 'Active Courses')}
+                    onClick={() => handleStatCardClick('courses', 'Total Playlists')}
                 />
                 <StatCard
                     title="AI Quizzes"
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                             className="bg-white border border-slate-200 w-full max-w-2xl max-h-[85vh] flex flex-col rounded-[2rem] shadow-2xl relative z-10 overflow-hidden"
                         >
                             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                                <h2 className="text-xl font-black text-slate-900 tracking-tight">{modalData.title} Detailed List</h2>
+                                <h2 className="text-xl font-black text-slate-900 tracking-tight">{modalData.title}</h2>
                                 <button onClick={() => setModalData(null)} className="p-2 hover:bg-slate-200/50 text-slate-400 rounded-xl transition-colors">
                                     <X className="w-5 h-5" />
                                 </button>

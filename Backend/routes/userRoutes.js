@@ -37,5 +37,6 @@ router.route('/:id')
     .delete(protect, admin, deleteUser);
 
 router.put('/:id/access', protect, admin, grantUserAccess);
+router.delete('/:id/access', protect, admin, revokeUserAccess);
 
 module.exports = router;

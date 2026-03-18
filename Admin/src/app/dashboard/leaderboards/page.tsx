@@ -23,6 +23,7 @@ export default function LeaderboardsPage() {
     const [leaderboardData, setLeaderboardData] = useState<any | null>(null);
     const [loadingQuizzes, setLoadingQuizzes] = useState(true);
     const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const { user, loading: authLoading } = useAuth();
 
     // Fetch all quizzes for the dropdown
@@ -132,6 +133,10 @@ export default function LeaderboardsPage() {
         doc.save(`${safeTitle}_Leaderboard.pdf`);
     };
 
+    const filteredRankings = leaderboardData?.rankings?.filter((r: any) => 
+        r.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
+
     return (
         <DashboardLayout>
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
@@ -197,6 +202,18 @@ export default function LeaderboardsPage() {
                             </div>
                         )}
                     </div>
+
+                    {leaderboardData && (
+                        <div className="relative w-full max-w-xs mt-4 sm:mt-0">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input
+                                placeholder="Search student..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 shadow-sm transition-all"
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Leaderboard Table Area */}
@@ -236,7 +253,7 @@ export default function LeaderboardsPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {leaderboardData.rankings.map((student: any, index: number) => {
+                                {filteredRankings.map((student: any, index: number) => {
                                     const isTop3 = index < 3;
                                     return (
                                         <tr key={student._id} className={`hover:bg-slate-50/80 transition-colors group ${index === 0 ? 'bg-amber-50/30' : index === 1 ? 'bg-slate-50' : index === 2 ? 'bg-orange-50/30' : ''}`}>

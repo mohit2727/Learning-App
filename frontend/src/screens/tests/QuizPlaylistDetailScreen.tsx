@@ -48,18 +48,7 @@ export const QuizPlaylistDetailScreen = ({ route, navigation }: any) => {
                 navigation.navigate('ActiveTest', { testId: quiz._id });
             }
         } else {
-            setIsProcessing(true);
-            try {
-                // If the user hasn't purchased the playlist, they must pay for the whole playlist
-                const order = await paymentService.createOrder(playlist._id, 'QuizPlaylist');
-                setPaymentOrder(order);
-                setActiveQuiz(quiz); // We store the quiz they wanted to start
-                setShowPayment(true);
-            } catch (error: any) {
-                toast.error('Payment Error', error.message || 'Failed to initialize payment');
-            } finally {
-                setIsProcessing(false);
-            }
+            toast.info('Access Required', 'Please purchase the playlist to unlock this quiz.');
         }
     };
 
@@ -219,7 +208,12 @@ export const QuizPlaylistDetailScreen = ({ route, navigation }: any) => {
                                 </View>
                             </View>
                             
-                            <View className="bg-gray-50 p-2.5 rounded-2xl">
+                            <View className="bg-gray-50 p-2.5 rounded-2xl flex-row items-center gap-2">
+                                {!hasAccess && (
+                                    <View className="bg-amber-100 px-2 py-1 rounded-lg">
+                                        <Text className="text-amber-600 font-black text-[7px] uppercase tracking-widest">Locked</Text>
+                                    </View>
+                                )}
                                 <Play size={14} color={hasAccess ? "#4F46E5" : "#94A3B8"} fill={hasAccess ? "#4F46E5" : "transparent"} />
                             </View>
                         </TouchableOpacity>

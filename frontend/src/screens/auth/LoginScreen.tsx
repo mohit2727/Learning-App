@@ -19,20 +19,27 @@ export const LoginScreen = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleSendOtp = async () => {
-        if (!phoneNumber || phoneNumber.length < 10) {
-            toast.error('Error', 'Please enter a valid phone number with country code (e.g., +91...)');
+        let formattedNumber = phoneNumber.trim();
+
+        // If it's a 10-digit number without a leading '+', prepend '+91'
+        if (formattedNumber.length === 10 && !formattedNumber.startsWith('+')) {
+            formattedNumber = `+91${formattedNumber}`;
+        }
+
+        if (!formattedNumber.startsWith('+') || formattedNumber.length < 12) {
+            toast.error('Error', 'Please enter a valid 10-digit mobile number');
             return;
         }
 
         setIsLoading(true);
         try {
-            const vid = await signInWithPhone(phoneNumber, recaptchaVerifier.current);
+            const vid = await signInWithPhone(formattedNumber, recaptchaVerifier.current);
             setVerificationId(vid);
             setIsOtpSent(true);
-            toast.success('OTP Sent', `A 6-digit code has been sent to ${phoneNumber}`);
+            toast.success('OTP Sent', `A 6-digit code has been sent to ${formattedNumber}`);
         } catch (error: any) {
             console.error("OTP Error:", error);
-            toast.error('Error', error.message || 'Failed to send OTP. Ensure the phone number is correct and has a country code.');
+            toast.error('Error', error.message || 'Failed to send OTP. Check your connection.');
         } finally {
             setIsLoading(false);
         }
@@ -73,28 +80,30 @@ export const LoginScreen = () => {
                         Welcome Back
                     </Text>
                     <Text variant="body" className="text-gray-500 text-center">
-                        Sign in with your phone number to continue.
+                        Sign in with your 10-digit mobile number.
                     </Text>
                 </View>
 
                 <View>
                     {!isOtpSent ? (
                         <Input
-                            label="Phone Number"
-                            placeholder="+91 00000 00000"
+                            label="Mobile Number"
+                            placeholder="00000 00000"
                             keyboardType="phone-pad"
-                            autoCapitalize="none"
+                            autoFocus
+                            maxLength={10}
                             value={phoneNumber}
                             onChangeText={setPhoneNumber}
                         />
                     ) : (
                         <>
-                            <Text className="text-sm font-bold text-gray-400 mb-2 uppercase tracking-widest">Phone Number</Text>
-                            <Text className="text-lg font-bold text-gray-900 mb-6">{phoneNumber}</Text>
+                            <Text className="text-sm font-bold text-gray-400 mb-2 uppercase tracking-widest">Mobile Number</Text>
+                            <Text className="text-lg font-bold text-gray-900 mb-6">{phoneNumber.length === 10 ? `+91 ${phoneNumber}` : phoneNumber}</Text>
                             <Input
                                 label="Verification Code"
                                 placeholder="Enter 6-digit code"
                                 keyboardType="number-pad"
+                                autoFocus
                                 maxLength={6}
                                 value={otp}
                                 onChangeText={setOtp}
@@ -103,7 +112,7 @@ export const LoginScreen = () => {
                     )}
 
                     <Button
-                        label={isOtpSent ? "Verify & Sign In" : "Send Code"}
+                        label={isOtpSent ? "Verify & Sign In" : "Get OTP"}
                         className="mt-6"
                         isLoading={isLoading}
                         onPress={isOtpSent ? handleVerifyOtp : handleSendOtp}

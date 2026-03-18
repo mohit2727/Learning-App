@@ -214,8 +214,19 @@ const TestAttempt = require('../models/testAttemptModel');
 // @access  Private/Admin
 const getDashboardStats = asyncHandler(async (req, res) => {
     const studentCount = await User.countDocuments({ role: 'student' });
-    const paidUserCount = await User.countDocuments({ role: 'student', isPaid: true });
+    
+    // Correctly count paid users: any student who has at least one item in their access arrays
+    const paidUserCount = await User.countDocuments({ 
+        role: 'student', 
+        $or: [
+            { 'enrolledCourses.0': { $exists: true } },
+            { 'purchasedQuizzes.0': { $exists: true } },
+            { 'purchasedPlaylists.0': { $exists: true } }
+        ]
+    });
+
     const activeCourseCount = await Course.countDocuments({ isActive: true });
+    const activeQuizPlaylistCount = await QuizPlaylist.countDocuments({ isActive: true });
     const quizCount = await Test.countDocuments({});
 
     // Fetch recent admin activities
@@ -249,7 +260,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     res.json({
         students: studentCount,
         paidUsers: paidUserCount,
-        courses: activeCourseCount,
+        courses: activeCourseCount, // Legacy field name
+        playlists: activeCourseCount + activeQuizPlaylistCount,
         quizzes: quizCount,
         recentActivities: activities,
         razorpayKeyId: process.env.RAZORPAY_KEY_ID
@@ -439,6 +451,42 @@ const grantUserAccess = asyncHandler(async (req, res) => {
     res.json(populatedUser);
 });
 
+// @desc    Revoke access from a specific item (Course/Quiz/Playlist)
+// @route   DELETE /api/users/:id/access
+// @access  Private/Admin
+const revokeUserAccess = asyncHandler(async (req, res) => {
+    const { itemId, type } = req.body;
+    // type should be 'course', 'quiz', or 'playlist'
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    if (type === 'course') {
+        user.enrolledCourses = user.enrolledCourses.filter(id => id.toString() !== itemId);
+    } else if (type === 'quiz') {
+        user.purchasedQuizzes = user.purchasedQuizzes.filter(id => id.toString() !== itemId);
+    } else if (type === 'playlist') {
+        user.purchasedPlaylists = user.purchasedPlaylists.filter(id => id.toString() !== itemId);
+    } else {
+        res.status(400);
+        throw new Error('Invalid item type specified');
+    }
+
+    const updatedUser = await user.save();
+    
+    // Return updated populated arrays for the frontend
+    const populatedUser = await User.findById(updatedUser._id)
+        .populate('enrolledCourses', 'title')
+        .populate('purchasedQuizzes', 'title')
+        .populate('purchasedPlaylists', 'title');
+
+    res.json(populatedUser);
+});
+
 // @desc    Admin manually create a user
 // @route   POST /api/users
 // @access  Private/Admin
@@ -487,5 +535,6 @@ module.exports = {
     updateUserAdmin,
     deleteUser,
     grantUserAccess,
+    revokeUserAccess,
     createUserAdmin,
 };

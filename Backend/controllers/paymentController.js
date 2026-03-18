@@ -5,6 +5,7 @@ const Payment = require('../models/paymentModel');
 const Course = require('../models/courseModel');
 const Test = require('../models/testModel');
 const User = require('../models/userModel');
+const QuizPlaylist = require('../models/quizPlaylistModel');
 
 // Initialize Razorpay
 let razorpay;
@@ -34,7 +35,6 @@ const createOrder = asyncHandler(async (req, res) => {
     } else if (itemType === 'Test') {
         item = await Test.findById(itemId);
     } else if (itemType === 'QuizPlaylist') {
-        const QuizPlaylist = require('../models/quizPlaylistModel');
         item = await QuizPlaylist.findById(itemId);
     }
 
@@ -59,32 +59,37 @@ const createOrder = asyncHandler(async (req, res) => {
         createdAt: { $gte: tenMinutesAgo },
     });
     if (existingPayment) {
-        return res.status(200).json({ id: existingPayment.razorpayOrderId, amount, currency: 'INR', _idempotent: true });
+        return res.status(200).json({ id: existingPayment.razorpayOrderId, amount: Math.round(amount), currency: 'INR', _idempotent: true });
     }
 
     const options = {
-        amount,
+        amount: Math.round(amount),
         currency: 'INR',
         receipt: `receipt_${Date.now()}`,
     };
 
-    const order = await razorpay.orders.create(options);
+    try {
+        const order = await razorpay.orders.create(options);
 
-    if (!order) {
+        if (!order) {
+            res.status(500);
+            throw new Error('Failed to create Razorpay order');
+        }
+
+        await Payment.create({
+            user: req.user._id,
+            itemModel: itemType,
+            itemId,
+            amount: item.price,
+            razorpayOrderId: order.id,
+            status: 'pending',
+        });
+
+        res.status(201).json(order);
+    } catch (error) {
         res.status(500);
-        throw new Error('Failed to create Razorpay order');
+        throw new Error(error.description || error.message || 'Error creating Razorpay order');
     }
-
-    await Payment.create({
-        user: req.user._id,
-        itemModel: itemType,
-        itemId,
-        amount: item.price,
-        razorpayOrderId: order.id,
-        status: 'pending',
-    });
-
-    res.status(201).json(order);
 });
 
 // @desc    Verify Razorpay Payment

@@ -33,6 +33,11 @@ const allowedOrigins = [
     'https://physical-education-with-ravina-admin.web.app',
     'https://physical-education-with-ravina-admin.firebaseapp.com',
     'https://learning-app-4xa9.onrender.com', // Added this as it's the domain from logs
+    'http://10.80.127.71:5000',
+    'http://10.80.127.71:8081',
+    'http://10.80.127.71:19000',
+    'http://10.80.127.71:19001',
+    'http://10.80.127.71:19002',
     ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : []),
 ];
 app.use(cors({
