@@ -1,33 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { View, ScrollView, TouchableOpacity, ActivityIndicator, Image, RefreshControl } from 'react-native';
 import { Text } from '../../components/Text';
 import { dataService } from '../../api/dataService';
 import { useAuth } from '../../context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, ShoppingBag, Calendar, CheckCircle2, Clock, AlertCircle } from 'lucide-react-native';
+import { useRefresh } from '../../hooks/useRefresh';
 
 export const OrderHistoryScreen = ({ navigation }: any) => {
     const { user, loading: authLoading } = useAuth();
     const [orders, setOrders] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        if (!authLoading && user) {
-            fetchOrders();
-        }
-    }, [authLoading, user]);
-
     const fetchOrders = async () => {
-        setIsLoading(true);
         try {
             const data = await dataService.getMyOrders();
             setOrders(data);
         } catch (error) {
             console.error('Error fetching orders:', error);
-        } finally {
-            setIsLoading(false);
+            throw error;
         }
     };
+
+    const { refreshing, onRefresh } = useRefresh(fetchOrders);
+
+    useEffect(() => {
+        if (!authLoading && user) {
+            setIsLoading(true);
+            fetchOrders().finally(() => setIsLoading(false));
+        }
+    }, [authLoading, user]);
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
@@ -59,21 +61,29 @@ export const OrderHistoryScreen = ({ navigation }: any) => {
     }
 
     return (
-        <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
-            <LinearGradient
-                colors={['#6366F1', '#4F46E5']}
-                className="pt-16 pb-12 px-6 rounded-b-[4rem]"
-            >
-                <TouchableOpacity 
-                    onPress={() => navigation.goBack()}
-                    className="bg-white/10 w-10 h-10 rounded-full items-center justify-center mb-6"
+        <ScrollView 
+            className="flex-1 bg-gray-50" 
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366F1']} />
+            }
+        >
+            <View className="rounded-b-[4rem] overflow-hidden">
+                <LinearGradient
+                    colors={['#6366F1', '#4F46E5']}
+                    className="pt-16 pb-12 px-6"
                 >
-                    <ChevronLeft color="white" size={24} />
-                </TouchableOpacity>
-                
-                <Text className="text-indigo-100 text-[10px] font-black uppercase tracking-[3px] mb-1">Account Activity</Text>
-                <Text variant="h2" className="text-white font-black text-3xl tracking-tighter">Order History</Text>
-            </LinearGradient>
+                    <TouchableOpacity 
+                        onPress={() => navigation.goBack()}
+                        className="bg-white/10 w-10 h-10 rounded-full items-center justify-center mb-6"
+                    >
+                        <ChevronLeft color="white" size={24} />
+                    </TouchableOpacity>
+                    
+                    <Text className="text-indigo-100 text-[10px] font-black uppercase tracking-[3px] mb-1">Account Activity</Text>
+                    <Text variant="h2" className="text-white font-black text-3xl tracking-tighter">Order History</Text>
+                </LinearGradient>
+            </View>
 
             <View className="px-6 -mt-8 pb-20">
                 {orders.length > 0 ? (

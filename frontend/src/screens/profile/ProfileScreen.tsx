@@ -7,12 +7,14 @@ import {
     Modal,
     ActivityIndicator,
     Dimensions,
+    RefreshControl
 } from 'react-native';
 import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { useAuth } from '../../context/AuthContext';
 import { dataService } from '../../api/dataService';
+import { useRefresh } from '../../hooks/useRefresh';
 import { toast } from '../../utils/toast';
 import { LinearGradient } from 'expo-linear-gradient';
 import { User, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen, ClipboardList, ShoppingBag } from 'lucide-react-native';
@@ -86,6 +88,17 @@ export const ProfileScreen = ({ navigation }: any) => {
         }
     };
 
+    const fetchUserData = async () => {
+        try {
+            await dataService.getDashboard(); 
+        } catch (error) {
+            console.error('Profile refresh failed:', error);
+            throw error;
+        }
+    };
+
+    const { refreshing, onRefresh } = useRefresh(fetchUserData);
+
     if (loading) {
         return (
             <View className="flex-1 items-center justify-center bg-gray-50">
@@ -101,40 +114,47 @@ export const ProfileScreen = ({ navigation }: any) => {
 
     return (
         <View className="flex-1 bg-gray-50">
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366F1']} />
+                }
+            >
 
                 {/* Header with Skewed Gradient */}
                 <View className="rounded-b-[4rem] overflow-hidden shadow-2xl mb-10">
-                    <LinearGradient
-                        colors={['#6366F1', '#4F46E5', '#3730A3']}
-                        className="pt-20 pb-16 px-6 items-center"
-                    >
-                        <View className="relative mb-6">
-                            <View className="w-24 h-24 rounded-[30%] bg-white p-1.5 shadow-2xl rotate-3">
-                                {user?.photoURL ? (
-                                    <View className="w-full h-full rounded-[25%] overflow-hidden -rotate-3 bg-indigo-50">
-                                        <ActivityIndicator size="small" color="#6366F1" style={{ position: 'absolute', top: '40%', left: '40%' }} />
-                                        <View style={{ width: '100%', height: '100%' }}>
-                                            {/* React Native Image equivalent for Tailwind mapping */}
-                                            <View className="w-full h-full bg-indigo-100 items-center justify-center">
-                                                <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
+                    <View className="overflow-hidden rounded-b-[4rem]">
+                        <LinearGradient
+                            colors={['#6366F1', '#4F46E5', '#3730A3']}
+                            className="pt-20 pb-16 px-6 items-center"
+                        >
+                            <View className="relative mb-6">
+                                <View className="w-24 h-24 rounded-[30%] bg-white p-1.5 shadow-2xl rotate-3">
+                                    {user?.photoURL ? (
+                                        <View className="w-full h-full rounded-[25%] overflow-hidden -rotate-3 bg-indigo-50">
+                                            <ActivityIndicator size="small" color="#6366F1" style={{ position: 'absolute', top: '40%', left: '40%' }} />
+                                            <View style={{ width: '100%', height: '100%' }}>
+                                                {/* React Native Image equivalent for Tailwind mapping */}
+                                                <View className="w-full h-full bg-indigo-100 items-center justify-center">
+                                                    <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
+                                                </View>
                                             </View>
                                         </View>
-                                    </View>
-                                ) : (
-                                    <View className="w-full h-full rounded-[25%] bg-indigo-50 items-center justify-center -rotate-3">
-                                        <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
-                                    </View>
-                                )}
+                                    ) : (
+                                        <View className="w-full h-full rounded-[25%] bg-indigo-50 items-center justify-center -rotate-3">
+                                            <Text className="text-indigo-600 font-black text-2xl">{initials}</Text>
+                                        </View>
+                                    )}
+                                </View>
+                                <View className="absolute -bottom-1 -right-1 bg-emerald-500 w-8 h-8 rounded-full border-4 border-white shadow-lg items-center justify-center">
+                                    <ShieldCheck size={14} color="white" strokeWidth={3} />
+                                </View>
                             </View>
-                            <View className="absolute -bottom-1 -right-1 bg-emerald-500 w-8 h-8 rounded-full border-4 border-white shadow-lg items-center justify-center">
-                                <ShieldCheck size={14} color="white" strokeWidth={3} />
-                            </View>
-                        </View>
 
-                        <Text variant="h2" className="text-white font-black text-xl tracking-tight leading-none mb-1">{displayName}</Text>
+                            <Text variant="h2" className="text-white font-black text-xl tracking-tight leading-none mb-1">{displayName}</Text>
 
-                    </LinearGradient>
+                        </LinearGradient>
+                    </View>
                 </View>
 
                 {/* Personal Info Card */}

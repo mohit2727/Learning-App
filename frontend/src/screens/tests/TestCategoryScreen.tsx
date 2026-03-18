@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, TouchableOpacity, ScrollView, ActivityIndicator, Modal, Alert } from 'react-native';
+import { View, FlatList, TouchableOpacity, ScrollView, ActivityIndicator, Modal, Alert, RefreshControl } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Text } from '../../components/Text';
 import { dataService } from '../../api/dataService';
@@ -7,6 +7,7 @@ import { paymentService } from '../../api/paymentService';
 import { useAuth } from '../../context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Lock, Play, ClipboardList, Target, Award, Sparkles, ShieldCheck } from 'lucide-react-native';
+import { useRefresh } from '../../hooks/useRefresh';
 
 export const TestCategoryScreen = ({ navigation }: any) => {
     const { user, loading: authLoading } = useAuth();
@@ -18,14 +19,7 @@ export const TestCategoryScreen = ({ navigation }: any) => {
     const [razorpayKey, setRazorpayKey] = useState<string>('');
     const [activeTest, setActiveTest] = useState<any>(null);
 
-    useEffect(() => {
-        if (!authLoading && user) {
-            fetchTests();
-        }
-    }, [authLoading, user]);
-
     const fetchTests = async () => {
-        setIsLoading(true);
         try {
             const data = await dataService.getTests();
             setTests(data);
@@ -33,10 +27,18 @@ export const TestCategoryScreen = ({ navigation }: any) => {
             if (stats.razorpayKeyId) setRazorpayKey(stats.razorpayKeyId);
         } catch (error) {
             console.error('Error fetching tests:', error);
-        } finally {
-            setIsLoading(false);
+            throw error;
         }
     };
+
+    const { refreshing, onRefresh } = useRefresh(fetchTests);
+
+    useEffect(() => {
+        if (!authLoading && user) {
+            setIsLoading(true);
+            fetchTests().finally(() => setIsLoading(false));
+        }
+    }, [authLoading, user]);
 
     const handleStartTest = async (test: any) => {
         const isPurchased = test.isPurchased || test.price === 0;
@@ -132,7 +134,13 @@ export const TestCategoryScreen = ({ navigation }: any) => {
     }
 
     return (
-        <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
+        <ScrollView 
+            className="flex-1 bg-gray-50" 
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366F1']} />
+            }
+        >
             <View className="rounded-b-[3rem] overflow-hidden shadow-2xl shadow-indigo-100 mb-8">
                 <LinearGradient
                     colors={['#6366F1', '#4F46E5']}

@@ -11,7 +11,16 @@ const getCourses = asyncHandler(async (req, res) => {
     if (!req.user || req.user.role !== 'admin') {
         query.isActive = true;
     }
-    const courses = await Course.find(query).populate('instructor', 'name');
+    const courses = await Course.find(query).populate('instructor', 'name').lean();
+
+    if (req.user && req.user.role !== 'admin') {
+        const coursesWithStatus = courses.map(c => ({
+            ...c,
+            isEnrolled: req.user.enrolledCourses?.some(id => id.toString() === c._id.toString())
+        }));
+        return res.json(coursesWithStatus);
+    }
+
     res.json(courses);
 });
 

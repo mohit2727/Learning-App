@@ -7,7 +7,7 @@ import { paymentService } from '../../api/paymentService';
 import { useAuth } from '../../context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Lock, Play, Target, Award, ChevronLeft, ShieldCheck } from 'lucide-react-native';
-import Toast from 'react-native-toast-message';
+import { toast } from '../../utils/toast';
 
 export const QuizPlaylistDetailScreen = ({ route, navigation }: any) => {
     const { playlistId } = route.params;
@@ -35,11 +35,7 @@ export const QuizPlaylistDetailScreen = ({ route, navigation }: any) => {
             if (stats.razorpayKeyId) setRazorpayKey(stats.razorpayKeyId);
         } catch (error: any) {
             console.error('Error fetching playlist:', error);
-            Toast.show({
-                type: 'error',
-                text1: 'Error',
-                text2: error.message || 'Failed to load playlist'
-            });
+            toast.error('Error', error.message || 'Failed to load playlist');
         } finally {
             setIsLoading(false);
         }
@@ -48,7 +44,9 @@ export const QuizPlaylistDetailScreen = ({ route, navigation }: any) => {
     const handleStartQuiz = async (quiz: any) => {
         const hasAccess = playlist?.hasAccess || playlist?.price === 0;
         if (hasAccess) {
-            navigation.navigate('ActiveTest', { testId: quiz._id });
+            if (quiz?._id) {
+                navigation.navigate('ActiveTest', { testId: quiz._id });
+            }
         } else {
             setIsProcessing(true);
             try {
@@ -58,11 +56,7 @@ export const QuizPlaylistDetailScreen = ({ route, navigation }: any) => {
                 setActiveQuiz(quiz); // We store the quiz they wanted to start
                 setShowPayment(true);
             } catch (error: any) {
-                Toast.show({
-                    type: 'error',
-                    text1: 'Payment Error',
-                    text2: error.message || 'Failed to initialize payment'
-                });
+                toast.error('Payment Error', error.message || 'Failed to initialize payment');
             } finally {
                 setIsProcessing(false);
             }
@@ -80,18 +74,10 @@ export const QuizPlaylistDetailScreen = ({ route, navigation }: any) => {
                     razorpay_payment_id: data.razorpay_payment_id,
                     razorpay_signature: data.razorpay_signature,
                 });
-                Toast.show({
-                    type: 'success',
-                    text1: 'Success',
-                    text2: 'Playlist unlocked successfully!'
-                });
+                toast.success('Success', 'Playlist unlocked successfully!');
                 fetchPlaylistDetail();
             } catch (error: any) {
-                Toast.show({
-                    type: 'error',
-                    text1: 'Verification Failed',
-                    text2: 'Payment verification failed on server.'
-                });
+                toast.error('Verification Failed', 'Payment verification failed on server.');
             } finally {
                 setIsLoading(false);
             }
@@ -154,9 +140,10 @@ export const QuizPlaylistDetailScreen = ({ route, navigation }: any) => {
     return (
         <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
             <View className="relative">
+            <View className="rounded-b-[4rem] overflow-hidden">
                 <LinearGradient
                     colors={['#6366F1', '#4F46E5']}
-                    className="pt-16 pb-24 px-6 rounded-b-[4rem]"
+                    className="pt-16 pb-24 px-6"
                 >
                     <TouchableOpacity 
                         onPress={() => navigation.goBack()}
@@ -169,6 +156,7 @@ export const QuizPlaylistDetailScreen = ({ route, navigation }: any) => {
                     <Text variant="h2" className="text-white font-black text-3xl tracking-tighter mb-4">{playlist?.title}</Text>
                     <Text className="text-indigo-100/80 leading-relaxed font-medium">{playlist?.description}</Text>
                 </LinearGradient>
+            </View>
 
                 <View className="px-6 -mt-12">
                     <View className="bg-white rounded-[2.5rem] p-6 shadow-2xl shadow-indigo-100 border border-gray-50">
@@ -190,7 +178,7 @@ export const QuizPlaylistDetailScreen = ({ route, navigation }: any) => {
                                 onPress={() => handleStartQuiz({})} // Trigger purchase logic
                                 className="bg-indigo-600 rounded-2xl py-4 mt-6 shadow-lg shadow-indigo-200"
                             >
-                                <Text className="text-white text-center font-black uppercase tracking-widest">Buy Full Playlist</Text>
+                                <Text className="text-white text-center font-black text-xs uppercase tracking-[3px]">PAY NOW — ₹{playlist?.price}</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -265,7 +253,6 @@ export const QuizPlaylistDetailScreen = ({ route, navigation }: any) => {
                 </View>
             </Modal>
             
-            <Toast />
         </ScrollView>
     );
 };

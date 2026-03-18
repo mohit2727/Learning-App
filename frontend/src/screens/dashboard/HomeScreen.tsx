@@ -8,10 +8,12 @@ import {
     Animated,
     Dimensions,
     ActivityIndicator,
+    RefreshControl
 } from 'react-native';
 import { Text } from '../../components/Text';
 import { useAuth } from '../../context/AuthContext';
 import { dataService } from '../../api/dataService';
+import { useRefresh } from '../../hooks/useRefresh';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Play, Video, BookOpen, PenTool as Tool, User, Award, MessageCircle, Send } from 'lucide-react-native';
 
@@ -111,24 +113,27 @@ export const HomeScreen = ({ navigation }: any) => {
     const [announcements, setAnnouncements] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    const fetchDashboardData = async () => {
+        try {
+            const [dashboardRes, announcementsRes] = await Promise.all([
+                dataService.getDashboard(),
+                dataService.getAnnouncements()
+            ]);
+            setDashboardData(dashboardRes);
+            setAnnouncements(announcementsRes);
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+            throw error;
+        }
+    };
+
+    const { refreshing, onRefresh } = useRefresh(fetchDashboardData);
+
     useEffect(() => {
-        const fetchDashboardData = async () => {
-            if (authLoading || !user) return;
+        if (!authLoading && user) {
             setIsLoading(true);
-            try {
-                const [dashboardRes, announcementsRes] = await Promise.all([
-                    dataService.getDashboard(),
-                    dataService.getAnnouncements()
-                ]);
-                setDashboardData(dashboardRes);
-                setAnnouncements(announcementsRes);
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchDashboardData();
+            fetchDashboardData().finally(() => setIsLoading(false));
+        }
     }, [authLoading, user]);
 
     if (isLoading) {
@@ -144,7 +149,13 @@ export const HomeScreen = ({ navigation }: any) => {
     const init = displayName.charAt(0).toUpperCase();
 
     return (
-        <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
+        <ScrollView 
+            className="flex-1 bg-gray-50" 
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366F1']} />
+            }
+        >
 
             {/* Gradient Header */}
             <View className="rounded-b-[3rem] overflow-hidden mb-6 shadow-2xl shadow-indigo-200">
