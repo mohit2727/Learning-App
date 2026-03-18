@@ -45,9 +45,10 @@ app.use(cors({
 }));
 
 // ─── Rate Limiting ───────────────────────────────────────────────────────────
+app.set('trust proxy', 1); // Trust Render's proxy to get real client IP
 const limiter = rateLimit({
     windowMs: 10 * 60 * 1000, // 10 minutes
-    max: 150,
+    max: 500, // Increased from 150 to allow more headroom
     standardHeaders: true,
     legacyHeaders: false,
     message: { message: 'Too many requests, please try again later.' },

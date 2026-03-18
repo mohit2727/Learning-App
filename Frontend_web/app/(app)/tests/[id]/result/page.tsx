@@ -152,21 +152,31 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
                             {test.questions.map((q: any, i: number) => {
                                 const userAnswerEntry = userAnswers.find(ua => ua.questionId === q._id);
                                 const selectedIdx = userAnswerEntry ? userAnswerEntry.selectedOption : null;
-                                const isCorrect = selectedIdx === q.correctOption;
+                                const isSkipped = selectedIdx === null || selectedIdx === undefined;
+                                const isCorrect = !isSkipped && (selectedIdx === q.correctOption);
 
                                 return (
-                                    <div key={q._id} className={`p-5 rounded-3xl border-2 ${isCorrect ? 'border-emerald-100 bg-emerald-50/30' : 'border-rose-100 bg-rose-50/30'}`}>
+                                    <div key={q._id} className={`p-5 rounded-3xl border-2 ${isSkipped ? 'border-slate-100 bg-slate-50/50' : isCorrect ? 'border-emerald-100 bg-emerald-50/30' : 'border-rose-100 bg-rose-50/30'}`}>
                                         <div className="flex items-start gap-3 mb-4">
                                             <div className="mt-0.5">
-                                                {isCorrect ? (
+                                                {isSkipped ? (
+                                                    <HelpCircle size={20} className="text-slate-400" />
+                                                ) : isCorrect ? (
                                                     <CheckCircle2 size={20} className="text-emerald-500" />
                                                 ) : (
                                                     <XCircle size={20} className="text-rose-500" />
                                                 )}
                                             </div>
-                                            <p className="text-sm font-bold text-gray-800 leading-tight">
-                                                {i + 1}. {q.text || q.question}
-                                            </p>
+                                            <div className="flex-1">
+                                                <p className="text-sm font-bold text-gray-800 leading-tight">
+                                                    {i + 1}. {q.text || q.question}
+                                                </p>
+                                                {isSkipped && (
+                                                    <span className="inline-block mt-2 px-2 py-0.5 bg-slate-200 text-slate-600 text-[9px] font-black uppercase tracking-widest rounded-md">
+                                                        Question Skipped
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="space-y-2 pl-8">
@@ -177,6 +187,7 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
                                                 let style = "bg-white border-gray-100 text-gray-500";
                                                 if (isThisCorrect) style = "bg-emerald-100 border-emerald-500 text-emerald-800 font-bold";
                                                 else if (isThisSelected && !isCorrect) style = "bg-rose-100 border-rose-500 text-rose-800 font-bold line-through opacity-70";
+                                                else if (isSkipped) style = "bg-slate-50 border-slate-100 text-slate-400 opacity-60";
 
                                                 return (
                                                     <div key={optIdx} className={`px-4 py-3 rounded-2xl border ${style} flex justify-between items-center`}>

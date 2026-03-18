@@ -13,6 +13,8 @@ import { CourseDetailScreen } from '../screens/courses/CourseDetailScreen';
 import { VideoPlayerScreen } from '../screens/courses/VideoPlayerScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { LeaderboardScreen } from '../screens/leaderboard/LeaderboardScreen';
+import { QuizPlaylistDetailScreen } from '../screens/tests/QuizPlaylistDetailScreen';
+import { OrderHistoryScreen } from '../screens/profile/OrderHistoryScreen';
 
 // ─── Tab Navigator ────────────────────────────────────────────────────────────────
 
@@ -20,7 +22,7 @@ export type MainTabParamList = {
     Home: undefined;
     Tests: undefined;
     Leaderboard: undefined;
-    Courses: undefined;
+    Playlists: undefined;
     Profile: undefined;
 };
 
@@ -62,9 +64,9 @@ const TabsNavigator = () => (
             options={{ tabBarIcon: ({ focused }) => <TabIcon icon="🏆" focused={focused} />, tabBarLabel: 'Leaderboard' }}
         />
         <Tab.Screen
-            name="Courses"
+            name="Playlists"
             component={CoursesScreen}
-            options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📚" focused={focused} />, tabBarLabel: 'Courses' }}
+            options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📺" focused={focused} />, tabBarLabel: 'Playlists' }}
         />
         <Tab.Screen
             name="Profile"
@@ -85,6 +87,8 @@ export type AppStackParamList = {
     TestResult: { answers: (number | null)[]; questions: any[] };
     CourseDetail: { courseId: string };
     VideoPlayer: { lesson: any; courseTitle: string };
+    QuizPlaylistDetail: { playlistId: string };
+    OrderHistory: undefined;
     MyTests: undefined;
     MyCourses: undefined;
 };
@@ -98,6 +102,8 @@ export const MainNavigator = () => (
         <Stack.Screen name="TestResult" component={TestResultScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="CourseDetail" component={CourseDetailScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="VideoPlayer" component={VideoPlayerScreen} options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="QuizPlaylistDetail" component={QuizPlaylistDetailScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="MyTests" component={MyTestsScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="MyCourses" component={MyCoursesScreen} options={{ animation: 'slide_from_right' }} />
     </Stack.Navigator>

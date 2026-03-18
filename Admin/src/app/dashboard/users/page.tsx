@@ -28,6 +28,7 @@ export default function UsersPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [viewUser, setViewUser] = useState<any | null>(null);
     const [editingUser, setEditingUser] = useState<any | null>(null);
+    const [creatingUser, setCreatingUser] = useState(false);
     const [saving, setSaving] = useState(false);
     
     // Grant Access state
@@ -43,6 +44,12 @@ export default function UsersPage() {
     const [editMobile, setEditMobile] = useState('');
     const [editEmail, setEditEmail] = useState('');
     const [editRole, setEditRole] = useState('student');
+
+    // Create form state
+    const [newName, setNewName] = useState('');
+    const [newMobile, setNewMobile] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const [newRole, setNewRole] = useState('student');
 
     const fetchUsers = async () => {
         if (authLoading || !currentUser) return;
@@ -114,6 +121,31 @@ export default function UsersPage() {
         }
     };
 
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+
+        try {
+            await api.post(`/users`, {
+                name: newName,
+                mobile: newMobile,
+                email: newEmail,
+                role: newRole
+            });
+            setCreatingUser(false);
+            setNewName('');
+            setNewMobile('');
+            setNewEmail('');
+            setNewRole('student');
+            fetchUsers();
+            alert('User joined successfully!');
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Failed to create user');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const handleDeleteUser = async (id: string) => {
         if (!window.confirm("Are you sure you want to delete this user? This will also remove all their test history. This action cannot be undone.")) return;
 
@@ -173,10 +205,19 @@ export default function UsersPage() {
                     <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">User Management</h1>
                     <p className="text-slate-500 font-medium text-lg mt-2">Manage students, view performance, and handle accounts.</p>
                 </div>
-                <div className="flex bg-white rounded-2xl border border-slate-200 p-1.5 shadow-sm">
-                    <div className="px-5 py-2.5 bg-blue-50 border border-blue-100 rounded-xl">
-                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Total Students</p>
-                        <p className="text-2xl font-black text-slate-900 leading-none">{users.length}</p>
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => setCreatingUser(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2"
+                    >
+                        <User size={16} strokeWidth={3} />
+                        Join New User
+                    </button>
+                    <div className="flex bg-white rounded-2xl border border-slate-200 p-1.5 shadow-sm">
+                        <div className="px-5 py-2.5 bg-blue-50 border border-blue-100 rounded-xl">
+                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Total Students</p>
+                            <p className="text-2xl font-black text-slate-900 leading-none">{users.length}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -546,6 +587,95 @@ export default function UsersPage() {
                                         className="flex-[1.5] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black text-sm px-4 py-3 rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
                                     >
                                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Update Account'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Create User Modal */}
+            <AnimatePresence>
+                {creatingUser && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setCreatingUser(false)}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-0"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="bg-white border border-slate-200 w-full max-w-md rounded-[2rem] p-8 shadow-2xl relative z-10"
+                        >
+                            <h2 className="text-xl font-black text-slate-900 mb-1 tracking-tight">Join New Student</h2>
+                            <p className="text-slate-400 mb-6 text-xs font-bold uppercase tracking-tight">Manually register a user in the database.</p>
+
+                            <form onSubmit={handleCreateUser} className="space-y-5">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Full Name</label>
+                                    <input
+                                        required
+                                        placeholder="Enter student name"
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-300"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Mobile Number</label>
+                                    <input
+                                        required
+                                        placeholder="e.g. +919988776655"
+                                        value={newMobile}
+                                        onChange={(e) => setNewMobile(e.target.value)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-300"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Email Address</label>
+                                    <input
+                                        required
+                                        type="email"
+                                        placeholder="student@example.com"
+                                        value={newEmail}
+                                        onChange={(e) => setNewEmail(e.target.value)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-300"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Access Role</label>
+                                    <select
+                                        value={newRole}
+                                        onChange={(e) => setNewRole(e.target.value)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                                    >
+                                        <option value="student">Student</option>
+                                        <option value="admin">Administrator</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCreatingUser(false)}
+                                        className="flex-1 px-4 py-3 border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 rounded-xl transition-all font-bold text-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={saving}
+                                        className="flex-[1.5] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black text-sm px-4 py-3 rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+                                    >
+                                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Join Student'}
                                     </button>
                                 </div>
                             </form>

@@ -16,6 +16,16 @@ export const dataService = {
         return response.data;
     },
 
+    getQuizPlaylists: async () => {
+        const response = await apiClient.get('/quiz-playlists');
+        return response.data;
+    },
+
+    getQuizPlaylistById: async (id: string) => {
+        const response = await apiClient.get(`/quiz-playlists/${id}`);
+        return response.data;
+    },
+
 
     getTests: async () => {
         const response = await apiClient.get('/tests');
@@ -68,6 +78,11 @@ export const dataService = {
                 'Content-Type': 'multipart/form-data',
             },
         });
+        return response.data;
+    },
+
+    getMyOrders: async () => {
+        const response = await apiClient.get('/payments/my-orders');
         return response.data;
     },
 };

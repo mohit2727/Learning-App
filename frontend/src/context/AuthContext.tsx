@@ -8,6 +8,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import apiClient from '../api/apiClient';
+import Toast from 'react-native-toast-message';
 
 interface AuthContextType {
     user: User | null;
@@ -31,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (firebaseUser) {
                 // Pre-fetch token to ensure interceptors are ready
                 try {
-                    await firebaseUser.getIdToken(true);
+                    await firebaseUser.getIdToken();
                 } catch (error) {
                     console.error("Error refreshing token:", error);
                 }
@@ -42,20 +43,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const signInWithPhone = async (phoneNumber: string, recaptchaVerifier: any) => {
-        const phoneProvider = new PhoneAuthProvider(auth);
-        return await phoneProvider.verifyPhoneNumber(phoneNumber, recaptchaVerifier);
+        try {
+            const phoneProvider = new PhoneAuthProvider(auth);
+            return await phoneProvider.verifyPhoneNumber(phoneNumber, recaptchaVerifier);
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Sign In Failed',
+                text2: error.message || 'Could not send OTP'
+            });
+            throw error;
+        }
     };
 
     const verifyOtp = async (verificationId: string, code: string) => {
-        const credential = PhoneAuthProvider.credential(verificationId, code);
-        await signInWithCredential(auth, credential);
+        try {
+            const credential = PhoneAuthProvider.credential(verificationId, code);
+            await signInWithCredential(auth, credential);
+            Toast.show({
+                type: 'success',
+                text1: 'Welcome!',
+                text2: 'Sign in successful'
+            });
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'OTP Failed',
+                text2: error.message || 'Invalid verification code'
+            });
+            throw error;
+        }
     };
 
     const signOut = async () => {
         try {
             await firebaseSignOut(auth);
-        } catch (error) {
+            Toast.show({
+                type: 'info',
+                text1: 'Signed Out',
+                text2: 'You have been logged out'
+            });
+        } catch (error: any) {
             console.error("Sign out error:", error);
+            Toast.show({
+                type: 'error',
+                text1: 'Sign Out Error',
+                text2: error.message || 'Could not sign out'
+            });
         }
     };
 

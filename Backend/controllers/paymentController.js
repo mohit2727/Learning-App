@@ -145,7 +145,22 @@ const verifyPayment = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Get user's payment history
+// @route   GET /api/payments/my-orders
+// @access  Private
+const getMyPayments = asyncHandler(async (req, res) => {
+    const payments = await Payment.find({ user: req.user._id })
+        .populate({
+            path: 'itemId',
+            select: 'title description image price',
+        })
+        .sort({ createdAt: -1 });
+
+    res.json(payments);
+});
+
 module.exports = {
     createOrder,
     verifyPayment,
+    getMyPayments,
 };

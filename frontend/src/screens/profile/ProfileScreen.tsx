@@ -15,7 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import { dataService } from '../../api/dataService';
 import { toast } from '../../utils/toast';
 import { LinearGradient } from 'expo-linear-gradient';
-import { User, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen, ClipboardList } from 'lucide-react-native';
+import { User, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen, ClipboardList, ShoppingBag } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -133,12 +133,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                         </View>
 
                         <Text variant="h2" className="text-white font-black text-xl tracking-tight leading-none mb-1">{displayName}</Text>
-                        {!isPlaceholderEmail && (
-                            <View className="flex-row items-center bg-white/10 px-3 py-1 rounded-full border border-white/20">
-                                <Mail size={10} color="#C7D2FE" />
-                                <Text className="text-indigo-100 text-[9px] font-black uppercase tracking-wider ml-1.5">{email}</Text>
-                            </View>
-                        )}
+
                     </LinearGradient>
                 </View>
 
@@ -195,7 +190,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            className="flex-row items-center px-6 py-5"
+                            className="flex-row items-center px-6 py-5 border-b border-gray-50"
                             onPress={() => navigation?.navigate('MyCourses')}
                         >
                             <View className="w-10 h-10 bg-indigo-50 rounded-2xl items-center justify-center mr-4">
@@ -204,6 +199,20 @@ export const ProfileScreen = ({ navigation }: any) => {
                             <View className="flex-1">
                                 <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">My Courses</Text>
                                 <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Premium Library</Text>
+                            </View>
+                            <ChevronRight size={18} color="#E2E8F0" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            className="flex-row items-center px-6 py-5"
+                            onPress={() => navigation?.navigate('OrderHistory')}
+                        >
+                            <View className="w-10 h-10 bg-emerald-50 rounded-2xl items-center justify-center mr-4">
+                                <ShoppingBag size={20} color="#059669" />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-gray-800 font-black text-xs uppercase tracking-tight">Order History</Text>
+                                <Text className="text-gray-400 text-[8px] font-bold uppercase mt-0.5">Purchases & Enrollments</Text>
                             </View>
                             <ChevronRight size={18} color="#E2E8F0" />
                         </TouchableOpacity>

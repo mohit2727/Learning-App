@@ -4,8 +4,9 @@ const userSchema = mongoose.Schema(
     {
         firebaseUid: {
             type: String,
-            required: true,
+            required: false,
             unique: true,
+            sparse: true, // Allows multiple null/missing UIDs while enforcing uniqueness for non-null values
         },
         name: {
             type: String,

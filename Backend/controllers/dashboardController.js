@@ -26,6 +26,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             quizzesTaken: quizzesTakenCount,
         },
         newestCourses,
+        razorpayKeyId: process.env.RAZORPAY_KEY_ID
     });
 });
 

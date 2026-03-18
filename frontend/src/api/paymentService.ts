@@ -6,7 +6,7 @@ export const paymentService = {
      * @param itemId The ID of the course or test
      * @param itemType 'Course' or 'Test'
      */
-    createOrder: async (itemId: string, itemType: 'Course' | 'Test') => {
+    createOrder: async (itemId: string, itemType: 'Course' | 'Test' | 'QuizPlaylist') => {
         try {
             const response = await apiClient.post('/payments/create-order', {
                 itemId,

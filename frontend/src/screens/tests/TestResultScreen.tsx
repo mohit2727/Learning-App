@@ -59,17 +59,22 @@ export const TestResultScreen = ({ route, navigation }: any) => {
             {questions.map((q: any, i: number) => {
                 const userAns = answers[i];
                 const isCorrect = userAns === q.correctOption;
-                const isSkipped = userAns === null;
-                const borderColor = isSkipped ? 'border-gray-200' : isCorrect ? 'border-green-400' : 'border-red-400';
-                const bgColor = isSkipped ? 'bg-white dark:bg-gray-800' : isCorrect ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20';
+                const isSkipped = userAns === null || userAns === undefined;
+                const borderColor = isSkipped ? 'border-slate-200' : isCorrect ? 'border-green-400' : 'border-red-400';
+                const bgColor = isSkipped ? 'bg-slate-50 dark:bg-slate-800/40' : isCorrect ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20';
 
                 return (
-                    <View key={q._id || q.id || i} className={`mx-4 mb-4 rounded-2xl p-4 border-2 ${borderColor} ${bgColor}`}>
-                        <View className="flex-row items-start mb-3">
-                            <View className={`w-6 h-6 rounded-full items-center justify-center mr-2 mt-0.5 ${isSkipped ? 'bg-gray-300' : isCorrect ? 'bg-green-500' : 'bg-red-500'}`}>
-                                <Text className="text-white text-xs font-bold">{isSkipped ? '–' : isCorrect ? '✓' : '✗'}</Text>
+                    <View key={q._id || q.id || i} className={`mx-4 mb-4 rounded-3xl p-6 border-2 ${borderColor} ${bgColor} shadow-sm`}>
+                        <View className="flex-row items-start mb-4">
+                            <View className={`w-8 h-8 rounded-2xl items-center justify-center mr-3 mt-0.5 ${isSkipped ? 'bg-slate-200' : isCorrect ? 'bg-green-500' : 'bg-red-500'}`}>
+                                <Text className="text-white text-sm font-black">{isSkipped ? '?' : isCorrect ? '✓' : '✗'}</Text>
                             </View>
-                            <Text variant="body" className="flex-1 font-medium text-gray-800 dark:text-white">{q.text}</Text>
+                            <View className="flex-1">
+                                <Text variant="body" className="font-bold text-gray-800 dark:text-white leading-5">{q.text}</Text>
+                                {isSkipped && (
+                                    <Text className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-1">Skipped</Text>
+                                )}
+                            </View>
                         </View>
                         {q.options.map((opt: string, oi: number) => {
                             const isThisCorrect = oi === q.correctOption;

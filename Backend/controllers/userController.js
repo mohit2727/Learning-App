@@ -63,17 +63,38 @@ const getUserProfile = asyncHandler(async (req, res) => {
 const syncUser = asyncHandler(async (req, res) => {
     let user = req.user;
 
-    // If user doesn't exist in DB but they have a valid Firebase UID (attached by authMiddleware)
-    // Create the user explicitly here.
+    // If user doesn't exist in DB but they have a valid Firebase UID
     if (!user && req.firebaseUid) {
-        user = await User.create({
-            firebaseUid: req.firebaseUid,
-            name: 'New User',
-            email: `${req.firebaseUid}@placeholder.com`,
-            mobile: req.firebaseMobile || '',
-            role: 'student'
-        });
-        console.log('Successfully auto-created missing user via /sync:', user.firebaseUid);
+        // 1. Check if a manually joined user exists with matching email or mobile (without UID)
+        const filters = [];
+        if (req.firebaseMobile) filters.push({ mobile: req.firebaseMobile });
+        // NOTE: Firebase tokens might not always have email depending on login method, 
+        // but if it's there and not a placeholder, we could use it too.
+        
+        let existingManualUser = null;
+        if (filters.length > 0) {
+            existingManualUser = await User.findOne({ 
+                $or: filters,
+                firebaseUid: { $exists: false } 
+            });
+        }
+
+        if (existingManualUser) {
+            // MERGE: Attach Firebase UID to the manual record
+            existingManualUser.firebaseUid = req.firebaseUid;
+            user = await existingManualUser.save();
+            console.log('Successfully merged manual user with Firebase account:', user.firebaseUid);
+        } else {
+            // NEW: Create a fresh record
+            user = await User.create({
+                firebaseUid: req.firebaseUid,
+                name: 'New User',
+                email: `${req.firebaseUid}@placeholder.com`,
+                mobile: req.firebaseMobile || '',
+                role: 'student'
+            });
+            console.log('Successfully auto-created missing user via /sync:', user.firebaseUid);
+        }
     } else if (!user) {
          res.status(401);
          throw new Error('Not authorized');
@@ -128,17 +149,14 @@ const getLeaderboard = asyncHandler(async (req, res) => {
                     user: attempt.user,
                     score: attempt.score || 0,
                     timeSpent: attempt.timeSpent || 0,
-                    submittedAt: attempt.createdAt
+                    submittedAt: attempt.createdAt,
+                    testMap: { [attempt.test.toString()]: true }
                 };
             } else {
                 // Determine if we should sum up scores from DIFFERENT tests for the same student
                 // The prompt suggests "merging their scores". If a student takes 2 active tests, do they get score A + score B?
                 // The Admin merged endpoint currently just takes the FIRST attempt across ALL selected tests and sets that as the single score.
                 // To truly merge, let's track the first attempt *per test* for each student and sum them.
-                if (!studentAttemptsMap[userIdStr].testMap) {
-                    studentAttemptsMap[userIdStr].testMap = {};
-                    studentAttemptsMap[userIdStr].testMap[studentAttemptsMap[userIdStr].firstTestId] = true;
-                }
                 
                 const testIdStr = attempt.test.toString();
                 if (!studentAttemptsMap[userIdStr].testMap[testIdStr]) {
@@ -421,6 +439,41 @@ const grantUserAccess = asyncHandler(async (req, res) => {
     res.json(populatedUser);
 });
 
+// @desc    Admin manually create a user
+// @route   POST /api/users
+// @access  Private/Admin
+const createUserAdmin = asyncHandler(async (req, res) => {
+    const { name, email, mobile, role } = req.body;
+
+    if (!name || !email) {
+        res.status(400);
+        throw new Error('Name and Email are required');
+    }
+
+    // Check if user already exists
+    const userExists = await User.findOne({ $or: [{ email }, { mobile }] });
+
+    if (userExists) {
+        res.status(400);
+        throw new Error('User with this email or mobile already exists');
+    }
+
+    const user = await User.create({
+        name,
+        email,
+        mobile,
+        role: role || 'student',
+        // firebaseUid is left undefined until they first /sync
+    });
+
+    if (user) {
+        res.status(201).json(user);
+    } else {
+        res.status(400);
+        throw new Error('Invalid user data');
+    }
+});
+
 module.exports = {
     getUserProfile,
     syncUser,
@@ -434,4 +487,5 @@ module.exports = {
     updateUserAdmin,
     deleteUser,
     grantUserAccess,
+    createUserAdmin,
 };

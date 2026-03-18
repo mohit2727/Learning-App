@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                 // Register the token refresher for our Axios client
                 if (setTokenRefresher) {
-                    setTokenRefresher(() => firebaseUser.getIdToken(true));
+                    setTokenRefresher(() => firebaseUser.getIdToken());
                 }
 
                 // Set initial token for immediate use

@@ -309,17 +309,37 @@ export const ActiveTestScreen = ({ route, navigation }: any) => {
                 </View>
             </Modal>
 
-            {/* Submit Confirmation Modal */}
+            {/* Premium Submit Confirmation Modal */}
             <Modal visible={showSubmitModal} transparent animationType="fade">
-                <View className="flex-1 bg-black/50 items-center justify-center p-6">
-                    <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full">
-                        <Text variant="h3" className="font-bold text-gray-800 dark:text-white mb-2">Submit Test?</Text>
-                        <Text variant="body" className="text-gray-500 mb-4">
-                            You have answered {answeredCount} of {questions.length} questions.{' '}
-                            {questions.length - answeredCount} questions remain unattempted.
+                <View className="flex-1 bg-slate-900/60 items-center justify-center p-6">
+                    <View className="bg-white dark:bg-gray-800 rounded-[3rem] p-10 w-full shadow-2xl border border-white">
+                        <View className="w-16 h-16 bg-blue-50 dark:bg-blue-900/40 rounded-3xl items-center justify-center mb-6">
+                            <Text className="text-3xl">🏁</Text>
+                        </View>
+                        <Text variant="h2" className="font-black text-gray-900 dark:text-white mb-2 tracking-tight">Finish Test?</Text>
+                        <Text variant="body" className="text-gray-500 dark:text-gray-400 mb-8 font-medium leading-relaxed">
+                            You have answered <Text className="text-blue-600 font-bold">{answeredCount}</Text> of {questions.length} questions.{'\n\n'}
+                            {questions.length - answeredCount > 0 ? (
+                                <Text className="text-rose-500 font-bold">⚠️ {questions.length - answeredCount} questions are still skipped.</Text>
+                            ) : (
+                                <Text className="text-emerald-500 font-bold">✨ All questions answered!</Text>
+                            )}
                         </Text>
-                        <Button label="Yes, Submit" className="mb-2 bg-green-600" onPress={handleSubmit} />
-                        <Button label="Continue Exam" variant="outline" onPress={() => setShowSubmitModal(false)} />
+                        
+                        <View className="gap-3">
+                            <TouchableOpacity 
+                                onPress={handleSubmit}
+                                className="w-full bg-blue-600 py-5 rounded-2xl items-center shadow-lg shadow-blue-500/30"
+                            >
+                                <Text className="text-white font-black uppercase tracking-widest text-xs">Yes, Submit Now</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                onPress={() => setShowSubmitModal(false)}
+                                className="w-full bg-slate-50 dark:bg-slate-700 py-5 rounded-2xl items-center"
+                            >
+                                <Text className="text-slate-400 dark:text-slate-300 font-black uppercase tracking-widest text-xs">Continue Quiz</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>

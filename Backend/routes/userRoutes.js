@@ -12,7 +12,8 @@ const {
     getUserById,
     updateUserAdmin,
     deleteUser,
-    grantUserAccess
+    grantUserAccess,
+    createUserAdmin
 } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -27,7 +28,8 @@ router.get('/dashboard-stats', protect, admin, getDashboardStats);
 
 // Admin routes
 router.route('/')
-    .get(protect, admin, getUsers);
+    .get(protect, admin, getUsers)
+    .post(protect, admin, createUserAdmin);
 
 router.route('/:id')
     .get(protect, admin, getUserById)

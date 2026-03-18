@@ -10,7 +10,7 @@ const paymentSchema = mongoose.Schema(
         itemModel: {
             type: String,
             required: true,
-            enum: ['Course', 'Test'],
+            enum: ['Course', 'Test', 'QuizPlaylist'],
         },
         itemId: {
             type: mongoose.Schema.Types.ObjectId,
