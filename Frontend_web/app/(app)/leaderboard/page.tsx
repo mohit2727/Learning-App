@@ -126,8 +126,8 @@ export default function LeaderboardPage() {
                 )}
             </div>
 
-            {/* Others List */}
-            <div className="mx-4 -mt-5 bg-white rounded-t-[2rem] rounded-b-2xl p-5 shadow-2xl relative z-30 space-y-3 pb-8">
+            {/* Others List - Scrollable */}
+            <div className="mx-4 -mt-5 bg-white rounded-t-[2rem] rounded-b-2xl p-5 shadow-2xl relative z-30 space-y-3 pb-8 max-h-[60vh] overflow-y-auto no-scrollbar">
                 {others.length === 0 && top3.length > 0 && (
                     <p className="text-center text-gray-400 text-[10px] font-bold py-4 italic">STAY TUNED FOR DAILY UPDATES</p>
                 )}

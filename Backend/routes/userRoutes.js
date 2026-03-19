@@ -13,6 +13,7 @@ const {
     updateUserAdmin,
     deleteUser,
     grantUserAccess,
+    revokeUserAccess,
     createUserAdmin
 } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware');

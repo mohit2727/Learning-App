@@ -5,7 +5,7 @@ import { dataService, setAuthToken } from '@/lib/api';
 import Link from 'next/link';
 import { Play, BookOpen, Clock, ChevronRight } from 'lucide-react';
 
-export default function CoursesPage() {
+export default function VideoPlaylistsPage() {
     const { user, loading: authLoading } = useAuth();
     const [courses, setCourses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -16,7 +16,7 @@ export default function CoursesPage() {
             try {
                 const token = await user.getIdToken();
                 setAuthToken(token);
-                const data = await dataService.getCourses();
+                const data = await dataService.getVideoPlaylists();
                 setCourses(data);
             } catch (e) { console.error(e); }
             finally { setLoading(false); }
@@ -39,7 +39,7 @@ export default function CoursesPage() {
                         <p className="text-gray-400 text-sm font-medium">Loading Playlists...</p>
                     </div>
                 ) : courses.length > 0 ? courses.map(course => (
-                    <Link key={course._id} href={`/courses/${course._id}`}
+                    <Link key={course._id} href={`/videos/${course._id}`}
                         className="block card card-hover border border-white relative group">
                         <div className="relative h-32 w-full overflow-hidden">
                             {course.image ? (

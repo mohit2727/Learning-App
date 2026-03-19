@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, BookOpen, Play, ShieldCheck, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
-export default function MyCoursesPage() {
+export default function EnrolledVideosPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [courses, setCourses] = useState<any[]>([]);
@@ -43,7 +43,7 @@ export default function MyCoursesPage() {
                     <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
                         <BookOpen className="text-white" size={24} />
                     </div>
-                    <h1 className="text-white text-xl font-black tracking-tight uppercase">ENROLLED COURSES</h1>
+                    <h1 className="text-white text-xl font-black tracking-tight uppercase">ENROLLED VIDEOS</h1>
                     <p className="text-violet-200 text-[10px] font-black tracking-[0.2em] mt-1">YOUR PREMIUM LEARNING LIBRARY</p>
                 </div>
             </div>
@@ -56,12 +56,12 @@ export default function MyCoursesPage() {
                         </div>
                         <p className="font-black text-gray-800 text-base uppercase tracking-tight">Library is Empty</p>
                         <p className="text-gray-500 text-xs mt-2 leading-relaxed font-semibold">You haven't enrolled in any courses yet. Start your journey today!</p>
-                        <button onClick={() => router.push('/courses')} className="mt-8 bg-violet-600 text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-violet-200 tracking-wider">
-                            BROWSER COURSES
+                        <button onClick={() => router.push('/videos')} className="mt-8 bg-violet-600 text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-violet-200 tracking-wider">
+                            BROWSE VIDEOS
                         </button>
                     </div>
                 ) : courses.map((course: any, i: number) => (
-                    <Link key={course._id || i} href={`/courses/${course._id}`}
+                    <Link key={course._id || i} href={`/videos/${course._id}`}
                         className="block bg-white rounded-[2rem] overflow-hidden shadow-xl border border-white card-hover relative group">
                         <div className="h-28 relative">
                             {course.image

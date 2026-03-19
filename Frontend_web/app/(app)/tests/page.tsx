@@ -1,41 +1,69 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { dataService, paymentService, setAuthToken } from '@/lib/api';
+import { dataService, paymentService } from '@/lib/api';
 import { Lock, Unlock, Clock, Target, ChevronRight, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import useSWR, { mutate } from 'swr';
 
 export default function TestsPage() {
-    const { user, dbUser, loading: authLoading } = useAuth();
-    const [tests, setTests] = useState<any[]>([]);
-    const [playlists, setPlaylists] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [razorpayKey, setRazorpayKey] = useState('');
+    const { user, dbUser } = useAuth();
+    const router = useRouter();
+    
+    // ─── Data Fetching with SWR ──────────────────────────────────────────────────
+    const { data: testsData, isLoading: testsLoading } = useSWR(
+        user ? 'tests' : null,
+        () => dataService.getTests()
+    );
+    const { data: playlistsData, isLoading: playlistsLoading } = useSWR(
+        user ? 'playlists' : null,
+        () => dataService.getPlaylists()
+    );
+    const { data: dashboardData } = useSWR(
+        user ? 'dashboard' : null,
+        () => dataService.getDashboard()
+    );
+
+    const tests = testsData || [];
+    const playlists = playlistsData || [];
+    const razorpayKey = dashboardData?.razorpayKeyId || '';
+
     const [paymentOrder, setPaymentOrder] = useState<any>(null);
     const [activeItem, setActiveItem] = useState<any>(null);
     const [activeItemType, setActiveItemType] = useState<'Test' | 'QuizPlaylist'>('Test');
     const [showPayment, setShowPayment] = useState(false);
     const [processing, setProcessing] = useState(false);
-    const router = useRouter();
 
-    const fetchData = async () => {
-        setLoading(true);
-        try {
-            const token = await user!.getIdToken();
-            setAuthToken(token);
-            const [t, p, d] = await Promise.all([
-                dataService.getTests(),
-                dataService.getPlaylists(),
-                dataService.getDashboard()
-            ]);
-            setTests(t);
-            setPlaylists(p);
-            if (d.razorpayKeyId) setRazorpayKey(d.razorpayKeyId);
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
-    };
+    // ─── Handle Payment Result from Iframe ───────────────────────────────────────
+    useEffect(() => {
+        const handleMessage = async (event: MessageEvent) => {
+            if (event.data?.type === 'RAZORPAY_SUCCESS') {
+                setShowPayment(false);
+                setProcessing(true);
+                try {
+                    const result = await paymentService.verifyPayment(event.data.data);
+                    if (result.success) {
+                        alert('Payment Successful! Content unlocked.');
+                        // Re-fetch data to reflect purchased status
+                        mutate('tests');
+                        mutate('playlists');
+                    } else {
+                        alert('Payment verification failed. Please contact support.');
+                    }
+                } catch (e: any) {
+                    alert('Error verifying payment: ' + (e.message || 'Verification failed'));
+                } finally {
+                    setProcessing(false);
+                }
+            } else if (event.data?.type === 'RAZORPAY_CANCEL') {
+                setShowPayment(false);
+                alert('Payment cancelled.');
+            }
+        };
 
-    useEffect(() => { if (!authLoading && user) fetchData(); }, [authLoading, user]);
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
 
     const handleStart = async (test: any) => {
         const purchased = test.isPurchased || test.price === 0;
@@ -43,8 +71,6 @@ export default function TestsPage() {
         if (!purchased) {
             setProcessing(true);
             try {
-                const token = await user!.getIdToken();
-                setAuthToken(token);
                 const order = await paymentService.createOrder(test._id, 'Test');
                 setPaymentOrder(order);
                 setActiveItem(test);
@@ -73,8 +99,6 @@ export default function TestsPage() {
         } else {
             setProcessing(true);
             try {
-                const token = await user!.getIdToken();
-                setAuthToken(token);
                 const order = await paymentService.createOrder(playlist._id, 'QuizPlaylist');
                 setPaymentOrder(order);
                 setActiveItem(playlist);
@@ -88,7 +112,7 @@ export default function TestsPage() {
         }
     };
 
-    const razorpayHtml = paymentOrder && razorpayKey ? `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://checkout.razorpay.com/v1/checkout.js"></script></head><body><script>var options={"key":"${razorpayKey}","amount":"${paymentOrder.amount}","currency":"INR","name":"Physical Education","description":"Unlock ${activeItemType === 'Test' ? 'Quiz' : 'Playlist'}: ${activeItem?.title ?? ''}","order_id":"${paymentOrder.id}","handler":function(r){document.getElementById('rp-result').textContent=JSON.stringify({status:'success',...r});},"prefill":{"name":"${dbUser?.name ?? ''}","contact":"${dbUser?.mobile || user?.phoneNumber || ''}"},"theme":{"color":"#7c3aed"},"modal":{"ondismiss":function(){document.getElementById('rp-result').textContent=JSON.stringify({status:'cancel'});}}};var rzp=new Razorpay(options);rzp.open();</script><div id="rp-result" style="display:none"></div></body></html>` : '';
+    const razorpayHtml = paymentOrder && razorpayKey ? `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://checkout.razorpay.com/v1/checkout.js"></script></head><body><script>var options={"key":"${razorpayKey}","amount":"${paymentOrder.amount}","currency":"INR","name":"Physical Education","description":"Unlock ${activeItemType === 'Test' ? 'Quiz' : 'Playlist'}: ${activeItem?.title ?? ''}","order_id":"${paymentOrder.id}","handler":function(r){window.parent.postMessage({type:'RAZORPAY_SUCCESS',data:r},'*');},"prefill":{"name":"${dbUser?.name ?? ''}","contact":"${dbUser?.mobile || user?.phoneNumber || ''}"},"theme":{"color":"#7c3aed"},"modal":{"ondismiss":function(){window.parent.postMessage({type:'RAZORPAY_CANCEL'},'*');}}};var rzp=new Razorpay(options);rzp.open();</script></body></html>` : '';
 
     return (
         <div className="flex flex-col min-h-full bg-gray-50">
@@ -99,7 +123,7 @@ export default function TestsPage() {
             </div>
 
             <div className="px-5 pb-8 space-y-4">
-                {loading ? (
+                {testsLoading || playlistsLoading ? (
                     <div className="flex flex-col items-center justify-center pt-20 gap-3">
                         <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
                         <p className="text-gray-400 text-sm font-medium">Loading...</p>
@@ -114,7 +138,7 @@ export default function TestsPage() {
                                     <h2 className="text-gray-800 font-black text-xs uppercase tracking-widest">Premium Bundles</h2>
                                 </div>
                                 <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-5 px-5">
-                                    {playlists.map(p => {
+                                    {playlists.map((p: any) => {
                                         const purchased = p.hasAccess || p.price === 0;
                                         return (
                                             <button key={p._id} onClick={() => handlePlaylistPurchase(p)}
@@ -150,62 +174,60 @@ export default function TestsPage() {
                             <div className="w-1 h-5 bg-violet-600 rounded-full" />
                             <h2 className="text-gray-800 font-black text-xs uppercase tracking-widest">Single Quizzes</h2>
                         </div>
-                        {tests.length > 0 ? tests.map(test => {
+                        {tests.length > 0 ? tests.map((test: any) => {
                             const purchased = test.isPurchased || test.price === 0;
                             return (
                                 <button key={test._id} onClick={() => handleStart(test)}
                                     className="w-full text-left card card-hover p-4 border border-white group relative">
-                                    {/* ... existing test card body ... */}
-
-                            <div className="flex items-start gap-4">
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${!purchased ? 'bg-gray-50 text-gray-400' : test.isLocked ? 'bg-amber-50 text-amber-500' : 'bg-violet-50 text-violet-600'}`}>
-                                    {test.isLocked && purchased ? <Lock size={24} strokeWidth={2.5} /> : purchased ? <Unlock size={24} strokeWidth={2.5} /> : <Lock size={24} strokeWidth={2.5} />}
-                                </div>
-
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-extrabold text-gray-800 text-base group-hover:text-violet-600 transition-colors uppercase tracking-tight">{test.title}</span>
-                                    </div>
-                                    <p className="text-gray-500 text-xs mt-1 line-clamp-1">{test.description || 'Evaluate your knowledge with this quiz.'}</p>
-
-                                    <div className="flex items-center gap-3 mt-3">
-                                        <div className="flex items-center gap-1 bg-violet-50 text-violet-600 px-2 py-0.5 rounded-lg text-[10px] font-bold">
-                                            <Clock size={12} /> {test.duration || 0}m
+                                    <div className="flex items-start gap-4">
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${!purchased ? 'bg-gray-50 text-gray-400' : test.isLocked ? 'bg-amber-50 text-amber-500' : 'bg-violet-50 text-violet-600'}`}>
+                                            {test.isLocked && purchased ? <Lock size={24} strokeWidth={2.5} /> : purchased ? <Unlock size={24} strokeWidth={2.5} /> : <Lock size={24} strokeWidth={2.5} />}
                                         </div>
-                                        <div className="flex items-center gap-1 bg-purple-50 text-purple-600 px-2 py-0.5 rounded-lg text-[10px] font-bold">
-                                            <Target size={12} /> {test.totalMarks || 0} pts
+
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-extrabold text-gray-800 text-base group-hover:text-violet-600 transition-colors uppercase tracking-tight">{test.title}</span>
+                                            </div>
+                                            <p className="text-gray-500 text-xs mt-1 line-clamp-1">{test.description || 'Evaluate your knowledge with this quiz.'}</p>
+
+                                            <div className="flex items-center gap-3 mt-3">
+                                                <div className="flex items-center gap-1 bg-violet-50 text-violet-600 px-2 py-0.5 rounded-lg text-[10px] font-bold">
+                                                    <Clock size={12} /> {test.duration || 0}m
+                                                </div>
+                                                <div className="flex items-center gap-1 bg-purple-50 text-purple-600 px-2 py-0.5 rounded-lg text-[10px] font-bold">
+                                                    <Target size={12} /> {test.totalMarks || 0} pts
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col items-end gap-1">
+                                            {!purchased ? (
+                                                <div className="text-violet-700 text-sm font-black">₹{test.price}</div>
+                                            ) : test.isLocked ? (
+                                                <div className="text-amber-600 text-[10px] font-black bg-amber-50 px-2 py-1 rounded-lg">LOCKED</div>
+                                            ) : (
+                                                <div className="text-emerald-600 text-[10px] font-black bg-emerald-50 px-2 py-1 rounded-lg">READY</div>
+                                            )}
+                                            <ChevronRight size={18} className="text-gray-300 group-hover:text-violet-400 transition-colors" />
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="flex flex-col items-end gap-1">
-                                    {!purchased ? (
-                                        <div className="text-violet-700 text-sm font-black">₹{test.price}</div>
-                                    ) : test.isLocked ? (
-                                        <div className="text-amber-600 text-[10px] font-black bg-amber-50 px-2 py-1 rounded-lg">LOCKED</div>
-                                    ) : (
-                                        <div className="text-emerald-600 text-[10px] font-black bg-emerald-50 px-2 py-1 rounded-lg">READY</div>
+                                    {purchased && (
+                                        <div className="absolute top-0 right-0 p-1">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200 animate-pulse" />
+                                        </div>
                                     )}
-                                    <ChevronRight size={18} className="text-gray-300 group-hover:text-violet-400 transition-colors" />
+                                </button>
+                            );
+                        }) : (
+                            <div className="text-center pt-20 px-10">
+                                <div className="w-20 h-20 bg-violet-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Target size={40} className="text-violet-300" />
                                 </div>
+                                <p className="font-extrabold text-gray-800 text-lg">No Quizzes Available</p>
+                                <p className="text-gray-500 text-sm mt-2 leading-relaxed">Check back later for new practice materials.</p>
                             </div>
-
-                            {purchased && (
-                                <div className="absolute top-0 right-0 p-1">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200 animate-pulse" />
-                                </div>
-                            )}
-                        </button>
-                    );
-                }) : (
-                    <div className="text-center pt-20 px-10">
-                        <div className="w-20 h-20 bg-violet-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Target size={40} className="text-violet-300" />
-                        </div>
-                        <p className="font-extrabold text-gray-800 text-lg">No Quizzes Available</p>
-                        <p className="text-gray-500 text-sm mt-2 leading-relaxed">Check back later for new practice materials.</p>
-                    </div>
-                )}
+                        )}
                     </>
                 )}
 

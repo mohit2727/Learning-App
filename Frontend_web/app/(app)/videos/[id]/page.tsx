@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Play, ChevronLeft, Clock, BookOpen, Info, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
-export default function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function VideoPlaylistDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const { user, loading: authLoading } = useAuth();
     const [course, setCourse] = useState<any>(null);
@@ -19,7 +19,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
             try {
                 const token = await user.getIdToken();
                 setAuthToken(token);
-                const data = await dataService.getCourseDetail(id);
+                const data = await dataService.getVideoPlaylistById(id);
                 setCourse(data);
             } catch (e) { console.error(e); }
             finally { setLoading(false); }
@@ -79,7 +79,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
                 <div className="space-y-3">
                     <h4 className="font-black text-gray-400 text-[10px] uppercase tracking-[0.2em] ml-2">Course syllabus</h4>
                     {course?.lessons?.map((lesson: any, i: number) => (
-                        <Link key={lesson._id || i} href={`/courses/${id}/video?v=${lesson.videoUrl}`}
+                        <Link key={lesson._id || i} href={`/videos/${id}/video?v=${lesson.videoUrl}`}
                             className="card p-3 flex items-center gap-4 card-hover border border-gray-50">
                             <div className="w-10 h-10 rounded-xl bg-violet-50 flex flex-col items-center justify-center shrink-0">
                                 <span className="text-violet-600 font-black text-sm">{i + 1}</span>
@@ -103,7 +103,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
 
             {/* Play All Button (Sticky) */}
             <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-[440px] px-8">
-                <button onClick={() => { if (course?.lessons?.[0]) router.push(`/courses/${id}/video?v=${course.lessons[0].videoUrl}`) }}
+                <button onClick={() => { if (course?.lessons?.[0]) router.push(`/videos/${id}/video?v=${course.lessons[0].videoUrl}`) }}
                     className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl py-4 font-black shadow-2xl flex items-center justify-center gap-3 card-hover tracking-[0.1em]">
                     <Play size={18} fill="white" /> START WATCHING NOW
                 </button>

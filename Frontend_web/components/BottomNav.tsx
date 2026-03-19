@@ -5,7 +5,7 @@ import { Home, BookOpen, FileText, Trophy, User } from 'lucide-react';
 
 const tabs = [
     { href: '/dashboard', icon: Home, label: 'Home' },
-    { href: '/courses', icon: BookOpen, label: 'Courses' },
+    { href: '/videos', icon: BookOpen, label: 'Videos' },
     { href: '/tests', icon: FileText, label: 'Tests' },
     { href: '/leaderboard', icon: Trophy, label: 'Leaders' },
     { href: '/profile', icon: User, label: 'Profile' },

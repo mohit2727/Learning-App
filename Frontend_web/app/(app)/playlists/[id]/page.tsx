@@ -1,35 +1,20 @@
 'use client';
-import { useState, useEffect, use } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { dataService, setAuthToken } from '@/lib/api';
+import { dataService } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, PlayCircle, Lock, Unlock, Clock, HelpCircle } from 'lucide-react';
+import { use } from 'react';
+import useSWR from 'swr';
 
 export default function PlaylistDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-    const { user, loading: authLoading } = useAuth();
-    const [playlist, setPlaylist] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
     const router = useRouter();
 
-    useEffect(() => {
-        if (authLoading || !user) return;
-        const load = async () => {
-            try {
-                const token = await user.getIdToken();
-                setAuthToken(token);
-                // We don't have a direct getPlaylistById in dataService yet, so we'll fetch from API directly
-                const api = (await import('@/lib/api')).default;
-                const { data } = await api.get(`/quiz-playlists/${id}`);
-                setPlaylist(data);
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
-    }, [id, authLoading, user]);
+    const { data: playlist, isLoading } = useSWR(
+        user ? `playlist-${id}` : null,
+        () => dataService.getPlaylistById(id)
+    );
 
     const handleQuizClick = (quiz: any) => {
         if (quiz.isLocked) {
@@ -39,16 +24,21 @@ export default function PlaylistDetailsPage({ params }: { params: Promise<{ id: 
         router.push(`/tests/${quiz._id}`);
     };
 
-    if (loading) return (
+    if (isLoading) return (
         <div className="flex-1 flex items-center justify-center p-20">
             <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
         </div>
     );
 
     if (!playlist) return (
-        <div className="flex-1 p-8 text-center">
-            <p className="text-gray-500 font-medium">Playlist not found.</p>
-            <button onClick={() => router.back()} className="mt-4 text-violet-600 font-bold">Go Back</button>
+        <div className="flex-1 p-8 text-center bg-gray-50 h-screen">
+            <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <HelpCircle size={40} className="text-gray-300" />
+            </div>
+            <p className="text-gray-500 font-bold">Playlist not found.</p>
+            <button onClick={() => router.back()} className="mt-6 bg-violet-600 text-white px-8 py-3 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-violet-100">
+                Go Back
+            </button>
         </div>
     );
 
@@ -80,7 +70,7 @@ export default function PlaylistDetailsPage({ params }: { params: Promise<{ id: 
             <div className="px-5 space-y-4 relative z-20">
                 <div className="flex items-center gap-2 mb-4">
                     <div className="w-1.5 h-6 bg-violet-600 rounded-full" />
-                    <h2 className="text-gray-800 font-black text-sm uppercase tracking-widest">Included Quizzes</h2>
+                    <h2 className="text-gray-800 font-black text-sm uppercase tracking-widest">Included Quizzes {playlist.quizzes ? `(${playlist.quizzes.length})` : ''}</h2>
                 </div>
 
                 {!playlist.quizzes || playlist.quizzes.length === 0 ? (

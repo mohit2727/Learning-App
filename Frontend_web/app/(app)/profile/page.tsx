@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { UserCircle, Mail, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen } from 'lucide-react';
+import { UserCircle, Phone, MapPin, ChevronRight, LogOut, ShieldCheck, Star, Zap, BookOpen, Receipt, HelpCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ProfilePage() {
     const { user, dbUser, logout, loading: authLoading, refreshDbUser } = useAuth();
@@ -72,8 +73,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <h1 className="text-white text-xl font-black tracking-tight">{displayName}</h1>
-                    {/* Email removed as requested */}
+                    <h1 className="text-white text-xl font-black tracking-tight uppercase">{displayName}</h1>
                 </div>
             </div>
 
@@ -124,31 +124,60 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                     <h4 className="font-black text-gray-400 text-[10px] uppercase tracking-[0.2em] ml-2">Learning Progress</h4>
                     <div className="bg-white rounded-[2rem] shadow-lg border border-gray-50 overflow-hidden p-2">
-                        <button onClick={() => router.push('/profile/my-tests')}
+                        <Link href="/profile/my-tests"
                             className="w-full h-14 bg-white hover:bg-violet-50/50 rounded-2xl flex items-center px-4 gap-4 transition-all group">
                             <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
                                 <Star size={18} />
                             </div>
                             <div className="flex-1 text-left">
-                                <p className="font-extrabold text-gray-800 text-xs tracking-tight">Test Attempts</p>
+                                <p className="font-extrabold text-gray-800 text-xs tracking-tight uppercase">Test Attempts</p>
                                 <p className="text-[9px] text-gray-400 font-bold">Review your past performance</p>
                             </div>
                             <ChevronRight size={16} className="text-gray-300 group-hover:text-violet-600 transition-colors" />
-                        </button>
+                        </Link>
 
                         <div className="h-px bg-gray-50 mx-4" />
 
-                        <button onClick={() => router.push('/profile/my-courses')}
+                        <Link href="/profile/enrolled"
                             className="w-full h-14 bg-white hover:bg-violet-50/50 rounded-2xl flex items-center px-4 gap-4 transition-all group">
                             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
                                 <BookOpen size={18} />
                             </div>
                             <div className="flex-1 text-left">
-                                <p className="font-extrabold text-gray-800 text-xs tracking-tight">Enrolled Courses</p>
+                                <p className="font-extrabold text-gray-800 text-xs tracking-tight uppercase">Enrolled Videos</p>
                                 <p className="text-[9px] text-gray-400 font-bold">Continue your learning journey</p>
                             </div>
                             <ChevronRight size={16} className="text-gray-300 group-hover:text-violet-600 transition-colors" />
-                        </button>
+                        </Link>
+
+                        <div className="h-px bg-gray-50 mx-4" />
+
+                        <Link href="/profile/orders"
+                            className="w-full h-14 bg-white hover:bg-violet-50/50 rounded-2xl flex items-center px-4 gap-4 transition-all group">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500">
+                                <Receipt size={18} />
+                            </div>
+                            <div className="flex-1 text-left">
+                                <p className="font-extrabold text-gray-800 text-xs tracking-tight uppercase">Order History</p>
+                                <p className="text-[9px] text-gray-400 font-bold">View receipts and transactions</p>
+                            </div>
+                            <ChevronRight size={16} className="text-gray-300 group-hover:text-violet-600 transition-colors" />
+                        </Link>
+                    </div>
+
+                    <h4 className="font-black text-gray-400 text-[10px] uppercase tracking-[0.2em] ml-2 mt-4">Support & Feedback</h4>
+                    <div className="bg-white rounded-[2rem] shadow-lg border border-gray-50 overflow-hidden p-2">
+                        <Link href="/help"
+                            className="w-full h-14 bg-white hover:bg-violet-50/50 rounded-2xl flex items-center px-4 gap-4 transition-all group">
+                            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500">
+                                <HelpCircle size={18} />
+                            </div>
+                            <div className="flex-1 text-left">
+                                <p className="font-extrabold text-gray-800 text-xs tracking-tight uppercase">Help & Support</p>
+                                <p className="text-[9px] text-gray-400 font-bold">FAQs and Contact Support</p>
+                            </div>
+                            <ChevronRight size={16} className="text-gray-300 group-hover:text-violet-600 transition-colors" />
+                        </Link>
                     </div>
 
                     <button onClick={() => { if (confirm('Are you sure you want to logout?')) logout().then(() => router.push('/sign-in')); }}
@@ -156,7 +185,7 @@ export default function ProfilePage() {
                         <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600">
                             <LogOut size={18} />
                         </div>
-                        <p className="flex-1 text-left font-black text-rose-600 text-xs tracking-wider uppercase ml-4">Logout Session</p>
+                        <p className="flex-1 text-left font-black text-rose-600 text-[11px] tracking-[0.1em] uppercase ml-4">Logout Session</p>
                     </button>
                 </div>
             </div>
