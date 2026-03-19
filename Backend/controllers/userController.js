@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const Course = require('../models/courseModel');
 const Test = require('../models/testModel');
 const Announcement = require('../models/announcementModel');
+const QuizPlaylist = require('../models/quizPlaylistModel');
 const admin = require('../config/firebase-admin');
 
 // @desc    Delete user (Admin only)

@@ -210,7 +210,7 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
                         <div className="absolute top-0 right-0 p-8 opacity-5">
                             <HelpCircle size={120} />
                         </div>
-                        
+
                         <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 mb-6">
                             <HelpCircle size={32} />
                         </div>
@@ -221,13 +221,13 @@ export default function ActiveTestPage({ params }: { params: Promise<{ id: strin
                         </p>
 
                         <div className="space-y-3">
-                            <button 
+                            <button
                                 onClick={confirmSubmit}
                                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-100 transition-all active:scale-95 text-xs uppercase tracking-widest"
                             >
                                 YES, SUBMIT NOW
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setShowSubmitConfirm(false)}
                                 className="w-full bg-slate-50 hover:bg-slate-100 text-slate-400 font-black py-5 rounded-2xl transition-all active:scale-95 text-xs uppercase tracking-widest"
                             >
