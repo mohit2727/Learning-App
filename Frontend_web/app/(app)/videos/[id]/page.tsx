@@ -1,16 +1,17 @@
 'use client';
 import { useState, useEffect, use } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { dataService, setAuthToken } from '@/lib/api';
+import { dataService, paymentService, setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { Play, ChevronLeft, Clock, BookOpen, Info, ShieldCheck } from 'lucide-react';
+import { Play, ChevronLeft, Clock, BookOpen, Info, ShieldCheck, Lock, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 
 export default function VideoPlaylistDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-    const { user, loading: authLoading } = useAuth();
+    const { user, dbUser, refreshDbUser, loading: authLoading } = useAuth();
     const [course, setCourse] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isPurchasing, setIsPurchasing] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -26,6 +27,56 @@ export default function VideoPlaylistDetailPage({ params }: { params: Promise<{ 
         };
         load();
     }, [id, authLoading, user]);
+
+    const isEnrolled = course?.isEnrolled || dbUser?.role === 'admin';
+    const isFree = course?.price === 0;
+    const canAccess = isEnrolled || isFree;
+
+    const handleBuyNow = async () => {
+        if (!user || !course) return;
+        setIsPurchasing(true);
+        try {
+            const order = await paymentService.createOrder(course._id, 'Course');
+            
+            const options = {
+                key: (await dataService.getDashboard()).razorpayKeyId || 'rzp_test_5n4SOnO8O2XgC6',
+                amount: order.amount,
+                currency: order.currency,
+                name: "Learning App",
+                description: `Enroll in ${course.title}`,
+                order_id: order.id,
+                handler: async (response: any) => {
+                    try {
+                        await paymentService.verifyPayment({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        });
+                        alert('Payment Successful! Course unlocked.');
+                        await refreshDbUser();
+                        // Refresh course data to update isEnrolled
+                        const data = await dataService.getVideoPlaylistById(id);
+                        setCourse(data);
+                    } catch (err: any) {
+                        alert(err.message || 'Payment verification failed');
+                    }
+                },
+                prefill: {
+                    name: dbUser?.name,
+                    email: dbUser?.email,
+                    contact: dbUser?.mobile
+                },
+                theme: { color: "#7c3aed" }
+            };
+
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+        } catch (err: any) {
+            alert(err.message || 'Failed to initiate payment');
+        } finally {
+            setIsPurchasing(false);
+        }
+    };
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">
@@ -56,57 +107,97 @@ export default function VideoPlaylistDetailPage({ params }: { params: Promise<{ 
                             <Play size={10} className="text-violet-200" fill="currentColor" />
                             <span className="text-white text-[10px] font-black uppercase tracking-widest">{course?.lessons?.length || 0} Lessons</span>
                         </div>
-                        <div className="bg-emerald-500/20 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
-                            <ShieldCheck size={10} className="text-emerald-400" />
-                            <span className="text-white text-[10px] font-black uppercase tracking-widest">ENROLLED</span>
-                        </div>
+                        {canAccess ? (
+                            <div className="bg-emerald-500/20 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
+                                <ShieldCheck size={10} className="text-emerald-400" />
+                                <span className="text-white text-[10px] font-black uppercase tracking-widest">
+                                    {isFree ? 'FREE ACCESS' : 'ENROLLED'}
+                                </span>
+                            </div>
+                        ) : (
+                            <div className="bg-amber-500/20 backdrop-blur-md px-3 py-1 rounded-full border border-amber-500/30 flex items-center gap-1.5">
+                                <Lock size={10} className="text-amber-400" />
+                                <span className="text-white text-[10px] font-black uppercase tracking-widest">PREMIUM</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
+            {/* Lesson List or Purchase CTA */}
             <div className="px-5 -mt-6 pb-20 relative z-20 space-y-6">
-                {/* Course Info Card */}
-                <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-white">
-                    <h3 className="font-extrabold text-gray-800 text-sm tracking-tight mb-3 flex items-center gap-2">
-                        <Info size={16} className="text-violet-600" /> ABOUT THIS COURSE
-                    </h3>
-                    <p className="text-gray-500 text-xs leading-relaxed font-medium">
-                        {course?.description || 'Deep dive into specialized topics with professional guidance. This course covers everything from basics to advanced concepts.'}
-                    </p>
-                </div>
+                {!canAccess && course?.price > 0 ? (
+                    <div className="bg-white rounded-[2.5rem] p-10 shadow-xl border border-violet-100 flex flex-col items-center text-center">
+                        <div className="w-20 h-20 bg-violet-50 rounded-3xl flex items-center justify-center mb-6">
+                            <Lock size={40} className="text-violet-600" />
+                        </div>
+                        <h2 className="text-gray-900 font-black text-xl leading-tight mb-2">Enroll in {course.title}</h2>
+                        <p className="text-gray-500 text-sm font-medium mb-8 leading-relaxed">
+                            This course contains premium video lessons. Enroll now to get full access to all lectures and learning materials.
+                        </p>
+                        
+                        <div className="w-full bg-gray-50 rounded-3xl p-6 mb-8 border border-gray-100">
+                            <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Enrollment Fee</p>
+                            <p className="text-gray-900 font-black text-3xl">₹{course.price}</p>
+                        </div>
 
-                {/* Lesson List */}
-                <div className="space-y-3">
-                    <h4 className="font-black text-gray-400 text-[10px] uppercase tracking-[0.2em] ml-2">Course syllabus</h4>
-                    {course?.lessons?.map((lesson: any, i: number) => (
-                        <Link key={lesson._id || i} href={`/videos/${id}/video?v=${lesson.videoUrl}`}
-                            className="card p-3 flex items-center gap-4 card-hover border border-gray-50">
-                            <div className="w-10 h-10 rounded-xl bg-violet-50 flex flex-col items-center justify-center shrink-0">
-                                <span className="text-violet-600 font-black text-sm">{i + 1}</span>
-                            </div>
+                        <button 
+                            onClick={handleBuyNow}
+                            disabled={isPurchasing}
+                            className="w-full bg-violet-600 hover:bg-violet-700 text-white py-5 rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-violet-200 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                        >
+                            {isPurchasing ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <CreditCard size={18} />
+                            )}
+                            {isPurchasing ? 'Processing...' : 'Enroll Now'}
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        {/* Course Info Card */}
+                        <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-white">
+                            <h3 className="font-extrabold text-gray-800 text-sm tracking-tight mb-3 flex items-center gap-2">
+                                <Info size={16} className="text-violet-600" /> ABOUT THIS COURSE
+                            </h3>
+                            <p className="text-gray-500 text-xs leading-relaxed font-medium">
+                                {course?.description || 'Deep dive into specialized topics with professional guidance.'}
+                            </p>
+                        </div>
 
-                            <div className="flex-1">
-                                <p className="font-extrabold text-gray-800 text-xs tracking-tight line-clamp-1 truncate uppercase">{lesson.title}</p>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                    <Clock size={10} className="text-gray-300" />
-                                    <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Video Lesson</span>
-                                </div>
-                            </div>
+                        {/* Lesson List */}
+                        <div className="space-y-3">
+                            <h4 className="font-black text-gray-400 text-[10px] uppercase tracking-[0.2em] ml-2">Course syllabus</h4>
+                            {course?.lessons?.map((lesson: any, i: number) => (
+                                <Link key={lesson._id || i} href={`/videos/${id}/video?v=${lesson.videoUrl}`}
+                                    className="card p-3 flex items-center gap-4 card-hover border border-gray-50">
+                                    <div className="w-10 h-10 rounded-xl bg-violet-50 flex flex-col items-center justify-center shrink-0">
+                                        <span className="text-violet-600 font-black text-sm">{i + 1}</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-extrabold text-gray-800 text-xs tracking-tight line-clamp-1 truncate uppercase">{lesson.title}</p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <Clock size={10} className="text-gray-300" />
+                                            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Video Lesson</span>
+                                        </div>
+                                    </div>
+                                    <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200 shrink-0">
+                                        <Play size={12} fill="white" className="text-white" />
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
 
-                            <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200 shrink-0">
-                                <Play size={12} fill="white" className="text-white" />
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            </div>
-
-            {/* Play All Button (Sticky) */}
-            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-[440px] px-8">
-                <button onClick={() => { if (course?.lessons?.[0]) router.push(`/videos/${id}/video?v=${course.lessons[0].videoUrl}`) }}
-                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl py-4 font-black shadow-2xl flex items-center justify-center gap-3 card-hover tracking-[0.1em]">
-                    <Play size={18} fill="white" /> START WATCHING NOW
-                </button>
+                        {/* Play All Button (Sticky) */}
+                        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-[440px] px-8">
+                            <button onClick={() => { if (course?.lessons?.[0]) router.push(`/videos/${id}/video?v=${course.lessons[0].videoUrl}`) }}
+                                className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl py-4 font-black shadow-2xl flex items-center justify-center gap-3 card-hover tracking-[0.1em]">
+                                <Play size={18} fill="white" /> START WATCHING NOW
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
 
         </div>

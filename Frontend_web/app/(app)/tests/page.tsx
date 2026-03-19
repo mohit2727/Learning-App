@@ -15,17 +15,12 @@ export default function TestsPage() {
         user ? 'tests' : null,
         () => dataService.getTests()
     );
-    const { data: playlistsData, isLoading: playlistsLoading } = useSWR(
-        user ? 'playlists' : null,
-        () => dataService.getPlaylists()
-    );
     const { data: dashboardData } = useSWR(
         user ? 'dashboard' : null,
         () => dataService.getDashboard()
     );
 
     const tests = testsData || [];
-    const playlists = playlistsData || [];
     const razorpayKey = dashboardData?.razorpayKeyId || '';
 
     const [paymentOrder, setPaymentOrder] = useState<any>(null);
@@ -46,7 +41,6 @@ export default function TestsPage() {
                         alert('Payment Successful! Content unlocked.');
                         // Re-fetch data to reflect purchased status
                         mutate('tests');
-                        mutate('playlists');
                     } else {
                         alert('Payment verification failed. Please contact support.');
                     }
@@ -92,25 +86,6 @@ export default function TestsPage() {
         router.push(`/tests/${test._id}`);
     };
 
-    const handlePlaylistPurchase = async (playlist: any) => {
-        if (playlist.hasAccess || playlist.price === 0) {
-            router.push(`/playlists/${playlist._id}`);
-            return;
-        } else {
-            setProcessing(true);
-            try {
-                const order = await paymentService.createOrder(playlist._id, 'QuizPlaylist');
-                setPaymentOrder(order);
-                setActiveItem(playlist);
-                setActiveItemType('QuizPlaylist');
-                setShowPayment(true);
-            } catch (e: any) {
-                alert('Payment Error: ' + (e.message || 'Failed to initialize payment'));
-            } finally {
-                setProcessing(false);
-            }
-        }
-    };
 
     const razorpayHtml = paymentOrder && razorpayKey ? `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://checkout.razorpay.com/v1/checkout.js"></script></head><body><script>var options={"key":"${razorpayKey}","amount":"${paymentOrder.amount}","currency":"INR","name":"Physical Education","description":"Unlock ${activeItemType === 'Test' ? 'Quiz' : 'Playlist'}: ${activeItem?.title ?? ''}","order_id":"${paymentOrder.id}","handler":function(r){window.parent.postMessage({type:'RAZORPAY_SUCCESS',data:r},'*');},"prefill":{"name":"${dbUser?.name ?? ''}","contact":"${dbUser?.mobile || user?.phoneNumber || ''}"},"theme":{"color":"#7c3aed"},"modal":{"ondismiss":function(){window.parent.postMessage({type:'RAZORPAY_CANCEL'},'*');}}};var rzp=new Razorpay(options);rzp.open();</script></body></html>` : '';
 
@@ -123,52 +98,13 @@ export default function TestsPage() {
             </div>
 
             <div className="px-5 pb-8 space-y-4">
-                {testsLoading || playlistsLoading ? (
+                {testsLoading ? (
                     <div className="flex flex-col items-center justify-center pt-20 gap-3">
                         <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
                         <p className="text-gray-400 text-sm font-medium">Loading...</p>
                     </div>
                 ) : (
                     <>
-                        {/* Playlists Section */}
-                        {playlists.length > 0 && (
-                            <div className="space-y-3 mb-8">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-1 h-5 bg-violet-600 rounded-full" />
-                                    <h2 className="text-gray-800 font-black text-xs uppercase tracking-widest">Premium Bundles</h2>
-                                </div>
-                                <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-5 px-5">
-                                    {playlists.map((p: any) => {
-                                        const purchased = p.hasAccess || p.price === 0;
-                                        return (
-                                            <button key={p._id} onClick={() => handlePlaylistPurchase(p)}
-                                                className="shrink-0 w-72 card p-5 border border-white text-left relative overflow-hidden group">
-                                                <div className="flex flex-col h-full">
-                                                    <div className="flex items-center justify-between mb-3">
-                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${purchased ? 'bg-violet-100 text-violet-600' : 'bg-amber-50 text-amber-600'}`}>
-                                                            <Unlock size={20} strokeWidth={2.5} />
-                                                        </div>
-                                                        {purchased ? (
-                                                            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">OWNED</span>
-                                                        ) : (
-                                                            <span className="text-sm font-black text-gray-800">₹{p.price}</span>
-                                                        )}
-                                                    </div>
-                                                    <h3 className="font-extrabold text-gray-800 text-sm group-hover:text-violet-600 transition-colors line-clamp-1">{p.title}</h3>
-                                                    <p className="text-gray-500 text-[10px] mt-1 line-clamp-2 leading-relaxed">{p.description}</p>
-                                                    <div className="mt-4 flex items-center gap-2">
-                                                        <span className="text-[10px] font-bold text-violet-700 bg-violet-50 px-2 py-0.5 rounded-md uppercase tracking-tight">
-                                                            {p.quizzes?.length || 0} Full Quizzes
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
                         {/* Individual Tests Section */}
                         <div className="flex items-center gap-2 mb-2">
                             <div className="w-1 h-5 bg-violet-600 rounded-full" />

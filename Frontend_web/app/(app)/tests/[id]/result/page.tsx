@@ -3,7 +3,7 @@ import { useState, useEffect, use } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Trophy, Home, RotateCcw, Award, Star, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
+import { Trophy, Home, RotateCcw, Award, Star, ShieldCheck, CheckCircle2, XCircle, CircleHelp } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TestResultPage({ params }: { params: Promise<{ id: string }> }) {
@@ -160,7 +160,7 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
                                         <div className="flex items-start gap-3 mb-4">
                                             <div className="mt-0.5">
                                                 {isSkipped ? (
-                                                    <HelpCircle size={20} className="text-slate-400" />
+                                                    <CircleHelp size={20} className="text-slate-400" />
                                                 ) : isCorrect ? (
                                                     <CheckCircle2 size={20} className="text-emerald-500" />
                                                 ) : (

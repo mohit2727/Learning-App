@@ -85,7 +85,7 @@ export const dataService = {
 
 export const paymentService = {
     createOrder: (itemId: string, itemType: string) => apiClient.post('/payments/create-order', { itemId, itemType }).then(r => r.data),
-    verifyPayment: (data: any) => apiClient.post('/payments/verify', data).then(r => r.data),
+    verifyPayment: (data: any) => apiClient.post('/payments/verify-payment', data).then(r => r.data),
     getMyOrders: () => apiClient.get('/payments/my-orders').then(r => r.data),
 };
 

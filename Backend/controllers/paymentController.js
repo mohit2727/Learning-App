@@ -43,11 +43,16 @@ const createOrder = asyncHandler(async (req, res) => {
         throw new Error('Item not found');
     }
 
-    const amount = item.price * 100;
-
-    if (amount <= 0) {
+    if (isNaN(item.price) || item.price <= 0) {
         res.status(400);
-        throw new Error('Cannot create order for a free item');
+        throw new Error('This item does not have a valid price and cannot be purchased.');
+    }
+
+    const amount = Math.round(item.price * 100);
+
+    if (amount < 100) {
+        res.status(400);
+        throw new Error('The item price must be at least ₹1 for online payment.');
     }
 
     // ─── Idempotency: return existing pending order if created < 10 min ago ──
@@ -63,9 +68,9 @@ const createOrder = asyncHandler(async (req, res) => {
     }
 
     const options = {
-        amount: Math.round(amount),
+        amount,
         currency: 'INR',
-        receipt: `receipt_${Date.now()}`,
+        receipt: `receipt_${Date.now()}_${itemId.toString().slice(-4)}`,
     };
 
     try {
@@ -87,8 +92,10 @@ const createOrder = asyncHandler(async (req, res) => {
 
         res.status(201).json(order);
     } catch (error) {
+        console.error('RAZORPAY ERROR:', error);
         res.status(500);
-        throw new Error(error.description || error.message || 'Error creating Razorpay order');
+        const errorMessage = error.error?.description || error.description || error.message || 'Error creating Razorpay order';
+        throw new Error(errorMessage);
     }
 });
 

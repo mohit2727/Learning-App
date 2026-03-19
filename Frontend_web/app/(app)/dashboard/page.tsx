@@ -120,7 +120,7 @@ export default function DashboardPage() {
                 <div>
                     <div className="flex items-center justify-between mb-4 px-1">
                         <h2 className="text-gray-800 font-black text-[10px] uppercase tracking-[0.15em] opacity-60">Latest Content</h2>
-                        <Link href="/videos" className="text-violet-600 text-[10px] font-black uppercase tracking-widest">See all →</Link>
+                        <Link href="/playlists" className="text-violet-600 text-[10px] font-black uppercase tracking-widest">See all →</Link>
                     </div>
                     <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
                         {/* Video Playlists (from dashboard.newestCourses) */}
@@ -181,7 +181,7 @@ export default function DashboardPage() {
                 <div>
                     <h2 className="text-gray-800 font-black text-[10px] uppercase tracking-[0.15em] mb-4 px-1 opacity-60">Your Toolbox</h2>
                     <div className="grid grid-cols-2 gap-4">
-                        <Link href="/videos"
+                        <Link href="/playlists"
                             className="bg-indigo-50/30 border border-white rounded-[2.5rem] p-8 flex flex-col items-center shadow-lg shadow-indigo-100/50 card-hover transition-all">
                             <div className="w-14 h-14 bg-white rounded-3xl flex items-center justify-center mb-4 shadow-sm border border-indigo-50">
                                 <TrendingUp className="text-indigo-600" size={28} />

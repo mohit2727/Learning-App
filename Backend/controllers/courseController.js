@@ -34,9 +34,17 @@ const getCourseById = asyncHandler(async (req, res) => {
 
     if (course) {
         // Check if current user is enrolled
-        const isEnrolled = req.user && req.user.enrolledCourses
-            ? req.user.enrolledCourses.some(id => id.toString() === req.params.id)
-            : false;
+        let isEnrolled = false;
+        if (req.user) {
+            if (req.user.role === 'admin') {
+                isEnrolled = true;
+            } else if (req.user.enrolledCourses && req.user.enrolledCourses.some(id => id.toString() === req.params.id)) {
+                isEnrolled = true;
+            }
+        }
+
+        // If free, all have access
+        if (course.price === 0) isEnrolled = true;
 
         res.json({ ...course, isEnrolled });
     } else {
