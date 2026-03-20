@@ -7,6 +7,27 @@ const Test = require('../models/testModel');
 const User = require('../models/userModel');
 const QuizPlaylist = require('../models/quizPlaylistModel');
 
+// @desc    Safe diagnostic - check Razorpay env config
+// @route   GET /api/payments/razorpay-check
+// @access  Private
+const razorpayCheck = asyncHandler(async (req, res) => {
+    const keyId = process.env.RAZORPAY_KEY_ID || '';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || '';
+
+    // Compute a test HMAC to verify the secret actually works
+    const testHmac = crypto.createHmac('sha256', keySecret).update('test').digest('hex');
+
+    res.json({
+        keyId_prefix: keyId.substring(0, 8),
+        keyId_length: keyId.length,
+        keySecret_prefix: keySecret.substring(0, 4),
+        keySecret_length: keySecret.length,
+        keySecret_suffix: keySecret.substring(keySecret.length - 4),
+        testHmac_prefix: testHmac.substring(0, 8),
+        razorpayInitialized: !!razorpay,
+    });
+});
+
 // Initialize Razorpay
 let razorpay;
 if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
@@ -184,4 +205,5 @@ module.exports = {
     createOrder,
     verifyPayment,
     getMyPayments,
+    razorpayCheck,
 };
