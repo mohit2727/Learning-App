@@ -32,8 +32,8 @@ const razorpayCheck = asyncHandler(async (req, res) => {
 let razorpay;
 if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
     razorpay = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID,
-        key_secret: process.env.RAZORPAY_KEY_SECRET,
+        key_id: process.env.RAZORPAY_KEY_ID.trim(),
+        key_secret: process.env.RAZORPAY_KEY_SECRET.trim(),
     });
 } else {
     console.warn('WARNING: Razorpay keys are not configured as environment variables. Payment features will not work.');
