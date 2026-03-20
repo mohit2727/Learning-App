@@ -7,33 +7,12 @@ const Test = require('../models/testModel');
 const User = require('../models/userModel');
 const QuizPlaylist = require('../models/quizPlaylistModel');
 
-// @desc    Safe diagnostic - check Razorpay env config
-// @route   GET /api/payments/razorpay-check
-// @access  Private
-const razorpayCheck = asyncHandler(async (req, res) => {
-    const keyId = process.env.RAZORPAY_KEY_ID || '';
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || '';
-
-    // Compute a test HMAC to verify the secret actually works
-    const testHmac = crypto.createHmac('sha256', keySecret).update('test').digest('hex');
-
-    res.json({
-        keyId_prefix: keyId.substring(0, 8),
-        keyId_length: keyId.length,
-        keySecret_prefix: keySecret.substring(0, 4),
-        keySecret_length: keySecret.length,
-        keySecret_suffix: keySecret.substring(keySecret.length - 4),
-        testHmac_prefix: testHmac.substring(0, 8),
-        razorpayInitialized: !!razorpay,
-    });
-});
-
 // Initialize Razorpay
 let razorpay;
 if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
     razorpay = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID.trim(),
-        key_secret: process.env.RAZORPAY_KEY_SECRET.trim(),
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 } else {
     console.warn('WARNING: Razorpay keys are not configured as environment variables. Payment features will not work.');
@@ -134,14 +113,6 @@ const verifyPayment = asyncHandler(async (req, res) => {
         .update(body.toString())
         .digest('hex');
 
-    console.log('--- VERIFY PAYMENT DEBUG ---');
-    console.log('Order ID:', razorpay_order_id);
-    console.log('Payment ID:', razorpay_payment_id);
-    console.log('Key Secret length:', keySecret.length);
-    console.log('Expected sig:', expectedSignature);
-    console.log('Received sig:', razorpay_signature);
-    console.log('Match:', expectedSignature === razorpay_signature);
-
     const isAuthentic = expectedSignature === razorpay_signature;
 
     if (isAuthentic) {
@@ -205,5 +176,4 @@ module.exports = {
     createOrder,
     verifyPayment,
     getMyPayments,
-    razorpayCheck,
 };
