@@ -14,10 +14,11 @@ export default function PlaylistDetailsPage({ params }: { params: Promise<{ id: 
 
     const { data: playlist, isLoading } = useSWR(
         user ? `playlist-${id}` : null,
-        () => dataService.getPlaylistById(id)
+        () => dataService.getPlaylistById(id),
+        { revalidateOnFocus: true, dedupingInterval: 2000 }
     );
 
-    const isOwned = dbUser?.purchasedPlaylists?.includes(id) || dbUser?.role === 'admin';
+    const isOwned = dbUser?.purchasedPlaylists?.some((p: any) => p.toString() === id) || dbUser?.role === 'admin';
     const isFree = playlist?.price === 0;
     const canAccess = isOwned || isFree;
 
@@ -25,17 +26,36 @@ export default function PlaylistDetailsPage({ params }: { params: Promise<{ id: 
         if (!user || !playlist) return;
         setIsPurchasing(true);
         try {
+            // Step 1: Refresh token to prevent auth failures
+            const { setAuthToken } = await import('@/lib/api');
+            const freshToken = await user.getIdToken(true);
+            setAuthToken(freshToken);
+
+            // Step 2: Get Razorpay key from server FIRST
+            const dashboard = await dataService.getDashboard();
+            const rzpKey = dashboard?.razorpayKeyId;
+            if (!rzpKey) {
+                throw new Error('Payment gateway is not configured. Please contact support.');
+            }
+
+            // Step 3: Create order on backend
             const order = await paymentService.createOrder(playlist._id, 'QuizPlaylist');
             
+            // Step 4: Open Razorpay checkout
             const options = {
-                key: (await dataService.getDashboard()).razorpayKeyId || 'rzp_test_5n4SOnO8O2XgC6',
+                key: rzpKey,
                 amount: order.amount,
-                currency: order.currency,
+                currency: order.currency || 'INR',
                 name: "Learning App",
                 description: `Purchase ${playlist.title}`,
                 order_id: order.id,
                 handler: async (response: any) => {
                     try {
+                        // Refresh token in case it expired during payment
+                        const { setAuthToken } = await import('@/lib/api');
+                        const freshToken = await user.getIdToken(true);
+                        setAuthToken(freshToken);
+
                         await paymentService.verifyPayment({
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
@@ -44,7 +64,8 @@ export default function PlaylistDetailsPage({ params }: { params: Promise<{ id: 
                         alert('Payment Successful! Playlist unlocked.');
                         await refreshDbUser();
                     } catch (err: any) {
-                        alert(err.message || 'Payment verification failed');
+                        console.error('Verification error:', err);
+                        alert('Payment was received but verification failed. Do not pay again — contact support with your payment ID: ' + response.razorpay_payment_id);
                     }
                 },
                 prefill: {

@@ -279,7 +279,7 @@ export default function PlaylistsPage() {
 
                                 <div className="flex gap-4 pt-4">
                                     <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 border border-slate-200 hover:bg-slate-50 rounded-xl font-bold text-sm">Cancel</button>
-                                    <button type="submit" disabled={submitting || selectedQuizzes.length === 0} className="flex-[2] bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-black text-sm px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/20">
+                                    <button type="submit" disabled={submitting} className="flex-[2] bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-black text-sm px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/20">
                                         {submitting ? 'Saving...' : editingPlaylist ? 'Save Changes' : 'Create Playlist'}
                                     </button>
                                 </div>

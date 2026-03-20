@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import ErrorBoundary from "@/components/ErrorBoundary";
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,6 +21,11 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className="app-shell">
+                {/* Razorpay Checkout SDK — loaded globally so window.Razorpay is always available */}
+                <Script
+                    src="https://checkout.razorpay.com/v1/checkout.js"
+                    strategy="beforeInteractive"
+                />
                 <AuthProvider>
                     <div className="app-container">
                         <ErrorBoundary>
@@ -31,3 +37,4 @@ export default function RootLayout({
         </html>
     );
 }
+

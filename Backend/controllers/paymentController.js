@@ -107,10 +107,19 @@ const verifyPayment = asyncHandler(async (req, res) => {
 
     const body = razorpay_order_id + '|' + razorpay_payment_id;
 
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || '';
     const expectedSignature = crypto
-        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+        .createHmac('sha256', keySecret)
         .update(body.toString())
         .digest('hex');
+
+    console.log('--- VERIFY PAYMENT DEBUG ---');
+    console.log('Order ID:', razorpay_order_id);
+    console.log('Payment ID:', razorpay_payment_id);
+    console.log('Key Secret length:', keySecret.length);
+    console.log('Expected sig:', expectedSignature);
+    console.log('Received sig:', razorpay_signature);
+    console.log('Match:', expectedSignature === razorpay_signature);
 
     const isAuthentic = expectedSignature === razorpay_signature;
 

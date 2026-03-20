@@ -36,12 +36,25 @@ export default function VideoPlaylistDetailPage({ params }: { params: Promise<{ 
         if (!user || !course) return;
         setIsPurchasing(true);
         try {
+            // Step 1: Refresh token to prevent auth failures
+            const freshToken = await user.getIdToken(true);
+            setAuthToken(freshToken);
+
+            // Step 2: Get Razorpay key from server FIRST
+            const dashboard = await dataService.getDashboard();
+            const rzpKey = dashboard?.razorpayKeyId;
+            if (!rzpKey) {
+                throw new Error('Payment gateway is not configured. Please contact support.');
+            }
+
+            // Step 3: Create order
             const order = await paymentService.createOrder(course._id, 'Course');
             
+            // Step 4: Open checkout
             const options = {
-                key: (await dataService.getDashboard()).razorpayKeyId || 'rzp_test_5n4SOnO8O2XgC6',
+                key: rzpKey,
                 amount: order.amount,
-                currency: order.currency,
+                currency: order.currency || 'INR',
                 name: "Learning App",
                 description: `Enroll in ${course.title}`,
                 order_id: order.id,
