@@ -17,17 +17,45 @@ const generateQuestionsFromText = async (text) => {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
-    Analyze the following text and extract ALL quiz questions found within it.
-    Each question must have exactly 4 options and 1 correct option (index 0-3).
-    Provide a comprehensive list of all questions identified in the text.
-    Return the response ONLY as a JSON array of objects with the following structure:
-    [
-        {
-            "text": "Question text here?",
-            "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-            "correctOption": 0
-        }
-    ]
+    You are an expert quiz parser. Extract ALL MCQ questions from the text below and return them as a clean JSON array.
+
+    STRICT RULES:
+
+    === RULE 1: Question Text ("text" field) ===
+    - Contains ONLY the question stem — no option labels, no answer.
+    - Remove leading question numbers like "Q1.", "4.", "Q.4" from the start.
+    - For "Match the Following" questions: include the question stem AND the matching pairs (A–1, B–2 etc.) as part of the text. Format them inline like: "Match: A. Psychoanalytic Theory — 1. Carl Rogers | B. Humanistic Theory — 2. Albert Bandura | ..."
+    - For regular questions: just the question sentence.
+
+    === RULE 2: Options ("options" array — always exactly 4) ===
+    - Each item is the raw option text only — strip leading labels like "(A)", "(B)", "A.", "a)", "1." from the start.
+    - For "Match the Following": options are the combination answers like "A-3, B-1, C-4, D-2".
+    - For regular MCQ: options are the 4 answer choices.
+    - If the text only has 3 options, add a plausible 4th one.
+
+    === RULE 3: Correct Answer ("correctOption" — 0-based index) ===
+    - If the text says "Answer — A" or "Answer: (B)" or "Ans: C", map it: A=0, B=1, C=2, D=3.
+    - If no answer is given, use your best judgment based on the content.
+
+    === EXAMPLE ===
+    Input:
+    4. Match List I with List II:
+    A. Psychoanalytic Theory — 1. Carl Rogers
+    B. Humanistic Theory — 2. Albert Bandura
+    (A) A-3, B-1, C-4, D-2
+    (B) A-4, B-3, C-2, D-1
+    (C) A-2, B-4, C-1, D-3
+    (D) A-3, B-2, C-4, D-1
+    Answer — A
+
+    Output:
+    {
+      "text": "Match List I with List II: A. Psychoanalytic Theory — 1. Carl Rogers | B. Humanistic Theory — 2. Albert Bandura",
+      "options": ["A-3, B-1, C-4, D-2", "A-4, B-3, C-2, D-1", "A-2, B-4, C-1, D-3", "A-3, B-2, C-4, D-1"],
+      "correctOption": 0
+    }
+
+    Return ONLY a valid JSON array. No markdown, no explanation, no extra text.
 
     Text content:
     ${text.substring(0, 100000)}
