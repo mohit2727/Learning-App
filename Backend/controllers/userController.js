@@ -51,6 +51,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
             role: user.role,
             enrolledCourses: user.enrolledCourses || [],
             purchasedQuizzes: user.purchasedQuizzes || [],
+            purchasedPlaylists: user.purchasedPlaylists || [],
         });
     } else {
         res.status(404);
@@ -110,6 +111,7 @@ const syncUser = asyncHandler(async (req, res) => {
         role: user.role,
         enrolledCourses: user.enrolledCourses || [],
         purchasedQuizzes: user.purchasedQuizzes || [],
+        purchasedPlaylists: user.purchasedPlaylists || [],
     });
 });
 

@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { dataService, paymentService } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, PlayCircle, Lock, Unlock, Clock, HelpCircle, ShieldCheck, CreditCard } from 'lucide-react';
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import useSWR from 'swr';
 
 export default function PlaylistDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -11,6 +11,11 @@ export default function PlaylistDetailsPage({ params }: { params: Promise<{ id: 
     const { user, dbUser, refreshDbUser } = useAuth();
     const router = useRouter();
     const [isPurchasing, setIsPurchasing] = useState(false);
+
+    // Always refresh user profile on load — picks up admin-granted access
+    useEffect(() => {
+        if (user) refreshDbUser();
+    }, [id]);
 
     const { data: playlist, isLoading } = useSWR(
         user ? `playlist-${id}` : null,
