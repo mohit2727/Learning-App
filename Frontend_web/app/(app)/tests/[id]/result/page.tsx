@@ -1,12 +1,12 @@
 'use client';
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Trophy, Home, RotateCcw, Award, Star, ShieldCheck, CheckCircle2, XCircle, CircleHelp } from 'lucide-react';
 import Link from 'next/link';
 
-export default function TestResultPage({ params }: { params: Promise<{ id: string }> }) {
+function TestResultContent({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const searchParams = useSearchParams();
     const { user, loading: authLoading } = useAuth();
@@ -221,5 +221,17 @@ export default function TestResultPage({ params }: { params: Promise<{ id: strin
             </div>
 
         </div>
+    );
+}
+
+export default function TestResultPage({ params }: { params: Promise<{ id: string }> }) {
+    return (
+        <Suspense fallback={
+            <div className="flex-1 flex items-center justify-center h-screen bg-gray-50">
+                <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+        }>
+            <TestResultContent params={params} />
+        </Suspense>
     );
 }

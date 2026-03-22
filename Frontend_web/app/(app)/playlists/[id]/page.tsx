@@ -45,7 +45,7 @@ export default function PlaylistDetailsPage({ params }: { params: Promise<{ id: 
 
             // Step 3: Create order on backend
             const order = await paymentService.createOrder(playlist._id, 'QuizPlaylist');
-            
+
             // Step 4: Open Razorpay checkout
             const options = {
                 key: rzpKey,
@@ -155,13 +155,13 @@ export default function PlaylistDetailsPage({ params }: { params: Promise<{ id: 
                         <p className="text-gray-500 text-sm font-medium mb-8 leading-relaxed">
                             This is a premium playlist. Purchase it to get full access to all included quizzes and track your progress in the leaderboard.
                         </p>
-                        
+
                         <div className="w-full bg-gray-50 rounded-3xl p-6 mb-8 border border-gray-100">
                             <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Price to Unlock</p>
                             <p className="text-gray-900 font-black text-3xl">₹{playlist.price}</p>
                         </div>
 
-                        <button 
+                        <button
                             onClick={handleBuyNow}
                             disabled={isPurchasing}
                             className="w-full bg-violet-600 hover:bg-violet-700 text-white py-5 rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-violet-200 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
@@ -173,7 +173,7 @@ export default function PlaylistDetailsPage({ params }: { params: Promise<{ id: 
                             )}
                             {isPurchasing ? 'Processing...' : 'Buy Now'}
                         </button>
-                        
+
                         <div className="mt-6 flex items-center gap-2">
                             <ShieldCheck size={14} className="text-emerald-500" />
                             <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">Secure Payment by Razorpay</span>

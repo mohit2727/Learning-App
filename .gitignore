@@ -34,3 +34,9 @@ Thumbs.db
 # Uploads
 Backend/uploads/*
 !Backend/uploads/.gitkeep
+
+# Firebase & Hosting Junk
+.firebase/
+.firebaserc
+firebase.json
+firebase-debug.log*

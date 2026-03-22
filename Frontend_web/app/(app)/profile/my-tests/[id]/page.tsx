@@ -55,7 +55,7 @@ export default function ReviewAttemptPage({ params }: { params: Promise<{ id: st
                 <button onClick={() => router.back()} className="absolute top-6 left-5 flex items-center gap-1 text-white/80 hover:text-white transition-all z-30">
                     <ChevronLeft size={20} /> <span className="text-sm font-bold uppercase transition-all">Back</span>
                 </button>
-                
+
                 <div className="flex flex-col items-center relative z-10">
                     <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-2xl mb-4 animate-in zoom-in duration-500">
                         {passed ? (
@@ -104,7 +104,7 @@ export default function ReviewAttemptPage({ params }: { params: Promise<{ id: st
                 {/* Questions Review */}
                 <div className="space-y-4">
                     <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em] pl-2 mb-2">Detailed Analysis</h3>
-                    
+
                     {test.questions.map((q: any, i: number) => {
                         const userAnswerEntry = userAnswers.find((ua: any) => ua.questionId === q._id);
                         const selectedIdx = userAnswerEntry ? userAnswerEntry.selectedOption : (userAnswerEntry === undefined ? null : null);

@@ -19,9 +19,29 @@ export default function TestsPage() {
         user ? 'dashboard' : null,
         () => dataService.getDashboard()
     );
+    const { data: quizPlaylists } = useSWR(
+        user ? 'quiz-playlists' : null,
+        () => dataService.getQuizPlaylists()
+    );
 
     const tests = testsData || [];
     const razorpayKey = dashboardData?.razorpayKeyId || '';
+
+    // Extract any test IDs that belong to a playlist so we can hide them from the standalone library
+    const playlistTestIds = new Set();
+    if (quizPlaylists) {
+        quizPlaylists.forEach((playlist: any) => {
+            if (playlist.quizzes) {
+                playlist.quizzes.forEach((q: any) => {
+                    playlistTestIds.add(q._id || q);
+                });
+            }
+        });
+    }
+
+    const freeStandaloneTests = tests.filter((t: any) => 
+        !playlistTestIds.has(t._id) && (!t.price || t.price === 0)
+    );
 
     const [paymentOrder, setPaymentOrder] = useState<any>(null);
     const [activeItem, setActiveItem] = useState<any>(null);
@@ -110,8 +130,8 @@ export default function TestsPage() {
                             <div className="w-1 h-5 bg-violet-600 rounded-full" />
                             <h2 className="text-gray-800 font-black text-xs uppercase tracking-widest">Single Quizzes</h2>
                         </div>
-                        {tests.length > 0 ? tests.map((test: any) => {
-                            const purchased = test.isPurchased || test.price === 0;
+                        {freeStandaloneTests.length > 0 ? freeStandaloneTests.map((test: any) => {
+                            const purchased = true; // All tests shown here are inherently free by the filter above
                             return (
                                 <button key={test._id} onClick={() => handleStart(test)}
                                     className="w-full text-left card card-hover p-4 border border-white group relative">
