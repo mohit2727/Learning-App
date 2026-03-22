@@ -326,6 +326,25 @@ const getMyAttempts = asyncHandler(async (req, res) => {
     res.json(attempts);
 });
 
+// @desc    Get specific test attempt with questions
+// @route   GET /api/users/my-attempts/:id
+// @access  Private
+const getAttemptById = asyncHandler(async (req, res) => {
+    const TestAttempt = require('../models/testAttemptModel');
+    const attempt = await TestAttempt.findOne({ _id: req.params.id, user: req.user._id })
+        .populate({
+            path: 'test',
+            select: 'title questions totalMarks duration'
+        });
+
+    if (attempt) {
+        res.json(attempt);
+    } else {
+        res.status(404);
+        throw new Error('Attempt not found');
+    }
+});
+
 // @desc    Get all users (Admin only)
 // @route   GET /api/users
 // @access  Private/Admin
@@ -533,6 +552,7 @@ module.exports = {
     updateUserProfile,
     getMyCourses,
     getMyAttempts,
+    getAttemptById,
     getUsers,
     getUserById,
     updateUserAdmin,

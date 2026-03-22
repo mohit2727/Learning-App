@@ -13,6 +13,7 @@ export const LeaderboardScreen = () => {
     const { user, loading: authLoading } = useAuth();
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
     const [quizTitle, setQuizTitle] = useState<string>('Rankings');
+    const [currentUserRank, setCurrentUserRank] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     const fetchLeaderboard = async () => {
@@ -23,6 +24,7 @@ export const LeaderboardScreen = () => {
             if (data && data.rankings) {
                 setLeaderboard(data.rankings);
                 setQuizTitle(data.quizTitle || 'Leaderboard');
+                setCurrentUserRank(data.currentUserRank);
             } else if (Array.isArray(data)) {
                 setLeaderboard(data);
             }
@@ -108,7 +110,7 @@ export const LeaderboardScreen = () => {
                                         </View>
                                     </View>
                                     <Text className="text-white text-[9px] font-black truncate w-full text-center mb-2">{top3[2].name.split(' ')[0]}</Text>
-                                    <View className="h-12 w-full bg-white/5 rounded-t-2xl border-x border-t border-white/5 items-center justify-center">
+                                    <View className="h-10 w-full bg-white/5 rounded-t-2xl border-x border-t border-white/5 items-center justify-center shadow-lg">
                                         <Text className="text-white font-black text-[10px] leading-none opacity-80">{top3[2].score || top3[2].totalScore || 0}</Text>
                                         <Text className="text-indigo-300 text-[6px] font-black uppercase tracking-wider mt-1">PTS</Text>
                                     </View>
@@ -164,6 +166,33 @@ export const LeaderboardScreen = () => {
                     <View className="h-40" />
                 </ScrollView>
             </View>
+            
+            {/* Sticky Personal Rank Footer */}
+            {currentUserRank && (
+                <View className="absolute bottom-6 left-6 right-6 z-50 rounded-3xl overflow-hidden shadow-2xl border border-white/20">
+                    <LinearGradient
+                        colors={['#4F46E5', '#3730A3']}
+                        className="p-5 flex-row items-center"
+                    >
+                        <View className="w-12 h-12 rounded-2xl bg-white/20 border-2 border-white/30 items-center justify-center mr-4">
+                            <Text className="text-white font-black text-xl">{currentUserRank.name.charAt(0).toUpperCase()}</Text>
+                        </View>
+                        
+                        <View className="flex-1">
+                            <Text className="text-indigo-200 text-[8px] font-black uppercase tracking-widest mb-1">Your Current Rank</Text>
+                            <View className="flex-row items-end gap-2">
+                                <Text className="text-white font-black text-2xl leading-none">#{currentUserRank.rank}</Text>
+                                <Text className="text-white font-bold text-xs mb-0.5 truncate max-w-[120px]" numberOfLines={1}>{currentUserRank.name}</Text>
+                            </View>
+                        </View>
+
+                        <View className="items-end">
+                            <Text className="text-white font-black text-xl leading-none">{currentUserRank.score || 0}</Text>
+                            <Text className="text-indigo-300 text-[8px] font-black uppercase tracking-widest mt-1">PTS</Text>
+                        </View>
+                    </LinearGradient>
+                </View>
+            )}
         </View>
     );
 };

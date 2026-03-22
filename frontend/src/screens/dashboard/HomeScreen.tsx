@@ -55,15 +55,17 @@ const AnnouncementCarousel = ({ data }: { data: any[] }) => {
                 </View>
             ) : (
                 <View className="p-6">
-                    <LinearGradient
-                        colors={['#7C3AED', '#4F46E5']}
-                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                        style={{ borderRadius: 20, padding: 20 }}
-                    >
-                        <Text className="text-white/60 text-[10px] font-black uppercase tracking-[2] mb-1">Official News</Text>
-                        <Text variant="h3" className="text-white font-black text-lg mb-2" numberOfLines={1}>{item.title}</Text>
-                        <Text variant="caption" className="text-white/80 font-semibold" numberOfLines={2}>{item.body}</Text>
-                    </LinearGradient>
+                    <View className="rounded-2xl overflow-hidden">
+                        <LinearGradient
+                            colors={['#7C3AED', '#4F46E5']}
+                            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                            className="p-5"
+                        >
+                            <Text className="text-white/60 text-[10px] font-black uppercase tracking-[2] mb-1">Official News</Text>
+                            <Text variant="h3" className="text-white font-black text-lg mb-2" numberOfLines={1}>{item.title}</Text>
+                            <Text variant="caption" className="text-white/80 font-semibold" numberOfLines={2}>{item.body}</Text>
+                        </LinearGradient>
+                    </View>
                 </View>
             )}
             <View className="flex-row absolute bottom-4 right-6">

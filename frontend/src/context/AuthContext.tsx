@@ -7,36 +7,51 @@ import {
     PhoneAuthProvider
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import apiClient from '../api/apiClient';
+import { dataService } from '../api/dataService';
 import Toast from 'react-native-toast-message';
 
 interface AuthContextType {
     user: User | null;
+    dbUser: any | null;
     loading: boolean;
+    isOnboarded: boolean;
     signOut: () => Promise<void>;
     signInWithPhone: (phoneNumber: string, recaptchaVerifier: any) => Promise<string>;
     verifyOtp: (verificationId: string, code: string) => Promise<void>;
+    refreshDbUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [dbUser, setDbUser] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isOnboarded, setIsOnboarded] = useState(false);
+
+    const refreshDbUser = async () => {
+        try {
+            const profile = await dataService.getProfile();
+            setDbUser(profile);
+            const isNameSet = profile.name && profile.name !== 'New User' && !profile.name.startsWith('Student ') && profile.name !== 'Student';
+            setIsOnboarded(!!isNameSet);
+        } catch (error) {
+            console.error("Error fetching DB user:", error);
+            setDbUser(null);
+            setIsOnboarded(false);
+        }
+    };
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             setUser(firebaseUser);
-            setLoading(false);
-
             if (firebaseUser) {
-                // Pre-fetch token to ensure interceptors are ready
-                try {
-                    await firebaseUser.getIdToken();
-                } catch (error) {
-                    console.error("Error refreshing token:", error);
-                }
+                await refreshDbUser();
+            } else {
+                setDbUser(null);
+                setIsOnboarded(false);
             }
+            setLoading(false);
         });
 
         return () => unsubscribe();
@@ -94,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signOut, signInWithPhone, verifyOtp }}>
+        <AuthContext.Provider value={{ user, dbUser, loading, isOnboarded, signOut, signInWithPhone, verifyOtp, refreshDbUser }}>
             {children}
         </AuthContext.Provider>
     );

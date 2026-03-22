@@ -46,6 +46,11 @@ const getCourseById = asyncHandler(async (req, res) => {
         // If free, all have access
         if (course.price === 0) isEnrolled = true;
 
+        // Sort lessons by order
+        if (course.lessons) {
+            course.lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
+        }
+
         res.json({ ...course, isEnrolled });
     } else {
         res.status(404);

@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { Platform } from 'react-native';
 
 // Using Expo-specific environment variables for better integration with Expo Go
 const firebaseConfig = {
@@ -17,7 +18,8 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 // App Check For Mobile
 // Note: While mobile uses Play Integrity, it can also use reCAPTCHA v3 as a fallback 
 // or for Web (Expo Go / Web build).
-if (typeof window !== 'undefined') {
+// App Check - ONLY for Web
+if (Platform.OS === 'web') {
     initializeAppCheck(app, {
         provider: new ReCaptchaV3Provider('6LcLeIwsAAAAAII1F4KVhPyoKTS0lx-TLzQdW-AY'),
         isTokenAutoRefreshEnabled: true

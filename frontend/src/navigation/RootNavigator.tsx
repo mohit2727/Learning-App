@@ -5,9 +5,10 @@ import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
 import { ActivityIndicator, View } from 'react-native';
 import { AuthSync } from '../components/AuthSync';
+import { OnboardingScreen } from '../screens/auth/OnboardingScreen';
 
 export const RootNavigator = () => {
-    const { user, loading } = useAuth();
+    const { user, loading, isOnboarded } = useAuth();
 
     if (loading) {
         return (
@@ -20,7 +21,11 @@ export const RootNavigator = () => {
     return (
         <NavigationContainer>
             <AuthSync />
-            {user ? <MainNavigator /> : <AuthNavigator />}
+            {user ? (
+                isOnboarded ? <MainNavigator /> : <OnboardingScreen />
+            ) : (
+                <AuthNavigator />
+            )}
         </NavigationContainer>
     );
 };

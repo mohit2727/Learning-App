@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { dataService, setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ClipboardList, Target, Award, Star } from 'lucide-react';
+import { ChevronLeft, ClipboardList, Target, Award, Star, Eye } from 'lucide-react';
 
 export default function MyTestsPage() {
     const { user, loading: authLoading } = useAuth();
@@ -95,6 +95,14 @@ export default function MyTestsPage() {
                                     <p className="text-[8px] text-gray-400 font-black uppercase tracking-tighter">GRADE</p>
                                 </div>
                             </div>
+
+                            <button
+                                onClick={() => router.push(`/profile/my-tests/${attempt._id}`)}
+                                className="w-full mt-4 flex items-center justify-center gap-2 py-3 bg-violet-50 text-violet-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-violet-600 hover:text-white transition-all group"
+                            >
+                                <Eye size={14} className="group-hover:scale-110 transition-transform" />
+                                REVIEW ATTEMPT
+                            </button>
                         </div>
                     );
                 })}

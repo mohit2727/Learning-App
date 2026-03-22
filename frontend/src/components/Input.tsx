@@ -7,6 +7,7 @@ interface InputProps extends TextInputProps {
     error?: string;
     className?: string;
     containerClassName?: string;
+    icon?: React.ReactNode;
 }
 
 export const Input = ({
@@ -16,6 +17,7 @@ export const Input = ({
     containerClassName = '',
     onFocus,
     onBlur,
+    icon,
     ...props
 }: InputProps) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -35,19 +37,26 @@ export const Input = ({
                     {label}
                 </Text>
             )}
-            <TextInput
-                className={combinedInputStyles}
-                placeholderTextColor="#9ca3af" // gray-400
-                onFocus={(e) => {
-                    setIsFocused(true);
-                    onFocus?.(e);
-                }}
-                onBlur={(e) => {
-                    setIsFocused(false);
-                    onBlur?.(e);
-                }}
-                {...props}
-            />
+            <View className="relative">
+                {icon && (
+                    <View className="absolute left-3 top-0 bottom-0 justify-center z-10">
+                        {icon}
+                    </View>
+                )}
+                <TextInput
+                    className={`${combinedInputStyles} ${icon ? 'pl-10' : ''}`}
+                    placeholderTextColor="#9ca3af" // gray-400
+                    onFocus={(e) => {
+                        setIsFocused(true);
+                        onFocus?.(e);
+                    }}
+                    onBlur={(e) => {
+                        setIsFocused(false);
+                        onBlur?.(e);
+                    }}
+                    {...props}
+                />
+            </View>
             {error && (
                 <Text variant="caption" className="text-red-500 mt-1">
                     {error}

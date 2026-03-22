@@ -10,7 +10,13 @@ const getPlaylists = asyncHandler(async (req, res) => {
     if (!req.user || req.user.role !== 'admin') {
         query.isActive = true;
     }
-    const playlists = await QuizPlaylist.find(query).populate('quizzes', 'title totalQuestions duration').lean();
+    const playlists = await QuizPlaylist.find(query)
+        .populate({
+            path: 'quizzes',
+            select: 'title totalQuestions duration',
+            options: { sort: { createdAt: 1 } }
+        })
+        .lean();
 
     if (req.user && req.user.role !== 'admin') {
         const playlistsWithStatus = playlists.map(p => ({
@@ -27,7 +33,11 @@ const getPlaylists = asyncHandler(async (req, res) => {
 // @route   GET /api/quiz-playlists/:id
 // @access  Public
 const getPlaylistById = asyncHandler(async (req, res) => {
-    const playlist = await QuizPlaylist.findById(req.params.id).populate('quizzes');
+    const playlist = await QuizPlaylist.findById(req.params.id)
+        .populate({
+            path: 'quizzes',
+            options: { sort: { createdAt: 1 } }
+        });
 
     if (playlist) {
         // Check access if student

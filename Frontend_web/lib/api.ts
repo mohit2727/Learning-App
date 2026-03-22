@@ -75,6 +75,7 @@ export const dataService = {
     getProfile: () => apiClient.get('/users/profile').then(r => r.data),
     updateProfile: (data: any) => apiClient.put('/users/profile', data).then(r => r.data),
     getMyTests: () => apiClient.get('/users/my-attempts').then(r => r.data),
+    getAttemptById: (id: string) => apiClient.get(`/users/my-attempts/${id}`).then(r => r.data),
     getMyCourses: () => apiClient.get('/users/my-courses').then(r => r.data),
     // Compatibility aliases
     getCourses: () => apiClient.get('/courses').then(r => r.data),

@@ -25,6 +25,7 @@ router.route('/profile')
     .put(protect, updateUserProfile);
 router.get('/my-courses', protect, getMyCourses);
 router.get('/my-attempts', protect, getMyAttempts);
+router.get('/my-attempts/:id', protect, getAttemptById);
 router.get('/dashboard-stats', protect, admin, getDashboardStats);
 
 // Admin routes
