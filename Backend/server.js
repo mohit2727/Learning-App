@@ -32,6 +32,8 @@ const allowedOrigins = [
     'https://physical-education-with-ravina.firebaseapp.com',
     'https://physical-education-with-ravina-admin.web.app',
     'https://physical-education-with-ravina-admin.firebaseapp.com',
+    'https://physical-education-with-ravina.vercel.app', // Vercel Web Deployment
+    'https://physical-education-jvuigdotm-mohits-projects-35d32b3e.vercel.app', // Vercel Specific Alias
     'https://learning-app-4xa9.onrender.com', // Added this as it's the domain from logs
     'http://10.80.127.71:5000',
     'http://10.80.127.71:8081',
