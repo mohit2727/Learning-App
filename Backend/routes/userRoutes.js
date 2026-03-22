@@ -8,6 +8,7 @@ const {
     updateUserProfile,
     getMyCourses,
     getMyAttempts,
+    getAttemptById,
     getUsers,
     getUserById,
     updateUserAdmin,
