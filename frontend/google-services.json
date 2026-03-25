@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1044693722428-hk44qj1irkmflam5kmj4mcj1of4ibtut.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ravina.app",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
           "client_id": "1044693722428-jdb58qh9qbr1m0o1fqs3gotm83eh85uj.apps.googleusercontent.com",
           "client_type": 3
         }
