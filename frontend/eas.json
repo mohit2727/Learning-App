@@ -1,0 +1,13 @@
+{
+  "build": {
+    "preview": {
+      "env": {
+        "EAS_FORCE_NPM_INSTALL": "1"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {}
+  }
+}

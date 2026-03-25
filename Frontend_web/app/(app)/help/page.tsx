@@ -13,11 +13,11 @@ export default function HelpSupportPage() {
     ];
 
     const handleWhatsApp = () => {
-        window.open('https://wa.me/91XXXXXXXXXX', '_blank'); // Replace with actual number
+        window.open('https://wa.me/8000197188', '_blank'); // Replace with actual number
     };
 
     const handleEmail = () => {
-        window.location.href = 'mailto:support@example.com';
+        window.location.href = 'mailto:mohitacharya2727@gmail.com';
     };
 
     return (
@@ -25,14 +25,14 @@ export default function HelpSupportPage() {
             {/* Header */}
             <div className="bg-gradient-to-br from-violet-600 to-fuchsia-600 px-5 pt-8 pb-12 rounded-b-[3rem] shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                
+
                 <div className="relative z-10 flex flex-col items-center">
                     <div className="w-full flex justify-start mb-6">
                         <button onClick={() => router.back()} className="w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-2xl flex items-center justify-center transition-all">
                             <ChevronLeft size={24} className="text-white" />
                         </button>
                     </div>
-                    
+
                     <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-[2rem] flex items-center justify-center mb-6 shadow-2xl border border-white/30">
                         <MessageCircle size={36} className="text-white" />
                     </div>
@@ -100,10 +100,10 @@ export default function HelpSupportPage() {
                         </div>
                         <div>
                             <p className="text-xs font-black text-gray-800 uppercase tracking-tight">Verified Content</p>
-                            <p className="text-[10px] text-gray-500 font-bold">All materials are curated by experts.</p>
+                            <p className="text-[10px] text-gray-500 font-bold">All materials are curated by expert.</p>
                         </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-amber-500 shrink-0">
                             <Zap size={20} />
@@ -114,7 +114,7 @@ export default function HelpSupportPage() {
                         </div>
                     </div>
                 </div>
-                
+
                 <p className="text-center text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] pt-4">
                     Version 1.2.0 • Made with ❤️ for Students
                 </p>

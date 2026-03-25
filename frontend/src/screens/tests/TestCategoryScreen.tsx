@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Lock, Play, ClipboardList, Target, Award, Sparkles, ShieldCheck } from 'lucide-react-native';
 import { useRefresh } from '../../hooks/useRefresh';
+import { toast } from '../../utils/toast';
 
 export const TestCategoryScreen = ({ navigation }: any) => {
     const { user, loading: authLoading } = useAuth();
@@ -21,9 +22,28 @@ export const TestCategoryScreen = ({ navigation }: any) => {
 
     const fetchTests = async () => {
         try {
-            const data = await dataService.getTests();
-            setTests(data);
-            const stats = await dataService.getDashboard();
+            const [data, stats, playlistsData] = await Promise.all([
+                dataService.getTests(),
+                dataService.getDashboard(),
+                dataService.getQuizPlaylists()
+            ]);
+            
+            const playlistTestIds = new Set();
+            if (playlistsData && Array.isArray(playlistsData)) {
+                playlistsData.forEach((playlist: any) => {
+                    if (playlist.quizzes) {
+                        playlist.quizzes.forEach((q: any) => {
+                            playlistTestIds.add(q._id || q);
+                        });
+                    }
+                });
+            }
+
+            const freeStandaloneTests = data.filter((t: any) => 
+                !playlistTestIds.has(t._id) && (!t.price || t.price === 0)
+            );
+
+            setTests(freeStandaloneTests);
             if (stats.razorpayKeyId) setRazorpayKey(stats.razorpayKeyId);
         } catch (error) {
             console.error('Error fetching tests:', error);
@@ -41,6 +61,11 @@ export const TestCategoryScreen = ({ navigation }: any) => {
     }, [authLoading, user]);
 
     const handleStartTest = async (test: any) => {
+        if (test.isLocked) {
+            toast.info('Locked', 'This quiz is currently locked by the admin.');
+            return;
+        }
+
         const isPurchased = test.isPurchased || test.price === 0;
         if (isPurchased) {
             navigation?.navigate?.('ActiveTest', { testId: test._id });
@@ -52,7 +77,7 @@ export const TestCategoryScreen = ({ navigation }: any) => {
                 setActiveTest(test);
                 setShowPayment(true);
             } catch (error: any) {
-                Alert.alert('Payment Error', error.message || 'Failed to initialize payment');
+                toast.error('Payment Error', error.message || 'Failed to initialize payment');
             } finally {
                 setIsProcessing(false);
             }
@@ -70,10 +95,10 @@ export const TestCategoryScreen = ({ navigation }: any) => {
                     razorpay_payment_id: data.razorpay_payment_id,
                     razorpay_signature: data.razorpay_signature,
                 });
-                Alert.alert('Success', 'Quiz unlocked successfully!');
+                toast.success('Success', 'Quiz unlocked successfully!');
                 fetchTests();
             } catch (error: any) {
-                Alert.alert('Verification Failed', 'Payment verification failed on server.');
+                toast.error('Verification Failed', 'Payment verification failed on server.');
             } finally {
                 setIsLoading(false);
             }
@@ -166,7 +191,7 @@ export const TestCategoryScreen = ({ navigation }: any) => {
                                 <View className="flex-1">
                                     <View className="flex-row items-center gap-2 mb-2">
                                         <Text className="font-black text-gray-800 text-sm uppercase tracking-tight" numberOfLines={1}>{test.title}</Text>
-                                        {!isPurchased && <Lock size={12} color="#94A3B8" />}
+                                        {test.isLocked ? <Lock size={12} color="#F59E0B" /> : !isPurchased && <Lock size={12} color="#94A3B8" />}
                                         {isPurchased && test.price > 0 && <View className="bg-emerald-500 rounded-full p-1"><ShieldCheck size={10} color="white" strokeWidth={3} /></View>}
                                     </View>
                                     <Text className="text-gray-400 text-[10px] font-bold leading-relaxed mb-4" numberOfLines={2}>{test.description || 'Quick assessment for students.'}</Text>

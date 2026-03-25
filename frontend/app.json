@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Physical Education with Ravina",
-    "slug": "Frontend",
+    "slug": "physical-education-with-ravina",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,15 +12,30 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ravina.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.ravina.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/icon.png"
-      },
-      "predictiveBackGestureEnabled": false
-    }
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "b7825d1c-a113-47be-a5ab-6ce9047e0e8a"
+      }
+    },
+    "owner": "mohit2727s-organization",
+    "plugins": [
+      "expo-secure-store",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ]
   }
 }

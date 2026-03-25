@@ -91,7 +91,7 @@ export const ProfileScreen = ({ navigation }: any) => {
 
     const fetchUserData = async () => {
         try {
-            await dataService.getDashboard(); 
+            await dataService.getDashboard();
         } catch (error) {
             console.error('Profile refresh failed:', error);
             throw error;
@@ -115,7 +115,7 @@ export const ProfileScreen = ({ navigation }: any) => {
 
     return (
         <View className="flex-1 bg-gray-50">
-            <ScrollView 
+            <ScrollView
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366F1']} />
@@ -141,7 +141,9 @@ export const ProfileScreen = ({ navigation }: any) => {
                             </View>
 
                             <Text variant="h2" className="text-white font-black text-xl tracking-tight leading-none mb-1">{displayName}</Text>
-                            <Text className="text-white/60 text-[10px] font-bold uppercase tracking-[2px]">{email}</Text>
+                            {/* {!isPlaceholderEmail && (
+                                <Text className="text-white/60 text-[10px] font-bold uppercase tracking-[2px]">{email}</Text>
+                            )} */}
                         </LinearGradient>
                     </View>
                 </View>
@@ -245,7 +247,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                 {/* Help & Support Section */}
                 <View className="mx-6 space-y-3 mb-10">
                     <Text className="text-gray-400 font-black text-[9px] uppercase tracking-[3px] ml-4 mb-2">Help & Support</Text>
-                    
+
                     <View className="bg-white rounded-[2.5rem] shadow-xl shadow-indigo-100/20 border border-gray-50 overflow-hidden">
                         <TouchableOpacity
                             className="flex-row items-center px-6 py-5 border-b border-gray-50"

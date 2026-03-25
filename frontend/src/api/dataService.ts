@@ -72,6 +72,11 @@ export const dataService = {
         return response.data;
     },
 
+    getAttemptById: async (id: string) => {
+        const response = await apiClient.get(`/users/my-attempts/${id}`);
+        return response.data;
+    },
+
     uploadImage: async (formData: FormData) => {
         const response = await apiClient.post('/upload/image', formData, {
             headers: {

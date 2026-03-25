@@ -1,19 +1,17 @@
-import React, { useState, useRef } from 'react';
-import { View, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from '../../utils/toast';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import { auth } from '../../lib/firebase';
 
 export const LoginScreen = () => {
     const { signInWithPhone, verifyOtp } = useAuth();
-    const recaptchaVerifier = useRef<any>(null);
 
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [verificationId, setVerificationId] = useState('');
+    const [confirmation, setConfirmation] = useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
     const [otp, setOtp] = useState('');
     const [isOtpSent, setIsOtpSent] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -33,8 +31,8 @@ export const LoginScreen = () => {
 
         setIsLoading(true);
         try {
-            const vid = await signInWithPhone(formattedNumber, recaptchaVerifier.current);
-            setVerificationId(vid);
+            const confirm = await signInWithPhone(formattedNumber);
+            setConfirmation(confirm);
             setIsOtpSent(true);
             toast.success('OTP Sent', `A 6-digit code has been sent to ${formattedNumber}`);
         } catch (error: any) {
@@ -50,9 +48,13 @@ export const LoginScreen = () => {
             toast.error('Error', 'Please enter the 6-digit OTP sent to your phone');
             return;
         }
+        if (!confirmation) {
+            toast.error('Error', 'No verification in progress. Please request a new OTP.');
+            return;
+        }
         setIsLoading(true);
         try {
-            await verifyOtp(verificationId, otp);
+            await verifyOtp(confirmation, otp);
             // Redirection is handled by RootNavigator
         } catch (error: any) {
             console.error("Verification error:", error);
@@ -67,12 +69,6 @@ export const LoginScreen = () => {
             className="flex-1 bg-white dark:bg-gray-900"
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-             <FirebaseRecaptchaVerifierModal
-                ref={recaptchaVerifier}
-                firebaseConfig={auth.app.options}
-                attemptInvisibleVerification={true}
-            />
-
             <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
 
                 <View className="mb-10 items-center">
@@ -123,7 +119,7 @@ export const LoginScreen = () => {
                             label="Change Phone Number"
                             variant="ghost"
                             className="mt-2"
-                            onPress={() => { setIsOtpSent(false); setOtp(''); }}
+                            onPress={() => { setIsOtpSent(false); setOtp(''); setConfirmation(null); }}
                         />
                     )}
 

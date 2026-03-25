@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1044693722428",
+    "project_id": "physical-education-with-ravina",
+    "storage_bucket": "physical-education-with-ravina.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1044693722428:android:c683bfac8e27f207246a39",
+        "android_client_info": {
+          "package_name": "com.ravina.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1044693722428-jdb58qh9qbr1m0o1fqs3gotm83eh85uj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrGBYA5gickb-Q_9bLe_nTThy7DUNXucQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1044693722428-7d4mrrvts4jt23892c2vbq4el1crokbh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

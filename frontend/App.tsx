@@ -5,8 +5,13 @@ import { View, Platform, StyleSheet } from 'react-native';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { AuthProvider } from './src/context/AuthContext';
 import Toast from 'react-native-toast-message';
+import * as ScreenCapture from 'expo-screen-capture';
 
 export default function App() {
+  React.useEffect(() => {
+    ScreenCapture.preventScreenCaptureAsync();
+  }, []);
+
   return (
     <AuthProvider>
       <View style={styles.container}>

@@ -4,10 +4,12 @@ import { Text } from '../../components/Text';
 import { dataService } from '../../api/dataService';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ClipboardList, ChevronLeft, Award, Star, Target, ShieldCheck } from 'lucide-react-native';
+import { toast } from '../../utils/toast';
 
 export const MyTestsScreen = ({ navigation }: any) => {
     const [attempts, setAttempts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [fetchingAttempt, setFetchingAttempt] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchAttempts = async () => {
@@ -22,6 +24,25 @@ export const MyTestsScreen = ({ navigation }: any) => {
         };
         fetchAttempts();
     }, []);
+
+    const handleReviewQuiz = async (attemptId: string) => {
+        setFetchingAttempt(attemptId);
+        try {
+            const fullAttempt = await dataService.getAttemptById(attemptId);
+            navigation?.navigate('TestResult', {
+                answers: fullAttempt.answers.map((a: any) => a.selectedOption),
+                questions: fullAttempt.test.questions,
+                backendScore: fullAttempt.score,
+                backendTotalMarks: fullAttempt.totalMarks,
+                testId: fullAttempt.test._id
+            });
+        } catch (error) {
+            console.error('Failed to load attempt details:', error);
+            toast.error('Error', 'Could not load quiz review details.');
+        } finally {
+            setFetchingAttempt(null);
+        }
+    };
 
     if (loading) {
         return (
@@ -81,7 +102,11 @@ export const MyTestsScreen = ({ navigation }: any) => {
                         const pct = item.totalMarks > 0 ? Math.round((item.score / item.totalMarks) * 100) : 0;
                         const passed = pct >= 60;
                         return (
-                            <View className="bg-white p-5 rounded-[2rem] mb-4 shadow-xl shadow-black/5 border border-gray-50">
+                            <TouchableOpacity 
+                                onPress={() => handleReviewQuiz(item._id)}
+                                disabled={fetchingAttempt === item._id}
+                                className={`bg-white p-5 rounded-[2rem] mb-4 shadow-xl shadow-black/5 border border-gray-50 ${fetchingAttempt === item._id ? 'opacity-50' : ''}`}
+                            >
                                 <View className="flex-row justify-between items-start mb-4">
                                     <View className="flex-1">
                                         <View className="flex-row items-center gap-2 mb-1">
@@ -120,7 +145,14 @@ export const MyTestsScreen = ({ navigation }: any) => {
                                         <Text className="text-gray-400 text-[7px] font-black uppercase tracking-[2] mt-0.5">GRADE</Text>
                                     </View>
                                 </View>
-                            </View>
+
+                                <View className="mt-4 pt-3 border-t border-gray-50 flex-row justify-center items-center bg-indigo-50/50 -mx-5 -mb-5 p-3 rounded-b-[2rem]">
+                                    <Text className="text-indigo-600 font-black text-[10px] uppercase tracking-widest mr-2">Review Answers</Text>
+                                    <View className="bg-indigo-100 rounded-full w-5 h-5 items-center justify-center">
+                                        <ChevronLeft size={12} color="#4F46E5" style={{ transform: [{ rotate: '180deg' }] }} />
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
                         );
                     }}
                 />

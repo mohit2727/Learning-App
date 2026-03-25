@@ -1,30 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import {
-    onAuthStateChanged,
-    User,
-    signOut as firebaseSignOut,
-    signInWithCredential,
-    PhoneAuthProvider
-} from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { dataService } from '../api/dataService';
 import Toast from 'react-native-toast-message';
 
 interface AuthContextType {
-    user: User | null;
+    user: FirebaseAuthTypes.User | null;
     dbUser: any | null;
     loading: boolean;
     isOnboarded: boolean;
     signOut: () => Promise<void>;
-    signInWithPhone: (phoneNumber: string, recaptchaVerifier: any) => Promise<string>;
-    verifyOtp: (verificationId: string, code: string) => Promise<void>;
+    signInWithPhone: (phoneNumber: string) => Promise<FirebaseAuthTypes.ConfirmationResult>;
+    verifyOtp: (confirmation: FirebaseAuthTypes.ConfirmationResult, code: string) => Promise<void>;
     refreshDbUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
     const [dbUser, setDbUser] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [isOnboarded, setIsOnboarded] = useState(false);
@@ -43,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        const unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
             setUser(firebaseUser);
             if (firebaseUser) {
                 await refreshDbUser();
@@ -57,10 +50,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => unsubscribe();
     }, []);
 
-    const signInWithPhone = async (phoneNumber: string, recaptchaVerifier: any) => {
+    const signInWithPhone = async (phoneNumber: string) => {
         try {
-            const phoneProvider = new PhoneAuthProvider(auth);
-            return await phoneProvider.verifyPhoneNumber(phoneNumber, recaptchaVerifier);
+            const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+            return confirmation;
         } catch (error: any) {
             Toast.show({
                 type: 'error',
@@ -71,10 +64,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const verifyOtp = async (verificationId: string, code: string) => {
+    const verifyOtp = async (confirmation: FirebaseAuthTypes.ConfirmationResult, code: string) => {
         try {
-            const credential = PhoneAuthProvider.credential(verificationId, code);
-            await signInWithCredential(auth, credential);
+            await confirmation.confirm(code);
             Toast.show({
                 type: 'success',
                 text1: 'Welcome!',
@@ -92,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const signOut = async () => {
         try {
-            await firebaseSignOut(auth);
+            await auth().signOut();
             Toast.show({
                 type: 'info',
                 text1: 'Signed Out',
