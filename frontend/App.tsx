@@ -1,7 +1,9 @@
 import "./src/global.css";
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, Platform, StyleSheet } from 'react-native';
+import { View, Platform, StyleSheet, Appearance } from 'react-native';
+
+Appearance.setColorScheme('light');
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { AuthProvider } from './src/context/AuthContext';
 import Toast from 'react-native-toast-message';

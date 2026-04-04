@@ -62,7 +62,7 @@ export const TestCategoryScreen = ({ navigation }: any) => {
 
     const handleStartTest = async (test: any) => {
         if (test.isLocked) {
-            toast.info('Locked', 'This quiz is currently locked by the admin.');
+            toast.error('Access Denied', 'This quiz is locked by the admin.');
             return;
         }
 

@@ -1,5 +1,13 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+
+const lightTheme = {
+    ...DefaultTheme,
+    colors: {
+        ...DefaultTheme.colors,
+        background: '#f3f4f6',
+    },
+};
 import { useAuth } from '../context/AuthContext';
 import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
@@ -19,7 +27,7 @@ export const RootNavigator = () => {
     }
 
     return (
-        <NavigationContainer>
+        <NavigationContainer theme={lightTheme}>
             <AuthSync />
             {user ? (
                 isOnboarded ? <MainNavigator /> : <OnboardingScreen />
