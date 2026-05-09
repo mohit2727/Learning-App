@@ -150,7 +150,7 @@ export default function AnnouncementsPage() {
                                     </div>
                                     {image && (
                                         <div className="relative w-full h-24 rounded-xl overflow-hidden border border-slate-100 shadow-inner">
-                                            <img src={image.startsWith('http') ? image : `${process.env.NEXT_PUBLIC_API_URL || 'https://learning-app-4xa9.onrender.com'}${image}`} alt="Preview" className="w-full h-full object-cover" />
+                                            <img src={image.startsWith('http') ? image : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL || ''}${image}`} alt="Preview" className="w-full h-full object-cover" />
                                             <button type="button" onClick={() => setImage('')} className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm text-slate-600 p-1.5 rounded-lg border border-slate-100 shadow-sm">
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
@@ -226,7 +226,7 @@ export default function AnnouncementsPage() {
                                         <div className="flex flex-col md:flex-row gap-5">
                                             {announcement.image && (
                                                 <div className="w-full md:w-28 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm">
-                                                    <img src={announcement.image.startsWith('http') ? announcement.image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${announcement.image}`} alt="" className="w-full h-full object-cover" />
+                                                    <img src={announcement.image.startsWith('http') ? announcement.image : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL || ''}${announcement.image}`} alt="" className="w-full h-full object-cover" />
                                                 </div>
                                             )}
                                             <div className="flex-1 min-w-0">

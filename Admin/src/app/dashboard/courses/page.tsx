@@ -165,7 +165,7 @@ export default function CoursesPage() {
                     >
                         <div className="h-36 bg-slate-50 flex items-center justify-center relative overflow-hidden">
                             {course.image ? (
-                                <img src={course.image.startsWith('http') ? course.image : `${process.env.NEXT_PUBLIC_API_URL || 'https://learning-app-4xa9.onrender.com'}${course.image}`} alt={course.title} className="w-full h-full object-cover relative z-10" />
+                                <img src={course.image.startsWith('http') ? course.image : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL || ''}${course.image}`} alt={course.title} className="w-full h-full object-cover relative z-10" />
                             ) : (
                                 <BookOpen className="w-12 h-12 text-slate-200 relative z-10 group-hover:scale-110 transition-transform duration-500" strokeWidth={1.5} />
                             )}
@@ -281,7 +281,7 @@ export default function CoursesPage() {
 
                                 {image && (
                                     <div className="relative w-full h-32 rounded-xl overflow-hidden border border-slate-100">
-                                        <img src={image.startsWith('http') ? image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${image}`} alt="Preview" className="w-full h-full object-cover" />
+                                        <img src={image.startsWith('http') ? image : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL || ''}${image}`} alt="Preview" className="w-full h-full object-cover" />
                                         <button type="button" onClick={() => setImage('')} className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-slate-600 p-1.5 rounded-lg border border-slate-100 shadow-sm">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
@@ -377,7 +377,7 @@ export default function CoursesPage() {
 
                                 {image && (
                                     <div className="relative w-full h-32 rounded-xl overflow-hidden border border-slate-100">
-                                        <img src={image.startsWith('http') ? image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${image}`} alt="Preview" className="w-full h-full object-cover" />
+                                        <img src={image.startsWith('http') ? image : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL || ''}${image}`} alt="Preview" className="w-full h-full object-cover" />
                                         <button type="button" onClick={() => setImage('')} className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-slate-600 p-1.5 rounded-lg border border-slate-100 shadow-sm">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>

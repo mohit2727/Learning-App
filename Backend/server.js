@@ -22,26 +22,10 @@ app.use(helmet());
 app.use(express.json({ limit: '10mb' }));
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-// Add your Firebase domains to ALLOWED_ORIGINS in .env (comma-separated)
-// e.g. ALLOWED_ORIGINS=https://your-app.web.app,https://your-admin.web.app
-const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3002',
-    'https://physical-education-with-ravina.web.app',
-    'https://physical-education-with-ravina.firebaseapp.com',
-    'https://physical-education-with-ravina-admin.web.app',
-    'https://physical-education-with-ravina-admin.firebaseapp.com',
-    'https://physical-education-with-ravina.vercel.app', // Vercel Web Deployment
-    'https://physical-education-jvuigdotm-mohits-projects-35d32b3e.vercel.app', // Vercel Specific Alias
-    'https://learning-app-4xa9.onrender.com', // Added this as it's the domain from logs
-    'http://10.80.127.71:5000',
-    'http://10.80.127.71:8081',
-    'http://10.80.127.71:19000',
-    'http://10.80.127.71:19001',
-    'http://10.80.127.71:19002',
-    ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : []),
-];
+// Set ALLOWED_ORIGINS in .env (comma-separated)
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : ['http://localhost:3000', 'http://localhost:3001'];
 app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (e.g. mobile apps, curl)

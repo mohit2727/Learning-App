@@ -14,7 +14,7 @@ const generateQuestionsFromText = async (text) => {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' });
 
     const prompt = `
     You are an expert quiz parser. Extract ALL MCQ questions from the text below and return them as a clean JSON array.

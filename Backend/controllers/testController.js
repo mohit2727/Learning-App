@@ -441,6 +441,57 @@ const getMergedTestLeaderboardsAdmin = asyncHandler(async (req, res) => {
     });
 });
 
+// @desc    Update a single question in a test
+// @route   PUT /api/tests/:id/questions/:questionId
+// @access  Private/Admin
+const updateQuestion = asyncHandler(async (req, res) => {
+    const { text, options, correctOption } = req.body;
+    const test = await Test.findById(req.params.id);
+
+    if (!test) {
+        res.status(404);
+        throw new Error('Test not found');
+    }
+
+    const question = test.questions.id(req.params.questionId);
+    if (!question) {
+        res.status(404);
+        throw new Error('Question not found');
+    }
+
+    if (text !== undefined) question.text = text;
+    if (options !== undefined) question.options = options;
+    if (correctOption !== undefined) question.correctOption = correctOption;
+
+    const updatedTest = await test.save();
+    invalidateCache('/tests');
+    res.json(updatedTest);
+});
+
+// @desc    Delete a single question from a test
+// @route   DELETE /api/tests/:id/questions/:questionId
+// @access  Private/Admin
+const deleteQuestion = asyncHandler(async (req, res) => {
+    const test = await Test.findById(req.params.id);
+
+    if (!test) {
+        res.status(404);
+        throw new Error('Test not found');
+    }
+
+    const question = test.questions.id(req.params.questionId);
+    if (!question) {
+        res.status(404);
+        throw new Error('Question not found');
+    }
+
+    question.deleteOne();
+    test.totalQuestions = test.questions.length;
+    const updatedTest = await test.save();
+    invalidateCache('/tests');
+    res.json(updatedTest);
+});
+
 module.exports = {
     getTests,
     getTestById,
@@ -452,5 +503,7 @@ module.exports = {
     submitTest,
     deleteTest,
     getTestLeaderboardAdmin,
-    getMergedTestLeaderboardsAdmin
+    getMergedTestLeaderboardsAdmin,
+    updateQuestion,
+    deleteQuestion
 };

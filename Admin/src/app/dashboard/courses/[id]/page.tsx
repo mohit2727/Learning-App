@@ -189,7 +189,7 @@ export default function CourseDetailPage() {
                                 </div>
                                 <div className="w-20 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100 bg-slate-50 flex items-center justify-center">
                                     {lesson.image ? (
-                                        <img src={lesson.image.startsWith('http') ? lesson.image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${lesson.image}`} alt="" className="w-full h-full object-cover" />
+                                        <img src={lesson.image.startsWith('http') ? lesson.image : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL || ''}${lesson.image}`} alt="" className="w-full h-full object-cover" />
                                     ) : (
                                         <Youtube className="w-6 h-6 text-red-500" />
                                     )}
@@ -286,7 +286,7 @@ export default function CourseDetailPage() {
 
                                 {image && (
                                     <div className="relative w-full h-32 rounded-xl overflow-hidden border border-slate-100 shadow-inner bg-slate-50">
-                                        <img src={image.startsWith('http') ? image : `${process.env.NEXT_PUBLIC_API_URL || 'https://learning-app-4xa9.onrender.com'}${image}`} alt="Preview" className="w-full h-full object-cover" />
+                                        <img src={image.startsWith('http') ? image : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL || ''}${image}`} alt="Preview" className="w-full h-full object-cover" />
                                         <button type="button" onClick={() => setImage('')} className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-slate-600 p-1.5 rounded-lg border border-slate-100 shadow-sm">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
@@ -383,7 +383,7 @@ export default function CourseDetailPage() {
 
                                 {image && (
                                     <div className="relative w-full h-32 rounded-xl overflow-hidden border border-slate-100 shadow-inner bg-slate-50">
-                                        <img src={image.startsWith('http') ? image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${image}`} alt="Preview" className="w-full h-full object-cover" />
+                                        <img src={image.startsWith('http') ? image : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL || ''}${image}`} alt="Preview" className="w-full h-full object-cover" />
                                         <button type="button" onClick={() => setImage('')} className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-slate-600 p-1.5 rounded-lg border border-slate-100 shadow-sm">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
